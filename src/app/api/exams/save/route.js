@@ -1,4 +1,4 @@
-import { db } from "@/services/firebase-admin";
+import { getDb } from "@/services/firebase-admin";
 import { NextResponse } from "next/server";
 
 export async function POST(req) {
@@ -22,6 +22,7 @@ export async function POST(req) {
         }
 
         // Use Admin SDK (db.collection().add())
+        const db = getDb();
         const docRef = await db.collection("exams").add(cleanData);
 
         return NextResponse.json({ success: true, id: docRef.id });
