@@ -1,0 +1,177 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+@layer base {
+  :root {
+    /* Base Colors - Light Mode Default */
+    --background: #f8fafc;
+    /* Slate-50 */
+    --foreground: #0f172a;
+    /* Slate-900 */
+
+    --primary-hue: 260;
+    --primary: hsl(var(--primary-hue), 90%, 60%);
+    --primary-dark: hsl(var(--primary-hue), 90%, 45%);
+    --primary-light: hsl(var(--primary-hue), 90%, 90%);
+
+    --secondary: #0891b2;
+    /* Cyan-600 */
+    --accent: #db2777;
+    /* Pink-600 */
+
+    /* Glass/Surface Defaults (Light) */
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(0, 0, 0, 0.1);
+    --glass-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+
+    --bg-gradient: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --input-bg: #ffffff;
+    --input-border: #cbd5e1;
+
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --radius-sm: 8px;
+
+    --font-sans: 'Outfit', sans-serif;
+  }
+
+  /* Dark Mode Overrides */
+  .dark {
+    --background: #0f0c29;
+    --foreground: #ffffff;
+
+    --primary: hsl(var(--primary-hue), 90%, 65%);
+    --primary-dark: hsl(var(--primary-hue), 90%, 45%);
+    --primary-light: hsl(var(--primary-hue), 100%, 85%);
+
+    --secondary: #06b6d4;
+    --accent: #f472b6;
+
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --glass-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+
+    --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+
+    --text-main: #ffffff;
+    --text-muted: #94a3b8;
+    --input-bg: rgba(0, 0, 0, 0.2);
+    --input-border: rgba(255, 255, 255, 0.1);
+  }
+
+  body {
+    @apply text-[var(--text-main)] bg-[var(--background)] font-sans min-h-screen antialiased overflow-x-hidden;
+    background-image: var(--bg-gradient);
+    background-attachment: fixed;
+    transition: background-image 0.5s ease-in-out, background-color 0.5s ease;
+  }
+}
+
+@layer components {
+
+  /* Glassmorphism Utilities */
+  .glass {
+    @apply backdrop-blur-xl shadow-xl;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+  }
+
+  .glass-card {
+    @apply backdrop-blur-2xl rounded-3xl transition-all duration-300;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .glass-card:hover {
+    @apply -translate-y-1;
+    border-color: var(--primary);
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold transition-all duration-300 gap-2 relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:-translate-y-0.5;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  }
+
+  .btn-outline {
+    @apply bg-transparent border text-[var(--foreground)] hover:bg-black/5 dark:hover:bg-white/5;
+    border-color: var(--primary);
+  }
+
+  /* Inputs */
+  .input-field {
+    @apply w-full p-4 rounded-xl text-[var(--text-main)] placeholder-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+  }
+
+  .text-gradient-primary {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-cyan-500 dark:from-indigo-400 dark:to-cyan-400;
+  }
+}
+
+@layer utilities {
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+  }
+}
+
+/* Animations that are hard to do with Tailwind utilities alone */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
