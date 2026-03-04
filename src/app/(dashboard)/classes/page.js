@@ -7,7 +7,6 @@ import Link from "next/link";
 
 export default function ClassesPage() {
     const { user } = useAuth();
-    const [classes, setClasses] = null; // initialized below
     const [loading, setLoading] = useState(true);
     const [newClassName, setNewClassName] = useState("");
     const [newClassSchool, setNewClassSchool] = useState("");
