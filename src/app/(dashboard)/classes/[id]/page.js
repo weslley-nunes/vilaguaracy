@@ -18,6 +18,10 @@ export default function ClassDetailsPage() {
     const [newStudentEnrollment, setNewStudentEnrollment] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Bulk add state
+    const [addMode, setAddMode] = useState("single"); // 'single' | 'bulk'
+    const [bulkStudents, setBulkStudents] = useState("");
+
     useEffect(() => {
         if (!user || !classId) return;
 
@@ -45,37 +49,68 @@ export default function ClassDetailsPage() {
         fetchClassDetails();
     }, [user, classId, router]);
 
+    const generateAccessCode = () => {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excluding confusable I, O, 0, 1
+        let code = '';
+        for (let i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+        return code;
+    };
+
+    const generateId = () => {
+        return Date.now().toString(36) + Math.random().toString(36).substring(2);
+    };
+
     const handleAddStudent = async (e) => {
         e.preventDefault();
-        if (!newStudentName.trim() || !classData) return;
 
         setIsSubmitting(true);
         try {
-            const generateAccessCode = () => {
-                const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excluding confusable I, O, 0, 1
-                let code = '';
-                for (let i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
-                return code;
-            };
+            let newStudentsList = [];
 
-            const newStudent = {
-                id: crypto.randomUUID(), // Internal DB ID
-                accessCode: generateAccessCode(), // Friendly UI code
-                name: newStudentName,
-                enrollment: newStudentEnrollment || "",
-                addedAt: new Date().toISOString()
-            };
+            if (addMode === "single") {
+                if (!newStudentName.trim() || !classData) {
+                    setIsSubmitting(false);
+                    return;
+                }
+                newStudentsList.push({
+                    id: generateId(),
+                    accessCode: generateAccessCode(),
+                    name: newStudentName.trim(),
+                    enrollment: newStudentEnrollment.trim() || "",
+                    addedAt: new Date().toISOString()
+                });
+            } else {
+                if (!bulkStudents.trim() || !classData) {
+                    setIsSubmitting(false);
+                    return;
+                }
 
-            const updatedStudents = [...(classData.students || []), newStudent];
+                const lines = bulkStudents.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+                if (lines.length === 0) {
+                    setIsSubmitting(false);
+                    return;
+                }
+
+                newStudentsList = lines.map(name => ({
+                    id: generateId(),
+                    accessCode: generateAccessCode(),
+                    name: name,
+                    enrollment: "",
+                    addedAt: new Date().toISOString()
+                }));
+            }
+
+            const updatedStudents = [...(classData.students || []), ...newStudentsList];
 
             await updateClass(classId, { students: updatedStudents });
 
-            // Update local state
             setClassData({ ...classData, students: updatedStudents });
             setNewStudentName("");
             setNewStudentEnrollment("");
+            setBulkStudents("");
         } catch (error) {
-            alert("Erro ao adicionar aluno.");
+            console.error(error);
+            alert("Erro ao adicionar aluno(s).");
         } finally {
             setIsSubmitting(false);
         }
@@ -136,39 +171,79 @@ export default function ClassDetailsPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Form to add student */}
-                <div className="card h-fit lg:col-span-1 shadow-sm border border-gray-100">
-                    <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
-                        <UserPlus size={20} className="text-indigo-600" />
-                        Adicionar Aluno
-                    </h2>
+                <div className="card h-fit lg:col-span-1 shadow-sm border border-gray-100 flex flex-col">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="font-bold text-lg flex items-center gap-2">
+                            <UserPlus size={20} className="text-indigo-600" />
+                            Novo Cadastro
+                        </h2>
+                    </div>
+
+                    {/* Add Mode Toggle */}
+                    <div className="flex bg-gray-100 p-1 rounded-lg mb-4">
+                        <button
+                            type="button"
+                            onClick={() => setAddMode("single")}
+                            className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${addMode === 'single' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                        >
+                            Individual
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setAddMode("bulk")}
+                            className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${addMode === 'bulk' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                        >
+                            Em Lote (Lista)
+                        </button>
+                    </div>
+
                     <form onSubmit={handleAddStudent} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo *</label>
-                            <input
-                                type="text"
-                                value={newStudentName}
-                                onChange={(e) => setNewStudentName(e.target.value)}
-                                placeholder="Ex: Maria Luiza Silva"
-                                className="w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Matrícula (Opcional)</label>
-                            <input
-                                type="text"
-                                value={newStudentEnrollment}
-                                onChange={(e) => setNewStudentEnrollment(e.target.value)}
-                                placeholder="Ex: 2024001"
-                                className="w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                            />
-                        </div>
+                        {addMode === "single" ? (
+                            <>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo *</label>
+                                    <input
+                                        type="text"
+                                        value={newStudentName}
+                                        onChange={(e) => setNewStudentName(e.target.value)}
+                                        placeholder="Ex: Maria Luiza Silva"
+                                        className="w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                                        required={addMode === "single"}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Matrícula (Opcional)</label>
+                                    <input
+                                        type="text"
+                                        value={newStudentEnrollment}
+                                        onChange={(e) => setNewStudentEnrollment(e.target.value)}
+                                        placeholder="Ex: 2024001"
+                                        className="w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                                    />
+                                </div>
+                            </>
+                        ) : (
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Lista de Nomes (1 por linha) *</label>
+                                <textarea
+                                    value={bulkStudents}
+                                    onChange={(e) => setBulkStudents(e.target.value)}
+                                    placeholder="João da Silva&#10;Maria Santos&#10;Pedro Alves"
+                                    className="w-full h-32 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 resize-none text-sm"
+                                    required={addMode === "bulk"}
+                                ></textarea>
+                                <p className="text-[10px] text-gray-500 mt-1">
+                                    {bulkStudents.split('\n').filter(l => l.trim()).length} alunos detectados
+                                </p>
+                            </div>
+                        )}
+
                         <button
                             type="submit"
                             disabled={isSubmitting}
                             className="w-full btn btn-primary flex justify-center items-center gap-2 mt-2"
                         >
-                            {isSubmitting ? "Adicionando..." : "Adicionar à Turma"}
+                            {isSubmitting ? "Adicionando..." : (addMode === "single" ? "Adicionar Aluno" : "Importar Lista")}
                         </button>
                     </form>
                 </div>
@@ -217,7 +292,7 @@ export default function ClassDetailsPage() {
                                             <h3 className="font-bold text-gray-900 truncate" title={student.name}>{student.name}</h3>
                                             <div className="flex items-center gap-2 mt-0.5">
                                                 <span className="text-xs text-indigo-700 font-bold tracking-widest bg-indigo-100 px-2 py-0.5 rounded border border-indigo-200" title="Código de Acesso">
-                                                    {student.accessCode || student.id.substring(0, 6).toUpperCase()}
+                                                    {student.accessCode || String(student.id).substring(0, 6).toUpperCase()}
                                                 </span>
                                                 {/* Mobile only enrollment */}
                                                 {student.enrollment && (
