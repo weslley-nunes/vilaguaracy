@@ -30,9 +30,9 @@ const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = fa
             {/* Header */}
             <div className="border-b-2 border-black pb-4 mb-4">
                 {headerConfig?.useCustomHeader && headerConfig?.customHeaderImageUrl ? (
-                    <div className="w-full h-40 overflow-hidden flex items-center justify-center border border-gray-200">
+                    <div className="w-full flex items-center justify-center">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={headerConfig.customHeaderImageUrl} alt="Cabeçalho Personalizado" className="w-full h-full object-cover" />
+                        <img src={headerConfig.customHeaderImageUrl} alt="Cabeçalho Personalizado" className="w-full h-auto object-contain" />
                     </div>
                 ) : (
                     <>
