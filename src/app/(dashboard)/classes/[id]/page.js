@@ -272,14 +272,14 @@ export default function ClassDetailsPage() {
 
                             <div className="divide-y divide-gray-100">
                                 {students.map((student) => (
-                                    <div key={student.id} className="grid grid-cols-1 sm:grid-cols-12 gap-4 p-4 items-center hover:bg-gray-50 transition-colors">
+                                    <div key={student.id || Math.random().toString()} className="grid grid-cols-1 sm:grid-cols-12 gap-4 p-4 items-center hover:bg-gray-50 transition-colors">
 
                                         {/* QR Code */}
                                         <div className="sm:col-span-1 flex justify-start sm:justify-center">
                                             <div className="bg-white p-1.5 rounded border border-gray-200 shrink-0 shadow-sm">
                                                 <QRCodeSVG
                                                     id={`qr-${student.id}`}
-                                                    value={student.id}
+                                                    value={String(student.id)}
                                                     size={48}
                                                     level="L"
                                                     includeMargin={false}
