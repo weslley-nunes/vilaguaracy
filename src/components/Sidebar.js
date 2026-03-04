@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, GraduationCap, FileText, UserCircle, LogOut, Sparkles, BookOpen } from "lucide-react";
