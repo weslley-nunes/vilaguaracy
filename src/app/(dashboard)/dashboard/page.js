@@ -1,15 +1,54 @@
-"use client";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
-import { FileText, Users, Plus } from "lucide-react";
+import { FileText, Users, Plus, Loader2 } from "lucide-react";
+import { getClassesByUser } from "@/services/classesService";
+import { ExamService } from "@/services/examService";
 
 export default function Dashboard() {
     const { user } = useAuth();
 
+    const [stats, setStats] = useState({ examsCount: 0, studentsCount: 0 });
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (!user) return;
+
+        const loadStats = async () => {
+            setIsLoading(true);
+            try {
+                // Fetch exams and classes concurrently
+                const [exams, classes] = await Promise.all([
+                    ExamService.listByTeacher(user.uid),
+                    getClassesByUser(user.uid)
+                ]);
+
+                // Calculate total students
+                let totalStudents = 0;
+                classes.forEach(c => {
+                    if (c.students && Array.isArray(c.students)) {
+                        totalStudents += c.students.length;
+                    }
+                });
+
+                setStats({
+                    examsCount: exams.length,
+                    studentsCount: totalStudents
+                });
+            } catch (error) {
+                console.error("Erro ao carregar estatísticas do dashboard:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadStats();
+    }, [user]);
+
     return (
         <div>
             <header className="mb-8">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Olá, {user?.displayName?.split(" ")[0]}! 👋</h1>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Olá, {user?.displayName?.split(" ")[0] || 'Professor'}! 👋</h1>
                 <p className="text-gray-500 dark:text-gray-400">Aqui está o resumo das suas atividades.</p>
             </header>
 
@@ -20,7 +59,9 @@ export default function Dashboard() {
                     </div>
                     <div>
                         <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Avaliações Criadas</p>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-white">0</p>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            {isLoading ? <Loader2 size={20} className="animate-spin text-indigo-400" /> : stats.examsCount}
+                        </p>
                     </div>
                 </div>
 
@@ -30,7 +71,9 @@ export default function Dashboard() {
                     </div>
                     <div>
                         <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Alunos Cadastrados</p>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-white">0</p>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            {isLoading ? <Loader2 size={20} className="animate-spin text-teal-400" /> : stats.studentsCount}
+                        </p>
                     </div>
                 </div>
             </div>
