@@ -17,6 +17,9 @@ export default function Sidebar() {
         { href: "/tutorial", label: "Ajuda & Tutoriais", icon: BookOpen },
     ];
 
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => setMounted(true), []);
+
     return (
         <aside className="w-72 h-screen flex flex-col fixed left-0 top-0 z-50 glass border-r-0">
             <div className="p-8 flex items-center gap-3 mb-6">
@@ -53,25 +56,29 @@ export default function Sidebar() {
             </nav>
 
             <div className="p-6 mt-auto">
-                <div className="glass-card p-4 rounded-2xl mb-2 flex items-center gap-3 border border-gray-200 dark:border-white/5 bg-white/50 dark:bg-white/5">
-                    {user?.photoURL ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={user.photoURL} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-indigo-500/50" />
-                    ) : (
-                        <UserCircle size={40} className="text-gray-400" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-gray-800 dark:text-white truncate">{user?.displayName?.split(" ")[0] || "Professor"}</p>
-                        <p className="text-xs text-gray-500 truncate">Plano Pro</p>
-                    </div>
-                </div>
-                <button
-                    onClick={logout}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 rounded-xl transition-colors font-medium border border-transparent hover:border-red-500/20"
-                >
-                    <LogOut size={16} />
-                    Sair do Portal
-                </button>
+                {mounted && (
+                    <>
+                        <div className="glass-card p-4 rounded-2xl mb-2 flex items-center gap-3 border border-gray-200 dark:border-white/5 bg-white/50 dark:bg-white/5">
+                            {user?.photoURL ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={user.photoURL} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-indigo-500/50" />
+                            ) : (
+                                <UserCircle size={40} className="text-gray-400" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-bold text-gray-800 dark:text-white truncate">{user?.displayName?.split(" ")[0] || "Professor"}</p>
+                                <p className="text-xs text-gray-500 truncate">Plano Pro</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={logout}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 rounded-xl transition-colors font-medium border border-transparent hover:border-red-500/20"
+                        >
+                            <LogOut size={16} />
+                            Sair do Portal
+                        </button>
+                    </>
+                )}
             </div>
         </aside>
     );

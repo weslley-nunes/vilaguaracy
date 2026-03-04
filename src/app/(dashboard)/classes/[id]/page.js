@@ -147,6 +147,11 @@ export default function ClassDetailsPage() {
 
     const students = classData.students || [];
 
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => setMounted(true), []);
+
+    if (!mounted) return <div className="text-center py-10">Montando listagem segura...</div>;
+
     return (
         <div className="max-w-5xl mx-auto pb-10">
             {/* Header */}
