@@ -387,17 +387,49 @@ export default function BuilderPage() {
                     <div className="flex items-center justify-between mb-3">
                         <h3 className="font-bold text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2"><FileText size={16} /> Configuração do Cabeçalho</h3>
                         <div className="flex items-center gap-2">
-                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Usar Imagem Completa?</span>
+                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Personalizar Cabeçalho da Escola</span>
                             <button onClick={() => setHeaderConfig({ ...headerConfig, useCustomHeader: !headerConfig.useCustomHeader })} className={`w-8 h-4 flex items-center rounded-full p-0.5 duration-300 ease-in-out ${headerConfig.useCustomHeader ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600'}`}>
                                 <div className={`bg-white w-3 h-3 rounded-full shadow-md transform duration-300 ease-in-out ${headerConfig.useCustomHeader ? 'translate-x-4' : ''}`}></div>
                             </button>
                         </div>
                     </div>
                     {headerConfig.useCustomHeader ? (
-                        <div className="flex gap-4 items-center">
-                            <div className="flex-1">
-                                <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1 block">Link da Imagem</label>
-                                <input type="text" value={headerConfig.customHeaderImageUrl} onChange={(e) => setHeaderConfig({ ...headerConfig, customHeaderImageUrl: e.target.value })} className="w-full p-2 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white bg-gray-50 dark:bg-white/5 text-sm" />
+                        <div className="flex flex-col gap-3">
+                            <div>
+                                <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 block">Upload da Imagem do Cabeçalho</label>
+                                <div className="flex items-center gap-4">
+                                    <label className="cursor-pointer bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50 px-4 py-2 flex items-center gap-2 rounded-lg font-bold text-sm transition-colors border border-indigo-200 dark:border-indigo-800">
+                                        <PlusCircle size={16} />
+                                        Escolher Arquivo
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files[0];
+                                                if (file) {
+                                                    const reader = new FileReader();
+                                                    reader.onloadend = () => {
+                                                        setHeaderConfig({ ...headerConfig, customHeaderImageUrl: reader.result });
+                                                    };
+                                                    reader.readAsDataURL(file);
+                                                }
+                                            }}
+                                        />
+                                    </label>
+                                    {headerConfig.customHeaderImageUrl && (
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-xs text-green-600 font-bold flex items-center gap-1"><Check size={14} /> Imagem Selecionada</span>
+                                            <button
+                                                onClick={() => setHeaderConfig({ ...headerConfig, customHeaderImageUrl: "" })}
+                                                className="text-xs text-red-500 hover:underline"
+                                            >
+                                                Remover
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                                <p className="text-[10px] text-gray-400 mt-2">Dica: Use uma imagem retangular que substitua todo o espaço original (Escola, Professor, etc).</p>
                             </div>
                         </div>
                     ) : (
