@@ -51,8 +51,16 @@ export default function ClassDetailsPage() {
 
         setIsSubmitting(true);
         try {
+            const generateAccessCode = () => {
+                const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excluding confusable I, O, 0, 1
+                let code = '';
+                for (let i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+                return code;
+            };
+
             const newStudent = {
-                id: crypto.randomUUID(), // Generates a unique ID for the student
+                id: crypto.randomUUID(), // Internal DB ID
+                accessCode: generateAccessCode(), // Friendly UI code
                 name: newStudentName,
                 enrollment: newStudentEnrollment || "",
                 addedAt: new Date().toISOString()
@@ -182,7 +190,7 @@ export default function ClassDetailsPage() {
                             {/* Desktop Table Header */}
                             <div className="hidden sm:grid grid-cols-12 gap-4 p-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                 <div className="col-span-2 sm:col-span-1 text-center">QR</div>
-                                <div className="col-span-10 sm:col-span-5">Nome</div>
+                                <div className="col-span-10 sm:col-span-5">Aluno & Código</div>
                                 <div className="col-span-4 sm:col-span-3">Matrícula</div>
                                 <div className="col-span-1 sm:col-span-3 text-right">Ações</div>
                             </div>
@@ -208,8 +216,8 @@ export default function ClassDetailsPage() {
                                         <div className="sm:col-span-5">
                                             <h3 className="font-bold text-gray-900 truncate" title={student.name}>{student.name}</h3>
                                             <div className="flex items-center gap-2 mt-0.5">
-                                                <span className="text-xs text-indigo-500 font-mono bg-indigo-50 px-1.5 py-0.5 rounded truncate max-w-[120px]" title={student.id}>
-                                                    ID: {student.id.substring(0, 8)}
+                                                <span className="text-xs text-indigo-700 font-bold tracking-widest bg-indigo-100 px-2 py-0.5 rounded border border-indigo-200" title="Código de Acesso">
+                                                    {student.accessCode || student.id.substring(0, 6).toUpperCase()}
                                                 </span>
                                                 {/* Mobile only enrollment */}
                                                 {student.enrollment && (

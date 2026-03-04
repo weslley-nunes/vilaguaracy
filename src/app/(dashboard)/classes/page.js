@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { createClass, getClassesByUser, deleteClass } from "@/services/classesService";
-import { Users, Plus, Trash2, FolderOpen } from "lucide-react";
+import { createClass, getClassesByUser, deleteClass, updateClass } from "@/services/classesService";
+import { Users, Plus, Trash2, FolderOpen, Edit2, X } from "lucide-react";
 import Link from "next/link";
 
 export default function ClassesPage() {
@@ -11,6 +11,7 @@ export default function ClassesPage() {
     const [newClassName, setNewClassName] = useState("");
     const [newClassSchool, setNewClassSchool] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [editingClassId, setEditingClassId] = useState(null);
 
     // Initial load states
     const [localClasses, setLocalClasses] = useState([]);
@@ -31,24 +32,46 @@ export default function ClassesPage() {
         fetchClasses();
     }, [user]);
 
-    const handleCreateClass = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!newClassName.trim() || !user) return;
 
         setIsSubmitting(true);
         try {
-            const newClass = await createClass(user.uid, {
-                name: newClassName,
-                school: newClassSchool || "Não informada",
-            });
-            setLocalClasses([newClass, ...localClasses]);
-            setNewClassName("");
-            setNewClassSchool("");
+            if (editingClassId) {
+                await updateClass(editingClassId, {
+                    name: newClassName,
+                    school: newClassSchool || "Não informada",
+                });
+                setLocalClasses(localClasses.map(c =>
+                    c.id === editingClassId ? { ...c, name: newClassName, school: newClassSchool || "Não informada" } : c
+                ));
+                cancelEdit();
+            } else {
+                const newClass = await createClass(user.uid, {
+                    name: newClassName,
+                    school: newClassSchool || "Não informada",
+                });
+                setLocalClasses([newClass, ...localClasses]);
+                cancelEdit();
+            }
         } catch (error) {
-            alert("Erro ao criar turma. Tente novamente.");
+            alert(editingClassId ? "Erro ao salvar alterações da turma." : "Erro ao criar turma. Tente novamente.");
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    const startEdit = (classItem) => {
+        setEditingClassId(classItem.id);
+        setNewClassName(classItem.name);
+        setNewClassSchool(classItem.school === "Não informada" ? "" : classItem.school);
+    };
+
+    const cancelEdit = () => {
+        setEditingClassId(null);
+        setNewClassName("");
+        setNewClassSchool("");
     };
 
     const handleDelete = async (classId) => {
@@ -56,6 +79,7 @@ export default function ClassesPage() {
             try {
                 await deleteClass(classId);
                 setLocalClasses(localClasses.filter(c => c.id !== classId));
+                if (editingClassId === classId) cancelEdit();
             } catch (error) {
                 alert("Erro ao deletar turma");
             }
@@ -74,13 +98,20 @@ export default function ClassesPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Form to create class */}
-                <div className="card h-fit lg:col-span-1">
-                    <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
-                        <Plus size={20} className="text-indigo-600" />
-                        Nova Turma
+                {/* Form to create/edit class */}
+                <div className="card h-fit lg:col-span-1 border-2 border-transparent transition-colors duration-300">
+                    <h2 className="font-bold text-lg mb-4 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            {editingClassId ? <Edit2 size={20} className="text-indigo-600" /> : <Plus size={20} className="text-indigo-600" />}
+                            {editingClassId ? "Editar Turma" : "Nova Turma"}
+                        </div>
+                        {editingClassId && (
+                            <button onClick={cancelEdit} className="text-gray-400 hover:text-gray-600 transition-colors p-1" title="Cancelar Edição">
+                                <X size={18} />
+                            </button>
+                        )}
                     </h2>
-                    <form onSubmit={handleCreateClass} className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Nome da Turma *</label>
                             <input
@@ -88,7 +119,7 @@ export default function ClassesPage() {
                                 value={newClassName}
                                 onChange={(e) => setNewClassName(e.target.value)}
                                 placeholder="Ex: 3º Ano B"
-                                className="w-full border-gray-300 rounded-md"
+                                className={`w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 ${editingClassId ? 'bg-indigo-50/30' : ''}`}
                                 required
                             />
                         </div>
@@ -99,15 +130,15 @@ export default function ClassesPage() {
                                 value={newClassSchool}
                                 onChange={(e) => setNewClassSchool(e.target.value)}
                                 placeholder="Ex: Colégio Estadual"
-                                className="w-full border-gray-300 rounded-md"
+                                className={`w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 ${editingClassId ? 'bg-indigo-50/30' : ''}`}
                             />
                         </div>
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full btn btn-primary flex justify-center items-center gap-2"
+                            className={`w-full btn flex justify-center items-center gap-2 ${editingClassId ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'btn-primary'}`}
                         >
-                            {isSubmitting ? "Criando..." : "Criar Turma"}
+                            {isSubmitting ? "Salvando..." : (editingClassId ? "Salvar Alterações" : "Criar Turma")}
                         </button>
                     </form>
                 </div>
@@ -122,10 +153,10 @@ export default function ClassesPage() {
                         </div>
                     ) : (
                         localClasses.map((classItem) => (
-                            <div key={classItem.id} className="card p-0 overflow-hidden hover:border-indigo-200 transition-colors">
+                            <div key={classItem.id} className={`card p-0 overflow-hidden transition-all duration-300 ${editingClassId === classItem.id ? 'ring-2 ring-indigo-500 shadow-md' : 'hover:border-indigo-200'}`}>
                                 <div className="p-5 flex items-center justify-between">
                                     <div className="flex items-center gap-4">
-                                        <div className="bg-indigo-50 p-3 rounded-lg text-indigo-600">
+                                        <div className={`p-3 rounded-lg ${editingClassId === classItem.id ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-600'} transition-colors`}>
                                             <Users size={24} />
                                         </div>
                                         <div>
@@ -146,13 +177,23 @@ export default function ClassesPage() {
                                     >
                                         Gerenciar Alunos →
                                     </Link>
-                                    <button
-                                        onClick={() => handleDelete(classItem.id)}
-                                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                                        title="Apagar Turma"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
+                                    <div className="flex gap-1.5">
+                                        <button
+                                            onClick={() => startEdit(classItem)}
+                                            className="p-1.5 text-gray-500 hover:text-indigo-600 hover:bg-indigo-100 rounded transition-colors flex items-center gap-1 text-sm border border-transparent hover:border-indigo-200"
+                                            title="Editar Turma"
+                                        >
+                                            <Edit2 size={16} />
+                                            <span className="sr-only sm:not-sr-only sm:text-xs font-medium">Editar</span>
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(classItem.id)}
+                                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors flex items-center gap-1 text-sm border border-transparent hover:border-red-200"
+                                            title="Apagar Turma"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         ))
