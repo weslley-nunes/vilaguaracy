@@ -141,7 +141,7 @@ export default function ClassesPage() {
                                 </div>
                                 <div className="bg-gray-50 px-5 py-3 border-t border-gray-100 flex justify-between items-center">
                                     <Link
-                                        href={`/dashboard/classes/${classItem.id}`}
+                                        href={`/classes/${classItem.id}`}
                                         className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
                                     >
                                         Gerenciar Alunos →

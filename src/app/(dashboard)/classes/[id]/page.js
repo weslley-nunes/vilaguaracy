@@ -33,7 +33,7 @@ export default function ClassDetailsPage() {
                     setClassData(currentClass);
                 } else {
                     alert("Turma não encontrada.");
-                    router.push("/dashboard/classes");
+                    router.push("/classes");
                 }
             } catch (error) {
                 console.error("Erro ao carregar detalhes", error);
