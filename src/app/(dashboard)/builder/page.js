@@ -409,8 +409,30 @@ export default function BuilderPage() {
                                                 const file = e.target.files[0];
                                                 if (file) {
                                                     const reader = new FileReader();
-                                                    reader.onloadend = () => {
-                                                        setHeaderConfig({ ...headerConfig, customHeaderImageUrl: reader.result });
+                                                    reader.onload = (event) => {
+                                                        const img = new Image();
+                                                        img.onload = () => {
+                                                            const canvas = document.createElement('canvas');
+                                                            let width = img.width;
+                                                            let height = img.height;
+                                                            const MAX_WIDTH = 1000; // max width optimized for printing
+
+                                                            if (width > MAX_WIDTH) {
+                                                                height = Math.round((height * MAX_WIDTH) / width);
+                                                                width = MAX_WIDTH;
+                                                            }
+
+                                                            canvas.width = width;
+                                                            canvas.height = height;
+
+                                                            const ctx = canvas.getContext('2d');
+                                                            ctx.drawImage(img, 0, 0, width, height);
+
+                                                            // Convert back to Base64 using JPEG and 80% quality
+                                                            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+                                                            setHeaderConfig({ ...headerConfig, customHeaderImageUrl: compressedBase64 });
+                                                        };
+                                                        img.src = event.target.result;
                                                     };
                                                     reader.readAsDataURL(file);
                                                 }
