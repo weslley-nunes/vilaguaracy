@@ -10,11 +10,11 @@ export default function Sidebar() {
 
     const links = [
         { href: "/dashboard", label: "Início", icon: LayoutDashboard },
-        { href: "/dashboard/classes", label: "Turmas & Alunos", icon: GraduationCap },
-        { href: "/dashboard/builder", label: "Criar Avaliação", icon: FileText },
-        { href: "/dashboard/exams", label: "Minhas Avaliações", icon: FileText },
-        { href: "/dashboard/scanner", label: "Correção IA", icon: Sparkles },
-        { href: "/dashboard/tutorial", label: "Ajuda & Tutoriais", icon: BookOpen },
+        { href: "/classes", label: "Turmas & Alunos", icon: GraduationCap },
+        { href: "/builder", label: "Criar Avaliação", icon: FileText },
+        { href: "/exams", label: "Minhas Avaliações", icon: FileText },
+        { href: "/scanner", label: "Correção IA", icon: Sparkles },
+        { href: "/tutorial", label: "Ajuda & Tutoriais", icon: BookOpen },
     ];
 
     return (
