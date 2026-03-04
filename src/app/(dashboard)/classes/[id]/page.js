@@ -108,7 +108,7 @@ export default function ClassDetailsPage() {
         <div className="max-w-5xl mx-auto pb-10">
             {/* Header */}
             <div className="mb-8">
-                <Link href="/dashboard/classes" className="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-800 mb-4 transition-colors">
+                <Link href="/classes" className="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-800 mb-4 transition-colors">
                     <ArrowLeft size={16} className="mr-1" /> Voltar para turmas
                 </Link>
                 <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4">
