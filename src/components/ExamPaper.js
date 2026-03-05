@@ -1,7 +1,7 @@
 import React, { forwardRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 
-const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = false, isAdapted = false, scoringMode = "auto", totalScore = 10, onQuestionChange = null }, ref) => {
+const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = false, isAdapted = false, scoringMode = "auto", totalScore = 10, onQuestionChange = null, printConfig = {} }, ref) => {
     // Determine exam ID for QR (fallback to timestamp if not provided in headerConfig)
     const examId = headerConfig?.examId || "PREVIEW";
     const studentName = headerConfig?.studentName || "";
