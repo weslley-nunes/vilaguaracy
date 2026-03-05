@@ -1,7 +1,7 @@
 import React, { forwardRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 
-const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = false, isAdapted = false }, ref) => {
+const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = false, isAdapted = false, scoringMode = "auto", totalScore = 10, onQuestionChange = null }, ref) => {
     // Determine exam ID for QR (fallback to timestamp if not provided in headerConfig)
     const examId = headerConfig?.examId || "PREVIEW";
     const studentName = headerConfig?.studentName || "";
@@ -65,9 +65,6 @@ const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = fa
             </div>
 
             {/* INTEGRATED ANSWER SHEET (ONLY IF NOT TEACHER VIEW OR EXPLICITLY ENABLED) */}
-            {/* Logic: Always show unless it's a "Teacher Key" view where we might just want to see answers inline. 
-                But user asked for integrated sheet. So we show it. 
-            */}
             {multipleChoiceQuestions.length > 0 && (
                 <div className="mb-8 border-2 border-dashed border-gray-400 p-4 rounded-lg bg-gray-50 print:bg-transparent print:border-black">
                     <p className="text-center text-xs font-bold uppercase mb-2">Cartão Resposta - Preencha completamente a bolinha</p>
@@ -78,8 +75,6 @@ const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = fa
                                 value={JSON.stringify({
                                     id: examId,
                                     s: studentName,
-                                    // Key logic: We might want encoded answers here for offline grading, 
-                                    // but keep it simple for now (ID lookup) to avoid huge QR codes
                                 })}
                                 size={100}
                             />
@@ -98,14 +93,11 @@ const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = fa
                                         <span className="w-3 text-center">E</span>
                                     </div>
                                     {col.map((q, qIdx) => {
-                                        // Find exact index in original array
                                         const realIndex = questions.indexOf(q) + 1;
                                         return (
                                             <div key={q.id || qIdx} className="flex items-center gap-1 text-xs">
                                                 <span className="font-bold w-5 text-right mr-1">{realIndex}.</span>
                                                 {[0, 1, 2, 3, 4].map((optIdx) => {
-                                                    // Highlighting logic for Teacher View in the grid? Maybe not necessary, usually inline is better.
-                                                    // But let's keep the grid standard.
                                                     return (
                                                         <div key={optIdx} className="w-3 h-3 rounded-full border border-black"></div>
                                                     )
@@ -122,53 +114,86 @@ const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = fa
 
             {/* Questions List */}
             <div className={spacing}>
-                {questions.map((q, index) => (
-                    <div key={q.id || index} className="break-inside-avoid">
-                        <div className="flex gap-2">
-                            <span className="font-bold">{index + 1}.</span>
-                            <div className="flex-1">
-                                <p className={`mb-2 whitespace-pre-wrap ${isAdapted ? 'font-medium' : ''} ${lineHeight}`}>{q.text}</p>
-                                {q.imageUrl && (
-                                    <div className="my-2">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={q.imageUrl} alt="Questão" className="max-h-40 object-contain border rounded-lg" />
-                                    </div>
-                                )}
+                {questions.map((q, index) => {
+                    const autoPoints = questions.length > 0 ? (totalScore / questions.length) : 0;
+                    const questionPoints = scoringMode === 'auto' ? autoPoints : (Number(q.points) || 0);
 
-                                {q.type === 'multiple_choice' && (
-                                    <div className={`pl-4 ${isAdapted ? 'space-y-3' : 'space-y-1'}`}>
-                                        {q.options?.map((opt, i) => {
-                                            const cleanOpt = opt.replace(/^[a-zA-Z\d]+[).:-]\s*/, "");
-                                            const isCorrect = showAnswers && (
-                                                q.correct === opt ||
-                                                q.correct === cleanOpt ||
-                                                // Try to match index if correct is a letter
-                                                q.correct?.toLowerCase() === String.fromCharCode(97 + i)
-                                            );
+                    return (
+                        <div key={q.id || index} className="break-inside-avoid">
+                            <div className="flex gap-2">
+                                <div className="flex flex-col items-center gap-1 w-8 shrink-0">
+                                    <span className="font-bold">{index + 1}.</span>
+                                </div>
+                                <div className="flex-1">
+                                    <div className="flex justify-between items-start gap-4 mb-2">
+                                        <p className={`whitespace-pre-wrap ${isAdapted ? 'font-medium' : ''} ${lineHeight}`}>{q.text}</p>
 
-                                            return (
-                                                <div key={i} className={`flex items-start gap-2 p-1 rounded ${isCorrect ? 'bg-green-100 dark:bg-green-900/30 -ml-1 pl-1' : ''}`}>
-                                                    <span className={`font-medium ${isAdapted ? 'text-lg font-bold' : 'text-sm'} ${isCorrect ? 'text-green-700 font-bold' : ''}`}>({String.fromCharCode(97 + i)})</span>
-                                                    <span className={`${isAdapted ? 'text-lg' : ''} ${isCorrect ? 'text-green-700 font-bold' : ''}`}>{cleanOpt}</span>
-                                                    {isCorrect && <span className="text-green-600 text-xs ml-2 font-bold">✔ Correta</span>}
+                                        {/* Pontuação da Questão */}
+                                        <div className="flex items-center gap-1 shrink-0 whitespace-nowrap text-gray-500">
+                                            {scoringMode === 'manual' && onQuestionChange ? (
+                                                <div className="print:hidden flex items-center gap-1 bg-indigo-50/50 p-1 rounded-lg border border-indigo-100">
+                                                    <input
+                                                        type="number"
+                                                        step="0.5"
+                                                        className="w-14 p-1 text-xs border border-indigo-300 rounded bg-white outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 text-center font-bold text-indigo-700"
+                                                        value={q.points !== undefined ? q.points : 1}
+                                                        onChange={(e) => onQuestionChange(q.id, { points: e.target.value })}
+                                                        title="Valor desta questão"
+                                                    />
+                                                    <span className="text-[10px] uppercase font-bold text-indigo-400">Pts</span>
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
+                                            ) : null}
 
-                                {q.type === 'text' && (
-                                    <div className="mt-2 border-t border-b border-gray-300 h-24 w-full">
-                                        {/* Linhas para resposta */}
-                                        <div className="border-b border-gray-200 h-8"></div>
-                                        <div className="border-b border-gray-200 h-8"></div>
-                                        <div className="border-b border-gray-200 h-8"></div>
+                                            {/* Display Points (Print View or Auto Mode) */}
+                                            {(!onQuestionChange || scoringMode === 'auto') && (
+                                                <span className="font-bold text-[10px] bg-gray-100 px-2 py-0.5 rounded border border-gray-200 text-gray-600 shadow-sm print:bg-transparent print:border-none print:shadow-none print:text-xs">
+                                                    {Number.isInteger(questionPoints) ? questionPoints : questionPoints.toFixed(1)} <span className="uppercase font-normal">Pts</span>
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
-                                )}
+                                    {q.imageUrl && (
+                                        <div className="my-2">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={q.imageUrl} alt="Questão" className="max-h-40 object-contain border rounded-lg" />
+                                        </div>
+                                    )}
+
+                                    {q.type === 'multiple_choice' && (
+                                        <div className={`pl-4 ${isAdapted ? 'space-y-3' : 'space-y-1'}`}>
+                                            {q.options?.map((opt, i) => {
+                                                const cleanOpt = opt.replace(/^[a-zA-Z\d]+[).:-]\s*/, "");
+                                                const isCorrect = showAnswers && (
+                                                    q.correct === opt ||
+                                                    q.correct === cleanOpt ||
+                                                    // Try to match index if correct is a letter
+                                                    q.correct?.toLowerCase() === String.fromCharCode(97 + i)
+                                                );
+
+                                                return (
+                                                    <div key={i} className={`flex items-start gap-2 p-1 rounded ${isCorrect ? 'bg-green-100 dark:bg-green-900/30 -ml-1 pl-1' : ''}`}>
+                                                        <span className={`font-medium ${isAdapted ? 'text-lg font-bold' : 'text-sm'} ${isCorrect ? 'text-green-700 font-bold' : ''}`}>({String.fromCharCode(97 + i)})</span>
+                                                        <span className={`${isAdapted ? 'text-lg' : ''} ${isCorrect ? 'text-green-700 font-bold' : ''}`}>{cleanOpt}</span>
+                                                        {isCorrect && <span className="text-green-600 text-xs ml-2 font-bold">✔ Correta</span>}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+
+                                    {q.type === 'text' && (
+                                        <div className="mt-2 border-t border-b border-gray-300 h-24 w-full">
+                                            {/* Linhas para resposta */}
+                                            <div className="border-b border-gray-200 h-8"></div>
+                                            <div className="border-b border-gray-200 h-8"></div>
+                                            <div className="border-b border-gray-200 h-8"></div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
             {/* Footer / Copyright */}
             <div className="mt-12 pt-4 border-t border-gray-300 text-center text-[10px] text-gray-500 font-medium">

@@ -20,6 +20,9 @@ export default function BuilderPage() {
     const [examQuestions, setExamQuestions] = useState([]);
     const [examTitle, setExamTitle] = useState("Avaliação de História");
 
+    const [scoringMode, setScoringMode] = useState("auto"); // "auto" | "manual"
+    const [totalScore, setTotalScore] = useState(10);
+
     // Header Configuration
     const [headerConfig, setHeaderConfig] = useState({
         schoolName: "Escola Exemplo",
@@ -211,6 +214,8 @@ export default function BuilderPage() {
                 title: examTitle || "Sem título",
                 headerConfig,
                 questions: examQuestions,
+                scoringMode,
+                totalScore: scoringMode === 'auto' ? totalScore : examQuestions.reduce((sum, q) => sum + (Number(q.points) || 0), 0)
                 // Status, dates, and teacherId are handled by the service
             };
 
@@ -255,7 +260,11 @@ export default function BuilderPage() {
     };
 
     const addToExam = (question) => {
-        setExamQuestions([...examQuestions, { ...question, id: Date.now() + Math.random() }]);
+        setExamQuestions([...examQuestions, { ...question, id: Date.now() + Math.random(), points: 1 }]);
+    };
+
+    const updateQuestion = (id, updates) => {
+        setExamQuestions(examQuestions.map(q => q.id === id ? { ...q, ...updates } : q));
     };
 
     // Manual Question Helpers
@@ -378,6 +387,44 @@ export default function BuilderPage() {
                         <button onClick={handleDiagnostics} className="btn btn-outline py-2 text-gray-500 border-gray-200 hover:bg-gray-100" title="Diagnóstico de Conexão"><Activity size={18} /></button>
                         <button onClick={saveExam} disabled={isSaving} className="btn btn-outline py-2 text-indigo-600 border-indigo-200 hover:bg-indigo-50">{isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} <span className="hidden sm:inline">Salvar</span></button>
                         <button onClick={handlePrintRequest} className="btn btn-primary py-2 shadow-lg shadow-indigo-200"><Printer size={18} /> <span className="hidden sm:inline">Imprimir / PDF</span></button>
+                    </div>
+                </div>
+
+                {/* Scoring Config Panel */}
+                <div className="bg-white dark:bg-white/5 p-4 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm mb-4">
+                    <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+                        <div className="flex items-center gap-6">
+                            <div>
+                                <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Sistema de Pontuação</label>
+                                <select value={scoringMode} onChange={(e) => setScoringMode(e.target.value)} className="p-2 border border-gray-300 rounded-lg text-sm outline-none focus:border-indigo-500 bg-white">
+                                    <option value="auto">Automático (Igualitário)</option>
+                                    <option value="manual">Manual (Por Questão)</option>
+                                </select>
+                            </div>
+                            {scoringMode === 'auto' && (
+                                <div>
+                                    <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Nota Total da Prova</label>
+                                    <input type="number" step="0.5" value={totalScore} onChange={(e) => setTotalScore(Number(e.target.value))} className="p-2 border border-gray-300 rounded-lg text-sm outline-none focus:border-indigo-500 w-24 bg-white" />
+                                </div>
+                            )}
+                        </div>
+                        <div>
+                            {scoringMode === 'auto' ? (
+                                <div className="text-right">
+                                    <span className="text-sm font-bold text-indigo-600 block">
+                                        {examQuestions.length > 0 ? (totalScore / examQuestions.length).toFixed(1) : 0} pts por questão
+                                    </span>
+                                    <span className="text-[10px] text-gray-500 uppercase font-bold">Valor distribuído igualmente</span>
+                                </div>
+                            ) : (
+                                <div className="text-right">
+                                    <span className="text-sm font-bold text-indigo-600 block">
+                                        Total: {examQuestions.reduce((acc, q) => acc + (Number(q.points) || 0), 0)} pts
+                                    </span>
+                                    <span className="text-[10px] text-gray-500 uppercase font-bold">Soma da pontuação manual</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -514,6 +561,9 @@ export default function BuilderPage() {
                             title={examTitle}
                             headerConfig={headerConfig}
                             showAnswers={showAnswers}
+                            scoringMode={scoringMode}
+                            totalScore={totalScore}
+                            onQuestionChange={updateQuestion}
                         />
                     </div>
                 </div>
@@ -527,25 +577,24 @@ export default function BuilderPage() {
                             {/* Page Break logic: first item doesn't strictly need one but subsequent do. 'page-break-before: always' handles this. */}
                             <style>{`@media print { .page-break { page-break-before: always; } }`}</style>
 
-                            {/* Exam Paper with Integrated OMR */}
                             <ExamPaper
                                 questions={v.questions}
                                 title={examTitle}
                                 headerConfig={{
                                     ...headerConfig,
                                     studentName: v.student || "________________",
-                                    examId: v.id, // For QR
-                                    // Use 'v.variationIndex' if we want to show "Prova Tipo A" etc.
+                                    examId: v.id,
                                 }}
-                                // Typically we DONT show answers in student prints unless requested
                                 showAnswers={false}
                                 isAdapted={v.isAdapted}
+                                scoringMode={scoringMode}
+                                totalScore={totalScore}
                             />
                         </div>
                     ))}
                     {/* Fallback */}
                     {printVariations.length === 0 && (
-                        <ExamPaper questions={examQuestions} title={examTitle} headerConfig={headerConfig} />
+                        <ExamPaper questions={examQuestions} title={examTitle} headerConfig={headerConfig} scoringMode={scoringMode} totalScore={totalScore} />
                     )}
                 </div>
             </div>
