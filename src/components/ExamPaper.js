@@ -128,10 +128,10 @@ const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = fa
                                     <div className="flex justify-between items-start gap-4 mb-2">
                                         <div className="flex-1">
                                             <p className={`whitespace-pre-wrap inline ${isAdapted ? 'font-medium' : ''} ${lineHeight}`}>
-                                                {q.text}
+                                                {typeof q.text === 'string' ? q.text : String(q.text || "")}
                                                 {q.bncc && q.bncc !== "N/A" && printConfig?.showBNCC !== false && (
                                                     <span className="ml-2 px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 text-[9px] font-bold rounded-full uppercase tracking-wider inline-flex items-center align-middle relative -top-0.5 print:border-gray-300 print:text-gray-500 print:bg-transparent">
-                                                        {q.bncc}
+                                                        {typeof q.bncc === 'string' ? q.bncc : String(q.bncc)}
                                                     </span>
                                                 )}
                                             </p>
@@ -168,15 +168,18 @@ const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = fa
                                         </div>
                                     )}
 
-                                    {q.type === 'multiple_choice' && (
+                                    {q.type === 'multiple_choice' && Array.isArray(q.options) && (
                                         <div className={`pl-4 ${isAdapted ? 'space-y-3' : 'space-y-1'}`}>
-                                            {q.options?.map((opt, i) => {
-                                                const cleanOpt = opt.replace(/^[a-zA-Z\d]+[).:-]\s*/, "");
+                                            {q.options.map((opt, i) => {
+                                                const optStr = typeof opt === 'string' ? opt : String(opt || "");
+                                                const cleanOpt = optStr.replace(/^[a-zA-Z\d]+[).:-]\s*/, "");
+                                                const correctStr = String(q.correct || "");
+
                                                 const isCorrect = showAnswers && (
-                                                    q.correct === opt ||
-                                                    q.correct === cleanOpt ||
+                                                    correctStr === optStr ||
+                                                    correctStr === cleanOpt ||
                                                     // Try to match index if correct is a letter
-                                                    q.correct?.toLowerCase() === String.fromCharCode(97 + i)
+                                                    correctStr.toLowerCase() === String.fromCharCode(97 + i)
                                                 );
 
                                                 return (
