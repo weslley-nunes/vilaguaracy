@@ -60,9 +60,8 @@ export default function BuilderPage() {
         studentList: "", // Text area content
         copies: 1,
         adaptedCopies: 0, // New: Copies with large font/accessibility
-        // includeAnswerSheet removed as separate toggle, assume integrated. Or repurpose to "Hide OMR"?
-        // User asked for it to be integrated. We can keep a toggle to HIDE it if desired.
-        showOMR: true
+        showOMR: true,
+        showBNCC: true // Toggle for showing BNCC tags on the printed paper
     });
 
     // shuffling helper
@@ -564,6 +563,7 @@ export default function BuilderPage() {
                             scoringMode={scoringMode}
                             totalScore={Number(totalScore) || 10}
                             onQuestionChange={updateQuestion}
+                            printConfig={printConfig}
                         />
                     </div>
                 </div>
@@ -589,12 +589,13 @@ export default function BuilderPage() {
                                 isAdapted={v.isAdapted}
                                 scoringMode={scoringMode}
                                 totalScore={Number(totalScore) || 10}
+                                printConfig={printConfig}
                             />
                         </div>
                     ))}
                     {/* Fallback */}
                     {printVariations.length === 0 && (
-                        <ExamPaper questions={examQuestions} title={examTitle} headerConfig={headerConfig} scoringMode={scoringMode} totalScore={Number(totalScore) || 10} />
+                        <ExamPaper questions={examQuestions} title={examTitle} headerConfig={headerConfig} scoringMode={scoringMode} totalScore={Number(totalScore) || 10} printConfig={printConfig} />
                     )}
                 </div>
             </div>
@@ -647,8 +648,20 @@ export default function BuilderPage() {
                                             <p className="text-xs text-gray-500">Muda a ordem das opções (A, B, C...) em cada questão.</p>
                                         </div>
                                     </label>
+
+                                    <label className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-white/10 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                                        <div className={`w-5 h-5 rounded flex items-center justify-center border ${printConfig.showBNCC ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-gray-300'}`}>
+                                            {printConfig.showBNCC && <Check size={14} />}
+                                        </div>
+                                        <input type="checkbox" className="hidden" checked={printConfig.showBNCC} onChange={(e) => setPrintConfig({ ...printConfig, showBNCC: e.target.checked })} />
+                                        <div className="flex-1">
+                                            <div className="font-bold text-sm text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                                                <FileText size={14} /> Exibir Códigos BNCC
+                                            </div>
+                                            <p className="text-xs text-gray-500">Mostra a habilidade da BNCC (ex: EF06HI02) caso disponível na prova de cada aluno.</p>
+                                        </div>
+                                    </label>
                                 </div>
-                                {/* OMR Toggle removed as user wants it integrated. We could add "Hide OMR" if requested later. */}
                             </div>
 
                             {/* Right: Students/Copies */}

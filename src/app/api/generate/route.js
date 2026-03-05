@@ -18,12 +18,14 @@ export async function POST(req) {
                         type: 'multiple_choice',
                         text: `MOCK: Questão de ${topic} (${difficulty}) para ${level}`,
                         options: ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D'],
-                        correct: 'A'
+                        correct: 'A',
+                        bncc: 'EF06HI02'
                     },
                     {
                         id: Date.now() + 2,
                         type: 'text',
-                        text: `MOCK: Explique o conceito de ${topic} considerando o nível ${level}.`
+                        text: `MOCK: Explique o conceito de ${topic} considerando o nível ${level}.`,
+                        bncc: 'EM13CHS101'
                     }
                 ]
             });
@@ -57,6 +59,7 @@ export async function POST(req) {
                     
                     Gere 3 questões seguindo estritamente este nível e dificuldade.
                     Misture questões de múltipla escolha e dissertativas.
+                    Como especialista, identifique o código da habilidade da BNCC (Base Nacional Comum Curricular) mais adequado para cada questão.
                     
                     Responda APENAS com um JSON válido seguindo esta estrutura, sem markdown (backticks):
                     {
@@ -65,7 +68,8 @@ export async function POST(req) {
                                 "text": "Enunciado da questão",
                                 "type": "multiple_choice" | "text",
                                 "options": ["Opção A", "Opção B", "Opção C", "Opção D"], // Apenas se for multiple_choice
-                                "correct": "A" // Letra da correta ou resposta esperada
+                                "correct": "A", // Letra da correta ou resposta esperada
+                                "bncc": "EF06HI02" // Código da BNCC (ou "N/A" se não aplicável)
                             }
                         ]
                     }

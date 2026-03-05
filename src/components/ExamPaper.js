@@ -126,7 +126,16 @@ const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = fa
                                 </div>
                                 <div className="flex-1">
                                     <div className="flex justify-between items-start gap-4 mb-2">
-                                        <p className={`whitespace-pre-wrap ${isAdapted ? 'font-medium' : ''} ${lineHeight}`}>{q.text}</p>
+                                        <div className="flex-1">
+                                            <p className={`whitespace-pre-wrap inline ${isAdapted ? 'font-medium' : ''} ${lineHeight}`}>
+                                                {q.text}
+                                                {q.bncc && q.bncc !== "N/A" && printConfig?.showBNCC !== false && (
+                                                    <span className="ml-2 px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 text-[9px] font-bold rounded-full uppercase tracking-wider inline-flex items-center align-middle relative -top-0.5 print:border-gray-300 print:text-gray-500 print:bg-transparent">
+                                                        {q.bncc}
+                                                    </span>
+                                                )}
+                                            </p>
+                                        </div>
 
                                         {/* Pontuação da Questão */}
                                         <div className="flex items-center gap-1 shrink-0 whitespace-nowrap text-gray-500">
@@ -146,7 +155,7 @@ const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = fa
 
                                             {/* Display Points (Print View or Auto Mode) */}
                                             {(!onQuestionChange || scoringMode === 'auto') && (
-                                                <span className="font-bold text-[10px] bg-gray-100 px-2 py-0.5 rounded border border-gray-200 text-gray-600 shadow-sm print:bg-transparent print:border-none print:shadow-none print:text-xs">
+                                                <span className="font-bold text-[10px] bg-gray-100 px-2 py-0.5 rounded border border-gray-200 text-gray-600 shadow-sm print:bg-transparent print:border-none print:shadow-none print:text-xs pt-1">
                                                     {Number.isInteger(questionPoints) ? questionPoints : questionPoints.toFixed(1)} <span className="uppercase font-normal">Pts</span>
                                                 </span>
                                             )}
