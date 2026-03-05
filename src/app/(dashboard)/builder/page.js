@@ -12,8 +12,8 @@ import { Sparkles, PlusCircle, Printer, Save, Trash, ArrowRight, Loader2, FileTe
 export default function BuilderPage() {
     const { user } = useAuth();
     const [topic, setTopic] = useState("");
-    const [difficulty, setDifficulty] = useState("Médio");
     const [level, setLevel] = useState("Ensino Médio");
+    const [year, setYear] = useState("1ª Série"); // Default year for the default level
     const [isGenerating, setIsGenerating] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [generatedQuestions, setGeneratedQuestions] = useState([]);
@@ -22,6 +22,14 @@ export default function BuilderPage() {
 
     const [scoringMode, setScoringMode] = useState("auto"); // "auto" | "manual"
     const [totalScore, setTotalScore] = useState(10);
+
+    // Level & Year Mapping
+    const LEVEL_YEARS = {
+        "Fundamental 1": ["1º Ano", "2º Ano", "3º Ano", "4º Ano", "5º Ano"],
+        "Fundamental 2": ["6º Ano", "7º Ano", "8º Ano", "9º Ano"],
+        "Ensino Médio": ["1ª Série", "2ª Série", "3ª Série"],
+        "Ensino Superior": ["Superior (Geral)", "1º Semestre", "2º Semestre", "3º Semestre", "4º Semestre", "5º Semestre", "6º Semestre", "7º Semestre", "8º Semestre", "9º Semestre", "10º Semestre"]
+    };
 
     // Header Configuration
     const [headerConfig, setHeaderConfig] = useState({
@@ -241,7 +249,7 @@ export default function BuilderPage() {
         try {
             const res = await fetch('/api/generate', {
                 method: 'POST',
-                body: JSON.stringify({ topic, difficulty, level }),
+                body: JSON.stringify({ topic, difficulty, level, year }),
             });
             const data = await res.json();
 
@@ -308,11 +316,29 @@ export default function BuilderPage() {
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-3 gap-3">
                             <div>
                                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Nível</label>
-                                <select value={level} onChange={(e) => setLevel(e.target.value)} className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-gray-100 bg-white dark:bg-white/5 focus:border-indigo-500 outline-none text-sm">
-                                    <option>Fundamental 1</option><option>Fundamental 2</option><option>Ensino Médio</option><option>Ensino Superior</option>
+                                <select
+                                    value={level}
+                                    onChange={(e) => {
+                                        const newLevel = e.target.value;
+                                        setLevel(newLevel);
+                                        setYear(LEVEL_YEARS[newLevel][0]); // Reset year to first option of new level
+                                    }}
+                                    className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-gray-100 bg-white dark:bg-white/5 focus:border-indigo-500 outline-none text-sm"
+                                >
+                                    {Object.keys(LEVEL_YEARS).map(l => (
+                                        <option key={l} value={l}>{l}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Ano/Série</label>
+                                <select value={year} onChange={(e) => setYear(e.target.value)} className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-gray-100 bg-white dark:bg-white/5 focus:border-indigo-500 outline-none text-sm">
+                                    {LEVEL_YEARS[level]?.map(y => (
+                                        <option key={y} value={y}>{y}</option>
+                                    ))}
                                 </select>
                             </div>
                             <div>

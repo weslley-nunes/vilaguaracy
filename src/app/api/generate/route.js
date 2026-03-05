@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function POST(req) {
     try {
-        const { topic, difficulty = "Médio", level = "Ensino Médio" } = await req.json();
+        const { topic, difficulty = "Médio", level = "Ensino Médio", year = "Geral" } = await req.json();
 
         // Use Gemini API Key
         const apiKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY; // Fallback to avoid breaking if they put it in the old var
@@ -16,7 +16,7 @@ export async function POST(req) {
                     {
                         id: Date.now() + 1,
                         type: 'multiple_choice',
-                        text: `MOCK: Questão de ${topic} (${difficulty}) para ${level}`,
+                        text: `MOCK: Questão de ${topic} (${difficulty}) para ${level} - ${year}`,
                         options: ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D'],
                         correct: 'A',
                         bncc: 'EF06HI02'
@@ -24,7 +24,7 @@ export async function POST(req) {
                     {
                         id: Date.now() + 2,
                         type: 'text',
-                        text: `MOCK: Explique o conceito de ${topic} considerando o nível ${level}.`,
+                        text: `MOCK: Explique o conceito de ${topic} considerando o nível ${level} e ano ${year}.`,
                         bncc: 'EM13CHS101'
                     }
                 ]
@@ -55,9 +55,10 @@ export async function POST(req) {
                     
                     Tópico: ${topic}
                     Nível de Ensino: ${level}
+                    Ano Escolar/Série: ${year}
                     Dificuldade: ${difficulty}
                     
-                    Gere 3 questões seguindo estritamente este nível e dificuldade.
+                    Gere 3 questões seguindo estritamente este nível, ano escolar e dificuldade. Use vocabulário adequado para a idade dos alunos desta etapa formativa.
                     Misture questões de múltipla escolha e dissertativas.
                     Como especialista, identifique o código da habilidade da BNCC (Base Nacional Comum Curricular) mais adequado para cada questão.
                     
