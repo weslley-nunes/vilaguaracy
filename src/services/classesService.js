@@ -39,14 +39,21 @@ export const getClassesByUser = async (userId) => {
     try {
         const q = query(
             collection(db, COLLECTION_NAME),
-            where("userId", "==", userId),
-            orderBy("createdAt", "desc")
+            where("userId", "==", userId)
         );
         const querySnapshot = await getDocs(q);
         const classes = [];
         querySnapshot.forEach((doc) => {
             classes.push({ id: doc.id, ...doc.data() });
         });
+
+        // Ordenação local para evitar a exigência de Compound Index no Firebase
+        classes.sort((a, b) => {
+            const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt || 0);
+            const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt || 0);
+            return timeB - timeA;
+        });
+
         return classes;
     } catch (error) {
         console.error("Erro ao buscar turmas:", error);
