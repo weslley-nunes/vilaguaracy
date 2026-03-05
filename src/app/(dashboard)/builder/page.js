@@ -215,7 +215,7 @@ export default function BuilderPage() {
                 headerConfig,
                 questions: examQuestions,
                 scoringMode,
-                totalScore: scoringMode === 'auto' ? totalScore : examQuestions.reduce((sum, q) => sum + (Number(q.points) || 0), 0)
+                totalScore: scoringMode === 'auto' ? (Number(totalScore) || 10) : examQuestions.reduce((sum, q) => sum + (Number(q.points) || 0), 0)
                 // Status, dates, and teacherId are handled by the service
             };
 
@@ -404,7 +404,7 @@ export default function BuilderPage() {
                             {scoringMode === 'auto' && (
                                 <div>
                                     <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Nota Total da Prova</label>
-                                    <input type="number" step="0.5" value={totalScore} onChange={(e) => setTotalScore(Number(e.target.value))} className="p-2 border border-gray-300 rounded-lg text-sm outline-none focus:border-indigo-500 w-24 bg-white" />
+                                    <input type="number" step="0.5" min="0" value={totalScore === "" ? "" : totalScore} onBlur={(e) => { if (e.target.value === "" || Number(e.target.value) <= 0) setTotalScore(10); }} onChange={(e) => setTotalScore(e.target.value === "" ? "" : Number(e.target.value))} className="p-2 border border-gray-300 rounded-lg text-sm outline-none focus:border-indigo-500 w-24 bg-white" placeholder="10" />
                                 </div>
                             )}
                         </div>
@@ -412,7 +412,7 @@ export default function BuilderPage() {
                             {scoringMode === 'auto' ? (
                                 <div className="text-right">
                                     <span className="text-sm font-bold text-indigo-600 block">
-                                        {examQuestions.length > 0 ? (totalScore / examQuestions.length).toFixed(1) : 0} pts por questão
+                                        {examQuestions.length > 0 ? ((Number(totalScore) || 10) / examQuestions.length).toFixed(1) : 0} pts por questão
                                     </span>
                                     <span className="text-[10px] text-gray-500 uppercase font-bold">Valor distribuído igualmente</span>
                                 </div>
@@ -562,7 +562,7 @@ export default function BuilderPage() {
                             headerConfig={headerConfig}
                             showAnswers={showAnswers}
                             scoringMode={scoringMode}
-                            totalScore={totalScore}
+                            totalScore={Number(totalScore) || 10}
                             onQuestionChange={updateQuestion}
                         />
                     </div>
@@ -588,13 +588,13 @@ export default function BuilderPage() {
                                 showAnswers={false}
                                 isAdapted={v.isAdapted}
                                 scoringMode={scoringMode}
-                                totalScore={totalScore}
+                                totalScore={Number(totalScore) || 10}
                             />
                         </div>
                     ))}
                     {/* Fallback */}
                     {printVariations.length === 0 && (
-                        <ExamPaper questions={examQuestions} title={examTitle} headerConfig={headerConfig} scoringMode={scoringMode} totalScore={totalScore} />
+                        <ExamPaper questions={examQuestions} title={examTitle} headerConfig={headerConfig} scoringMode={scoringMode} totalScore={Number(totalScore) || 10} />
                     )}
                 </div>
             </div>
