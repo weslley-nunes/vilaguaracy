@@ -458,7 +458,44 @@ export default function BuilderPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                             <div><label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Escola</label><input type="text" value={headerConfig.schoolName} onChange={(e) => setHeaderConfig({ ...headerConfig, schoolName: e.target.value })} className="w-full p-2 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white bg-white dark:bg-black/20 text-sm" /></div>
                             <div><label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Professor</label><input type="text" value={headerConfig.teacherName} onChange={(e) => setHeaderConfig({ ...headerConfig, teacherName: e.target.value })} className="w-full p-2 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white bg-white dark:bg-black/20 text-sm" /></div>
-                            <div><label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Logo URL</label><input type="text" value={headerConfig.logoUrl} onChange={(e) => setHeaderConfig({ ...headerConfig, logoUrl: e.target.value })} className="w-full p-2 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white bg-white dark:bg-black/20 text-sm" /></div>
+                            <div className="flex flex-col flex-1 pl-2">
+                                <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Logo Turma</label>
+                                {headerConfig.logoUrl ? (
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <div className="w-8 h-8 rounded border overflow-hidden">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={headerConfig.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                                        </div>
+                                        <button onClick={() => setHeaderConfig({ ...headerConfig, logoUrl: "" })} className="text-xs text-red-500 hover:underline flex items-center"><X size={12} /> Remover</button>
+                                    </div>
+                                ) : (
+                                    <label className="cursor-pointer text-xs flex justify-center py-2 px-1 border border-dashed border-gray-400 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 text-gray-600 dark:text-gray-300">
+                                        <span className="flex items-center gap-1"><PlusCircle size={14} /> Enviar Logo</span>
+                                        <input
+                                            type="file" accept="image/*" className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files[0];
+                                                if (!file) return;
+                                                const reader = new FileReader();
+                                                reader.onload = (event) => {
+                                                    const img = new Image();
+                                                    img.onload = () => {
+                                                        const canvas = document.createElement('canvas');
+                                                        let width = img.width; let height = img.height;
+                                                        const MAX_WIDTH = 200; // tamanho moderado para logos pequenas
+                                                        if (width > MAX_WIDTH) { height = Math.round((height * MAX_WIDTH) / width); width = MAX_WIDTH; }
+                                                        canvas.width = width; canvas.height = height;
+                                                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                                                        setHeaderConfig({ ...headerConfig, logoUrl: canvas.toDataURL('image/png', 0.9) });
+                                                    };
+                                                    img.src = event.target.result;
+                                                };
+                                                reader.readAsDataURL(file);
+                                            }}
+                                        />
+                                    </label>
+                                )}
+                            </div>
                             <div className="flex gap-2 items-end">
                                 <div className="flex-1"><label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Turma</label><input type="text" value={headerConfig.className} onChange={(e) => setHeaderConfig({ ...headerConfig, className: e.target.value })} className="w-full p-2 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white bg-white dark:bg-black/20 text-sm" /></div>
                                 <div className="flex items-center gap-1 mb-2">

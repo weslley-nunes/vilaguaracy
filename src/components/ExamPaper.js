@@ -170,6 +170,12 @@ const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = fa
                     </div>
                 ))}
             </div>
+            {/* Footer / Copyright */}
+            <div className="mt-12 pt-4 border-t border-gray-300 text-center text-[10px] text-gray-500 font-medium">
+                <p>
+                    Desenvolvido por <a href="https://corrigelab.com.br" target="_blank" rel="noopener noreferrer" className="text-indigo-600 font-bold hover:underline">corrigelab</a> - Realize sua avaliação também acessando: <span className="font-mono">corrigelab.com.br</span>
+                </p>
+            </div>
         </div>
     );
 });
