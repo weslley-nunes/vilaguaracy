@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { db } from "@/services/firebase";
 import { collection, addDoc, getDocs, limit, query, deleteDoc, doc } from "firebase/firestore";
 import { ExamService } from "@/services/examService";
+import { getClassesByUser } from "@/services/classesService";
 import ExamPaper from "@/components/ExamPaper";
 // AnswerSheet import removed as it is now integrated
 import { useReactToPrint } from "react-to-print";
@@ -20,6 +21,9 @@ export default function BuilderPage() {
     const [generatedQuestions, setGeneratedQuestions] = useState([]);
     const [examQuestions, setExamQuestions] = useState([]);
     const [examTitle, setExamTitle] = useState("Avaliação de História");
+
+    const [classes, setClasses] = useState([]);
+    const [selectedClass, setSelectedClass] = useState("");
 
     const [scoringMode, setScoringMode] = useState("auto"); // "auto" | "manual"
     const [totalScore, setTotalScore] = useState(10);
@@ -83,8 +87,16 @@ export default function BuilderPage() {
         return newArr;
     };
 
-    const handlePrintRequest = () => {
+    const handlePrintRequest = async () => {
         setIsPrintModalOpen(true);
+        if (user) {
+            try {
+                const userClasses = await getClassesByUser(user.uid);
+                setClasses(userClasses);
+            } catch (error) {
+                console.error("Erro ao buscar turmas:", error);
+            }
+        }
     };
 
     const generateAndPrint = async () => {
@@ -123,7 +135,8 @@ export default function BuilderPage() {
                 student: students[i] || "",
                 questions: currentQuestions,
                 variationIndex: i,
-                isAdapted: false // Standard version
+                isAdapted: false, // Standard version
+                classId: selectedClass || null
             });
         }
 
@@ -616,6 +629,7 @@ export default function BuilderPage() {
                                     ...headerConfig,
                                     studentName: v.student || "________________",
                                     examId: v.id,
+                                    classId: v.classId,
                                 }}
                                 showAnswers={false}
                                 isAdapted={v.isAdapted}
@@ -699,6 +713,32 @@ export default function BuilderPage() {
                             {/* Right: Students/Copies */}
                             <div className="space-y-4">
                                 <h4 className="font-bold text-sm text-gray-400 uppercase tracking-wide">Destinatários</h4>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-gray-700 dark:text-gray-300 block">
+                                        Importar Turma
+                                    </label>
+                                    <select
+                                        className="w-full p-3 rounded-xl border border-gray-300 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:border-indigo-500 outline-none"
+                                        value={selectedClass}
+                                        onChange={(e) => {
+                                            const classId = e.target.value;
+                                            setSelectedClass(classId);
+                                            const selectedClassObj = classes.find(c => c.id === classId);
+                                            if (selectedClassObj && selectedClassObj.students) {
+                                                const studentNames = selectedClassObj.students.map(s => s.name).join('\n');
+                                                setPrintConfig(prev => ({ ...prev, studentList: studentNames }));
+                                            } else {
+                                                setPrintConfig(prev => ({ ...prev, studentList: "" }));
+                                            }
+                                        }}
+                                    >
+                                        <option value="">-- Preencher manualmente --</option>
+                                        {classes.map(c => (
+                                            <option key={c.id} value={c.id}>{c.name} ({c.students?.length || 0} alunos)</option>
+                                        ))}
+                                    </select>
+                                </div>
 
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-gray-700 dark:text-gray-300 block">

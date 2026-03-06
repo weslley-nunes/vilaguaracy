@@ -75,6 +75,7 @@ const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = fa
                                 value={JSON.stringify({
                                     id: examId,
                                     s: studentName,
+                                    ...(headerConfig?.classId && { c: headerConfig.classId })
                                 })}
                                 size={100}
                             />
