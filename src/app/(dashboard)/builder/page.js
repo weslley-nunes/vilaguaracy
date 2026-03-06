@@ -14,6 +14,7 @@ export default function BuilderPage() {
     const [topic, setTopic] = useState("");
     const [level, setLevel] = useState("Ensino Médio");
     const [year, setYear] = useState("1ª Série"); // Default year for the default level
+    const [difficulty, setDifficulty] = useState("Médio");
     const [isGenerating, setIsGenerating] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [generatedQuestions, setGeneratedQuestions] = useState([]);
@@ -287,6 +288,11 @@ export default function BuilderPage() {
     const updateOption = (index, value) => {
         const newOptions = [...manualQuestion.options];
         newOptions[index] = value;
+        setManualQuestion({ ...manualQuestion, options: newOptions });
+    };
+    const removeOption = (index) => {
+        const newOptions = [...manualQuestion.options];
+        newOptions.splice(index, 1);
         setManualQuestion({ ...manualQuestion, options: newOptions });
     };
 
