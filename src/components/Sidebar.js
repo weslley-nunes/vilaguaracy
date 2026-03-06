@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, GraduationCap, FileText, UserCircle, LogOut, Sparkles, BookOpen } from "lucide-react";
+import { LayoutDashboard, GraduationCap, FileText, UserCircle, LogOut, Sparkles, BookOpen, BarChart2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 export default function Sidebar() {
@@ -15,6 +15,7 @@ export default function Sidebar() {
         { href: "/builder", label: "Criar Avaliação", icon: FileText },
         { href: "/exams", label: "Minhas Avaliações", icon: FileText },
         { href: "/scanner", label: "Correção IA", icon: Sparkles },
+        { href: "/acompanhamento", label: "Acompanhamento", icon: BarChart2 },
         { href: "/tutorial", label: "Ajuda & Tutoriais", icon: BookOpen },
     ];
 
