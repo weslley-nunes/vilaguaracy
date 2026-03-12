@@ -64,49 +64,54 @@ const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = fa
                 )}
             </div>
 
-            {/* INTEGRATED ANSWER SHEET (ONLY IF NOT TEACHER VIEW OR EXPLICITLY ENABLED) */}
+            {/* INTEGRATED ANSWER SHEET - Standardized Square for Precise Capture */}
             {multipleChoiceQuestions.length > 0 && (
-                <div className="mb-8 border-2 border-dashed border-gray-400 p-4 rounded-lg bg-gray-50 print:bg-transparent print:border-black relative">
-                    {/* Aligment Markers for Mobile App */}
-                    <div className="absolute top-0 left-0 w-2.5 h-2.5 bg-black print:block hidden"></div>
-                    <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-black print:block hidden"></div>
-                    <div className="absolute bottom-0 left-0 w-2.5 h-2.5 bg-black print:block hidden"></div>
-                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-black print:block hidden"></div>
+                <div className="mb-12 border-2 border-black p-8 rounded-xl bg-gray-50 print:bg-transparent print:border-black relative aspect-square w-full max-w-[650px] mx-auto flex flex-col items-center justify-center">
+                    {/* High-Precision Alignment Markers */}
+                    <div className="absolute top-0 left-0 w-4 h-4 bg-black print:block"></div>
+                    <div className="absolute top-0 right-0 w-4 h-4 bg-black print:block"></div>
+                    <div className="absolute bottom-0 left-0 w-4 h-4 bg-black print:block"></div>
+                    <div className="absolute bottom-0 right-0 w-4 h-4 bg-black print:block"></div>
 
-                    <p className="text-center text-xs font-bold uppercase mb-2">Cartão Resposta - Preencha completamente a bolinha</p>
-                    <div className="flex gap-4">
-                        {/* QR Code */}
-                        <div className="flex flex-col items-center justify-center border-r border-gray-300 pr-4">
+                    <p className="text-center text-sm font-bold uppercase mb-6 tracking-widest border-b border-black pb-2 w-full">Folha de Respostas Oficial</p>
+                    
+                    <div className="flex flex-col md:flex-row gap-8 items-center justify-center w-full">
+                        {/* QR Code Section */}
+                        <div className="flex flex-col items-center justify-center p-4 border-2 border-black rounded-lg bg-white">
                             <QRCodeSVG
                                 value={JSON.stringify({
                                     id: examId,
                                     s: studentName,
                                     ...(headerConfig?.classId && { c: headerConfig.classId })
                                 })}
-                                size={100}
+                                size={120}
+                                level="H"
                             />
-                            <span className="text-[10px] font-mono mt-1">{examId.slice(-6)}</span>
+                            <div className="mt-2 flex flex-col items-center">
+                                <span className="text-[12px] font-bold font-mono">ID: {examId.slice(-6)}</span>
+                                <span className="text-[10px] uppercase font-bold text-gray-600 mt-1">{studentName.slice(0, 20)}</span>
+                            </div>
                         </div>
 
-                        {/* Bubbles Grid */}
-                        <div className="flex-1 flex gap-6 justify-center">
+                        {/* Bubbles Grid Section */}
+                        <div className="flex gap-8 justify-center items-start p-4 bg-white border-2 border-black rounded-lg">
                             {gridColumns.map((col, colIdx) => (
-                                <div key={colIdx} className="space-y-1">
-                                    <div className="flex gap-1 pl-6 mb-1 text-[10px] font-bold">
-                                        <span className="w-3 text-center">A</span>
-                                        <span className="w-3 text-center">B</span>
-                                        <span className="w-3 text-center">C</span>
-                                        <span className="w-3 text-center">D</span>
-                                        <span className="w-3 text-center">E</span>
+                                <div key={colIdx} className="space-y-2">
+                                    <div className="flex gap-2 pl-8 mb-1 text-[12px] font-black">
+                                        <span className="w-4 text-center">A</span>
+                                        <span className="w-4 text-center">B</span>
+                                        <span className="w-4 text-center">C</span>
+                                        <span className="w-4 text-center">D</span>
+                                        <span className="w-4 text-center">E</span>
                                     </div>
                                     {col.map((q, qIdx) => {
                                         const realIndex = questions.indexOf(q) + 1;
                                         return (
-                                            <div key={q.id || qIdx} className="flex items-center gap-1 text-xs">
-                                                <span className="font-bold w-5 text-right mr-1">{realIndex}.</span>
+                                            <div key={q.id || qIdx} className="flex items-center gap-2 text-sm">
+                                                <span className="font-black w-6 text-right mr-2">{realIndex}.</span>
                                                 {[0, 1, 2, 3, 4].map((optIdx) => {
                                                     return (
-                                                        <div key={optIdx} className="w-3 h-3 rounded-full border border-black"></div>
+                                                        <div key={optIdx} className="w-4 h-4 rounded-full border-2 border-black bg-white"></div>
                                                     )
                                                 })}
                                             </div>
@@ -115,6 +120,10 @@ const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = fa
                                 </div>
                             ))}
                         </div>
+                    </div>
+                    
+                    <div className="mt-6 text-[10px] font-bold uppercase text-gray-500 text-center">
+                        Mantenha esta área dentro do quadro da câmera para correção automática
                     </div>
                 </div>
             )}
