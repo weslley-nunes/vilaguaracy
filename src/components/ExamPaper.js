@@ -66,7 +66,13 @@ const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = fa
 
             {/* INTEGRATED ANSWER SHEET (ONLY IF NOT TEACHER VIEW OR EXPLICITLY ENABLED) */}
             {multipleChoiceQuestions.length > 0 && (
-                <div className="mb-8 border-2 border-dashed border-gray-400 p-4 rounded-lg bg-gray-50 print:bg-transparent print:border-black">
+                <div className="mb-8 border-2 border-dashed border-gray-400 p-4 rounded-lg bg-gray-50 print:bg-transparent print:border-black relative">
+                    {/* Aligment Markers for Mobile App */}
+                    <div className="absolute top-0 left-0 w-2.5 h-2.5 bg-black print:block hidden"></div>
+                    <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-black print:block hidden"></div>
+                    <div className="absolute bottom-0 left-0 w-2.5 h-2.5 bg-black print:block hidden"></div>
+                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-black print:block hidden"></div>
+
                     <p className="text-center text-xs font-bold uppercase mb-2">Cartão Resposta - Preencha completamente a bolinha</p>
                     <div className="flex gap-4">
                         {/* QR Code */}

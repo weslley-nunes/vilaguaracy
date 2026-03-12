@@ -70,8 +70,8 @@ export default function Home() {
         </div>
 
         {/* Right Side: Glass Card Login */}
-        <div className="hidden lg:flex justify-center animate-float">
-          <div className="glass-card p-8 max-w-md w-full border-t border-white/20">
+        <div className="flex justify-center animate-float">
+          <div className="glass-card p-6 sm:p-8 max-w-md w-full border-t border-white/20">
             <div className="mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
                 <Wand2 size={20} />
