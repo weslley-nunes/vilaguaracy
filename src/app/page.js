@@ -41,7 +41,7 @@ export default function Home() {
             v1.0 Disponível
           </div>
 
-          <h1 className="text-5xl lg:text-7xl font-bold leading-tight">
+          <h1 className="text-5xl lg:text-7xl font-bold leading-tight text-white drop-shadow-lg">
             Avaliações com <br />
             <span className="text-gradient-primary">Inteligência Artificial</span>
           </h1>
@@ -78,7 +78,7 @@ export default function Home() {
 
         {/* Right Side: Glass Card Login */}
         <div className="flex justify-center animate-float">
-          <div className="glass-card p-6 sm:p-8 max-w-md w-full border-t border-white/20">
+          <div className="backdrop-blur-2xl bg-black/40 rounded-3xl p-6 sm:p-8 max-w-md w-full border border-white/10 shadow-2xl">
             <div className="mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
                 <Wand2 size={20} />
