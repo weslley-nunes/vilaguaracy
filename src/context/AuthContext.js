@@ -1,7 +1,8 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
-import { auth, googleProvider } from "@/services/firebase";
+import { onAuthStateChanged, signInWithPopup, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { auth, googleProvider, db } from "@/services/firebase";
+import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 
 const AuthContext = createContext({});
@@ -33,7 +34,19 @@ export const AuthContextProvider = ({ children }) => {
 
     const googleLogin = async () => {
         try {
-            await signInWithPopup(auth, googleProvider);
+            const result = await signInWithPopup(auth, googleProvider);
+            
+            // Integração com banco de dados
+            const userRef = doc(db, "users", result.user.uid);
+            const userSnap = await getDoc(userRef);
+            if (!userSnap.exists()) {
+                await setDoc(userRef, {
+                    email: result.user.email,
+                    role: 'professor',
+                    createdAt: serverTimestamp()
+                });
+            }
+
             router.push("/dashboard");
         } catch (error) {
             console.error("Login failed", error);
@@ -46,8 +59,40 @@ export const AuthContextProvider = ({ children }) => {
         router.push("/");
     };
 
+    const emailLogin = async (email, password) => {
+        try {
+            const loginEmail = email.toLowerCase() === 'admin' ? 'admin@corrigelab.com' : email;
+            await signInWithEmailAndPassword(auth, loginEmail, password);
+            router.push("/dashboard");
+        } catch (error) {
+            console.error("Email login failed", error);
+            throw error;
+        }
+    };
+
+    const emailRegister = async (email, password) => {
+        try {
+            const isAdmin = email.toLowerCase() === 'admin';
+            const loginEmail = isAdmin ? 'admin@corrigelab.com' : email;
+            
+            const userCredential = await createUserWithEmailAndPassword(auth, loginEmail, password);
+            
+            // Integração com banco de dados
+            await setDoc(doc(db, "users", userCredential.user.uid), {
+                email: loginEmail,
+                role: isAdmin ? 'admin' : 'professor',
+                createdAt: serverTimestamp()
+            });
+
+            router.push("/dashboard");
+        } catch (error) {
+            console.error("Email registration failed", error);
+            throw error;
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, googleLogin, logout, loading }}>
+        <AuthContext.Provider value={{ user, googleLogin, emailLogin, emailRegister, logout, loading }}>
             {loading ? <div className="flex-center" style={{ height: '100vh' }}>Loading...</div> : children}
         </AuthContext.Provider>
     );
