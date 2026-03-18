@@ -44,7 +44,8 @@ export default function BuilderPage() {
         showDate: true,
         logoUrl: "",
         customHeaderImageUrl: "",
-        useCustomHeader: false
+        useCustomHeader: false,
+        instructions: "Leia atentamente cada questão antes de responder.\nUtilize caneta esferográfica azul ou preta para preencher o gabarito."
     });
 
     // Teacher View State
@@ -546,8 +547,9 @@ export default function BuilderPage() {
                             </div>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                            <div><label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Escola</label><input type="text" value={headerConfig.schoolName} onChange={(e) => setHeaderConfig({ ...headerConfig, schoolName: e.target.value })} className="w-full p-2 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white bg-white dark:bg-black/20 text-sm" /></div>
+                        <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                                <div><label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Escola</label><input type="text" value={headerConfig.schoolName} onChange={(e) => setHeaderConfig({ ...headerConfig, schoolName: e.target.value })} className="w-full p-2 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white bg-white dark:bg-black/20 text-sm" /></div>
                             <div><label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Professor</label><input type="text" value={headerConfig.teacherName} onChange={(e) => setHeaderConfig({ ...headerConfig, teacherName: e.target.value })} className="w-full p-2 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white bg-white dark:bg-black/20 text-sm" /></div>
                             <div className="flex flex-col flex-1 pl-2">
                                 <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Logo Turma</label>
@@ -594,7 +596,16 @@ export default function BuilderPage() {
                                 </div>
                             </div>
                         </div>
-                    )}
+                        <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/5">
+                            <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Orientações da Avaliação (Opcional)</label>
+                            <textarea 
+                                value={headerConfig.instructions || ""} 
+                                onChange={(e) => setHeaderConfig({ ...headerConfig, instructions: e.target.value })} 
+                                className="w-full p-2 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white bg-white dark:bg-black/20 text-sm h-20 resize-none custom-scrollbar" 
+                                placeholder="Regras e orientações para o aluno..." 
+                            />
+                        </div>
+                    </>)}
                 </div>
 
                 {/* Preview Area (Shows Standard Exam) */}

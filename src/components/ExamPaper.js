@@ -14,9 +14,9 @@ const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = fa
     const lineHeight = isAdapted ? 'leading-relaxed' : '';
 
 
-    // Group questions for Answer Grid (5 cols max in grid)
+    // Group questions for Answer Grid (2 cols max in grid to avoid overflow)
     const multipleChoiceQuestions = questions.filter(q => q.type === 'multiple_choice');
-    const questionsPerCol = Math.ceil(multipleChoiceQuestions.length / 4) || 5;
+    const questionsPerCol = Math.ceil(multipleChoiceQuestions.length / 2) || 5;
     const gridColumns = [];
     if (multipleChoiceQuestions.length > 0) {
         for (let i = 0; i < multipleChoiceQuestions.length; i += questionsPerCol) {
@@ -64,6 +64,16 @@ const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = fa
                 )}
             </div>
 
+            {/* Configurable Instructions Section */}
+            {headerConfig?.instructions && (
+                <div className="mb-6 border border-gray-300 p-4 rounded-lg bg-gray-50 print:bg-transparent print:border-black">
+                    <h3 className="font-bold text-[12px] uppercase mb-1">Orientações:</h3>
+                    <p className={`whitespace-pre-wrap text-[11px] ${isAdapted ? 'text-lg' : ''} leading-relaxed font-medium text-gray-800`}>
+                        {headerConfig.instructions}
+                    </p>
+                </div>
+            )}
+
             {/* INTEGRATED ANSWER SHEET - Standardized Square for Precise Capture */}
             {multipleChoiceQuestions.length > 0 && (
                 <div className="mb-12 border-2 border-black p-8 rounded-xl bg-gray-50 print:bg-transparent print:border-black relative aspect-square w-full max-w-[650px] mx-auto flex flex-col items-center justify-center">
@@ -75,7 +85,7 @@ const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = fa
 
                     <p className="text-center text-sm font-bold uppercase mb-6 tracking-widest border-b border-black pb-2 w-full">Folha de Respostas Oficial</p>
                     
-                    <div className="flex flex-col md:flex-row gap-8 items-center justify-center w-full">
+                    <div className="flex flex-col md:flex-row gap-6 items-center md:items-start justify-between w-full px-2 md:px-6">
                         {/* QR Code Section */}
                         <div className="flex flex-col items-center justify-center p-4 border-2 border-black rounded-lg bg-white">
                             <QRCodeSVG
@@ -94,7 +104,7 @@ const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = fa
                         </div>
 
                         {/* Bubbles Grid Section */}
-                        <div className="flex gap-8 justify-center items-start p-4 bg-white border-2 border-black rounded-lg">
+                        <div className="flex gap-6 justify-center items-start p-4 bg-white border-2 border-black rounded-lg">
                             {gridColumns.map((col, colIdx) => (
                                 <div key={colIdx} className="space-y-2">
                                     <div className="flex gap-2 pl-8 mb-1 text-[12px] font-black">
