@@ -95,7 +95,7 @@ export default function CheckPage() {
                                             <div className="flex-1 mx-4 h-2 bg-gray-100 rounded-full overflow-hidden">
                                                 <div 
                                                     className={`h-full rounded-full ${percent >= 60 ? 'bg-green-500' : 'bg-orange-500'}`} 
-                                                    style={{ width: \`\${percent}%\` }}
+                                                    style={{ width: `${percent}%` }}
                                                 />
                                             </div>
                                             <span className="text-xs font-bold text-gray-400">{percent}%</span>
