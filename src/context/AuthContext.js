@@ -15,13 +15,24 @@ export const AuthContextProvider = ({ children }) => {
     const router = useRouter();
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            if (firebaseUser) {
+                let role = 'professor';
+                try {
+                    const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+                    if (userDoc.exists()) {
+                        role = userDoc.data().role || 'professor';
+                    }
+                } catch(e) {
+                    console.error("Error fetching role", e);
+                }
+
                 setUser({
-                    uid: user.uid,
-                    email: user.email,
-                    displayName: user.displayName,
-                    photoURL: user.photoURL,
+                    uid: firebaseUser.uid,
+                    email: firebaseUser.email,
+                    displayName: firebaseUser.displayName,
+                    photoURL: firebaseUser.photoURL,
+                    role: role
                 });
             } else {
                 setUser(null);
@@ -61,7 +72,7 @@ export const AuthContextProvider = ({ children }) => {
 
     const emailLogin = async (email, password) => {
         try {
-            const loginEmail = email.toLowerCase() === 'admin' ? 'admin@corrigelab.com' : email;
+            const loginEmail = email.toLowerCase() === 'admin' ? 'admin@vilaguaracy.com.br' : email;
             await signInWithEmailAndPassword(auth, loginEmail, password);
             router.push("/dashboard");
         } catch (error) {
@@ -73,14 +84,14 @@ export const AuthContextProvider = ({ children }) => {
     const emailRegister = async (email, password) => {
         try {
             const isAdmin = email.toLowerCase() === 'admin';
-            const loginEmail = isAdmin ? 'admin@corrigelab.com' : email;
+            const loginEmail = isAdmin ? 'admin@vilaguaracy.com.br' : email;
             
             const userCredential = await createUserWithEmailAndPassword(auth, loginEmail, password);
             
             // Integração com banco de dados
             await setDoc(doc(db, "users", userCredential.user.uid), {
                 email: loginEmail,
-                role: isAdmin ? 'admin' : 'professor',
+                role: isAdmin ? 'gestao' : 'professor',
                 createdAt: serverTimestamp()
             });
 

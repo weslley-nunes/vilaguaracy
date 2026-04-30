@@ -9,15 +9,29 @@ export default function Sidebar() {
     const pathname = usePathname();
     const { user, logout } = useAuth();
 
-    const links = [
-        { href: "/dashboard", label: "Início", icon: LayoutDashboard },
-        { href: "/classes", label: "Turmas & Alunos", icon: GraduationCap },
-        { href: "/builder", label: "Criar Avaliação", icon: FileText },
-        { href: "/exams", label: "Minhas Avaliações", icon: FileText },
-        { href: "/scanner", label: "Correção IA", icon: Sparkles },
-        { href: "/acompanhamento", label: "Acompanhamento", icon: BarChart2 },
-        { href: "/tutorial", label: "Ajuda & Tutoriais", icon: BookOpen },
-    ];
+    const role = user?.role || 'professor';
+
+    let links = [];
+    if (role === 'gestao' || role === 'coordenador') {
+        links = [
+            { href: "/dashboard", label: "Visão Geral", icon: LayoutDashboard },
+            { href: "/usuarios", label: "Gestão de Usuários", icon: UserCircle },
+            { href: "/classes", label: "Turmas & Alunos", icon: GraduationCap },
+            { href: "/builder", label: "Criar Avaliação Base", icon: FileText },
+            { href: "/exams", label: "Todas as Provas", icon: FileText },
+            { href: "/habilidades", label: "Habilidades & Gráficos", icon: BarChart2 },
+            { href: "/tutorial", label: "Ajuda & Tutoriais", icon: BookOpen },
+        ];
+    } else {
+        links = [
+            { href: "/dashboard", label: "Início", icon: LayoutDashboard },
+            { href: "/builder", label: "Adicionar Questões", icon: FileText },
+            { href: "/exams", label: "Minhas Avaliações", icon: FileText },
+            { href: "/scanner", label: "Correção IA", icon: Sparkles },
+            { href: "/acompanhamento", label: "Meus Resultados", icon: BarChart2 },
+            { href: "/tutorial", label: "Ajuda & Tutoriais", icon: BookOpen },
+        ];
+    }
 
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
@@ -29,8 +43,8 @@ export default function Sidebar() {
                     <Sparkles size={20} />
                 </div>
                 <div>
-                    <span className="font-bold text-xl text-gray-800 dark:text-white block leading-none">Corrige</span>
-                    <span className="text-xs text-indigo-500 dark:text-indigo-300 font-medium tracking-wide">LAB</span>
+                    <span className="font-bold text-xl text-gray-800 dark:text-white block leading-none">Vila</span>
+                    <span className="text-xs text-indigo-500 dark:text-indigo-300 font-medium tracking-wide">GUARACY</span>
                 </div>
             </div>
 

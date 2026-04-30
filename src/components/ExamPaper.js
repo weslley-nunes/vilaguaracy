@@ -155,9 +155,9 @@ const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = fa
                                         <div className="flex-1">
                                             <p className={`whitespace-pre-wrap inline ${isAdapted ? 'font-medium' : ''} ${lineHeight}`}>
                                                 {typeof q.text === 'string' ? q.text : String(q.text || "")}
-                                                {q.bncc && q.bncc !== "N/A" && printConfig?.showBNCC !== false && (
+                                                {q.habilidade && q.habilidade !== "N/A" && printConfig?.showHabilidades !== false && (
                                                     <span className="ml-2 px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 text-[9px] font-bold rounded-full uppercase tracking-wider inline-flex items-center align-middle relative -top-0.5 print:border-gray-300 print:text-gray-500 print:bg-transparent">
-                                                        {typeof q.bncc === 'string' ? q.bncc : String(q.bncc)}
+                                                        {typeof q.habilidade === 'string' ? q.habilidade : String(q.habilidade)}
                                                     </span>
                                                 )}
                                             </p>
@@ -236,7 +236,7 @@ const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = fa
             {/* Footer / Copyright */}
             <div className="mt-12 pt-4 border-t border-gray-300 text-center text-[10px] text-gray-500 font-medium">
                 <p>
-                    Desenvolvido por <a href="https://corrigelab.com.br" target="_blank" rel="noopener noreferrer" className="text-indigo-600 font-bold hover:underline">corrigelab</a> - Realize sua avaliação também acessando: <span className="font-mono">corrigelab.com.br</span>
+                    Desenvolvido por <a href="https://vilaguaracy.com.br" target="_blank" rel="noopener noreferrer" className="text-indigo-600 font-bold hover:underline">Vila Guaracy</a> - Realize sua avaliação também acessando: <span className="font-mono">vilaguaracy.com.br</span>
                 </p>
             </div>
         </div>

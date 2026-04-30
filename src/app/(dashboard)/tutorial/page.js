@@ -50,7 +50,7 @@ export default function TutorialPage() {
                 <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 mb-4">
                     Como usar o Portal
                 </h1>
-                <p className="text-gray-500 dark:text-gray-400">Tudo o que você precisa saber para aproveitar o Corrige Lab.</p>
+                <p className="text-gray-500 dark:text-gray-400">Tudo o que você precisa saber para aproveitar o Vila Guaracy.</p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">

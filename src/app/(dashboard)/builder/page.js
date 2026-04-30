@@ -75,7 +75,7 @@ export default function BuilderPage() {
         copies: 1,
         adaptedCopies: 0, // New: Copies with large font/accessibility
         showOMR: true,
-        showBNCC: true // Toggle for showing BNCC tags on the printed paper
+        showHabilidades: true // Toggle for showing tags on the printed paper
     });
 
     // shuffling helper
@@ -707,15 +707,15 @@ export default function BuilderPage() {
                                     </label>
 
                                     <label className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-white/10 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                                        <div className={`w-5 h-5 rounded flex items-center justify-center border ${printConfig.showBNCC ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-gray-300'}`}>
-                                            {printConfig.showBNCC && <Check size={14} />}
+                                        <div className={`w-5 h-5 rounded flex items-center justify-center border ${printConfig.showHabilidades ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-gray-300'}`}>
+                                            {printConfig.showHabilidades && <Check size={14} />}
                                         </div>
-                                        <input type="checkbox" className="hidden" checked={printConfig.showBNCC} onChange={(e) => setPrintConfig({ ...printConfig, showBNCC: e.target.checked })} />
+                                        <input type="checkbox" className="hidden" checked={printConfig.showHabilidades} onChange={(e) => setPrintConfig({ ...printConfig, showHabilidades: e.target.checked })} />
                                         <div className="flex-1">
                                             <div className="font-bold text-sm text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                                                <FileText size={14} /> Exibir Códigos BNCC
+                                                <FileText size={14} /> Exibir Habilidades
                                             </div>
-                                            <p className="text-xs text-gray-500">Mostra a habilidade da BNCC (ex: EF06HI02) caso disponível na prova de cada aluno.</p>
+                                            <p className="text-xs text-gray-500">Mostra a habilidade avaliada em cada questão.</p>
                                         </div>
                                     </label>
                                 </div>
@@ -832,10 +832,8 @@ export default function BuilderPage() {
                             <div><label className="block text-sm font-bold text-gray-700 mb-1">Enunciado</label><textarea value={manualQuestion.text} onChange={(e) => setManualQuestion({ ...manualQuestion, text: e.target.value })} className="w-full p-3 rounded-lg border border-gray-300 focus:border-indigo-500 outline-none min-h-[100px]" placeholder="Digite a pergunta aqui..." /></div>
                             <div><label className="block text-sm font-bold text-gray-700 mb-1">Link de Imagem (Opcional)</label><input type="text" value={manualQuestion.imageUrl || ""} onChange={(e) => setManualQuestion({ ...manualQuestion, imageUrl: e.target.value })} className="w-full p-3 rounded-lg border border-gray-300 focus:border-indigo-500 outline-none text-sm" placeholder="https://exemplo.com/imagem.jpg" /></div>
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1">Tipo</label>
-                                <select value={manualQuestion.type} onChange={(e) => setManualQuestion({ ...manualQuestion, type: e.target.value })} className="w-full p-3 rounded-lg border border-gray-300 focus:border-indigo-500 outline-none">
-                                    <option value="multiple_choice">Múltipla Escolha</option><option value="text">Dissertativa</option>
-                                </select>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Habilidade / BNCC (Opcional)</label>
+                                <input type="text" value={manualQuestion.habilidade || ""} onChange={(e) => setManualQuestion({ ...manualQuestion, habilidade: e.target.value })} className="w-full p-3 rounded-lg border border-gray-300 focus:border-indigo-500 outline-none" placeholder="Ex: EF06HI02..." />
                             </div>
                             {manualQuestion.type === 'multiple_choice' && (
                                 <div className="space-y-3">

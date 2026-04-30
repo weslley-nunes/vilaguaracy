@@ -84,7 +84,7 @@ export default function Home() {
                 <Wand2 size={20} />
               </div>
               <div>
-                <h3 className="text-white text-lg font-bold">Portal do Professor</h3>
+                <h3 className="text-white text-lg font-bold">Portal Vila Guaracy</h3>
                 <p className="text-xs text-gray-400">Acesso Restrito</p>
               </div>
             </div>
@@ -118,7 +118,7 @@ export default function Home() {
                 }
               } catch (err) {
                 if (err.code === 'auth/email-already-in-use') {
-                  setAuthError("Este usuário/e-mail já está em uso. (admin@corrigelab.com)");
+                  setAuthError("Este usuário/e-mail já está em uso. (admin@vilaguaracy.com.br)");
                 } else if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
                   setAuthError("Senha incorreta. Confirme a senha digitada.");
                 } else if (err.code === 'auth/user-not-found') {

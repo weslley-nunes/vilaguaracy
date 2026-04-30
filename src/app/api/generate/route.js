@@ -17,15 +17,17 @@ export async function POST(req) {
                         id: Date.now() + 1,
                         type: 'multiple_choice',
                         text: `MOCK: Questão de ${topic} (${difficulty}) para ${level} - ${year}`,
-                        options: ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D'],
+                        options: ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D', 'Alternativa E'],
                         correct: 'A',
-                        bncc: 'EF06HI02'
+                        habilidade: 'EF06HI02 - Mock Habilidade'
                     },
                     {
                         id: Date.now() + 2,
-                        type: 'text',
-                        text: `MOCK: Explique o conceito de ${topic} considerando o nível ${level} e ano ${year}.`,
-                        bncc: 'EM13CHS101'
+                        type: 'multiple_choice',
+                        text: `MOCK 2: Outra questão de ${topic}.`,
+                        options: ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D', 'Alternativa E'],
+                        correct: 'B',
+                        habilidade: 'EM13CHS101 - Mock Habilidade 2'
                     }
                 ]
             });
@@ -59,18 +61,18 @@ export async function POST(req) {
                     Dificuldade: ${difficulty}
                     
                     Gere 3 questões seguindo estritamente este nível, ano escolar e dificuldade. Use vocabulário adequado para a idade dos alunos desta etapa formativa.
-                    Misture questões de múltipla escolha e dissertativas.
-                    Como especialista, identifique o código da habilidade da BNCC (Base Nacional Comum Curricular) mais adequado para cada questão.
+                    Gere APENAS questões de múltipla escolha. NUNCA gere questões dissertativas.
+                    Como especialista, identifique a habilidade (ou código da BNCC) mais adequada que está sendo avaliada em cada questão.
                     
                     Responda APENAS com um JSON válido seguindo esta estrutura, sem markdown (backticks):
                     {
                         "questions": [
                             {
                                 "text": "Enunciado da questão",
-                                "type": "multiple_choice" | "text",
-                                "options": ["Opção A", "Opção B", "Opção C", "Opção D"], // Apenas se for multiple_choice
-                                "correct": "A", // Letra da correta ou resposta esperada
-                                "bncc": "EF06HI02" // Código da BNCC (ou "N/A" se não aplicável)
+                                "type": "multiple_choice",
+                                "options": ["Opção A", "Opção B", "Opção C", "Opção D", "Opção E"],
+                                "correct": "A",
+                                "habilidade": "EF06HI02 - Identificar a gênese da produção..." // Código e descrição da habilidade
                             }
                         ]
                     }

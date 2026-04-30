@@ -20,8 +20,8 @@ const outfit = Outfit({
 });
 
 export const metadata = {
-  title: "Corrige Lab - Portal do Professor",
-  description: "O laboratório inteligente de correção para professores. Simples. Forte. Escalável.",
+  title: "Vila Guaracy - Portal de Avaliações",
+  description: "O portal inteligente de avaliação. Simples. Forte. Escalável.",
 };
 
 export default function RootLayout({ children }) {
