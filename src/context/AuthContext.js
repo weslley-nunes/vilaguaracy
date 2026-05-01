@@ -53,7 +53,8 @@ export const AuthContextProvider = ({ children }) => {
             if (!userSnap.exists()) {
                 await setDoc(userRef, {
                     email: result.user.email,
-                    role: 'professor',
+                    role: 'pendente',
+                    name: result.user.displayName || 'Usuário Google',
                     createdAt: serverTimestamp()
                 });
             }
@@ -91,7 +92,8 @@ export const AuthContextProvider = ({ children }) => {
             // Integração com banco de dados
             await setDoc(doc(db, "users", userCredential.user.uid), {
                 email: loginEmail,
-                role: isAdmin ? 'gestao' : 'professor',
+                role: isAdmin ? 'gestao' : 'pendente',
+                name: 'Novo Usuário',
                 createdAt: serverTimestamp()
             });
 
