@@ -83,7 +83,7 @@ const AnswerSheet = forwardRef(({ examTitle, studentName, examId, questions, dat
             </div>
 
             <div className="mt-8 text-center text-xs text-gray-500">
-                Verifique as respostas em: <span className="underline text-blue-600">vilaguaracy.com.br/check?id={displayId}</span>
+                Verifique as respostas em: <span className="underline text-vg-navy">vilaguaracy.com.br/check?id={displayId}</span>
             </div>
         </div>
     );

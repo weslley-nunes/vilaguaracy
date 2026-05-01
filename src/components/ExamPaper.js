@@ -156,7 +156,7 @@ const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = fa
                                             <p className={`whitespace-pre-wrap inline ${isAdapted ? 'font-medium' : ''} ${lineHeight}`}>
                                                 {typeof q.text === 'string' ? q.text : String(q.text || "")}
                                                 {q.habilidade && q.habilidade !== "N/A" && printConfig?.showHabilidades !== false && (
-                                                    <span className="ml-2 px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 text-[9px] font-bold rounded-full uppercase tracking-wider inline-flex items-center align-middle relative -top-0.5 print:border-gray-300 print:text-gray-500 print:bg-transparent">
+                                                    <span className="ml-2 px-2 py-0.5 bg-vg-light text-vg-hover border border-vg-light text-[9px] font-bold rounded-full uppercase tracking-wider inline-flex items-center align-middle relative -top-0.5 print:border-gray-300 print:text-gray-500 print:bg-transparent">
                                                         {typeof q.habilidade === 'string' ? q.habilidade : String(q.habilidade)}
                                                     </span>
                                                 )}
@@ -166,16 +166,16 @@ const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = fa
                                         {/* Pontuação da Questão */}
                                         <div className="flex items-center gap-1 shrink-0 whitespace-nowrap text-gray-500">
                                             {scoringMode === 'manual' && onQuestionChange ? (
-                                                <div className="print:hidden flex items-center gap-1 bg-indigo-50/50 p-1 rounded-lg border border-indigo-100">
+                                                <div className="print:hidden flex items-center gap-1 bg-vg-light/50 p-1 rounded-lg border border-vg-light">
                                                     <input
                                                         type="number"
                                                         step="0.5"
-                                                        className="w-14 p-1 text-xs border border-indigo-300 rounded bg-white outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 text-center font-bold text-indigo-700"
+                                                        className="w-14 p-1 text-xs border border-vg-navy rounded bg-white outline-none focus:border-vg-dark focus:ring-1 focus:ring-vg-dark text-center font-bold text-vg-hover"
                                                         value={q.points !== undefined ? q.points : 1}
                                                         onChange={(e) => onQuestionChange(q.id, { points: e.target.value })}
                                                         title="Valor desta questão"
                                                     />
-                                                    <span className="text-[10px] uppercase font-bold text-indigo-400">Pts</span>
+                                                    <span className="text-[10px] uppercase font-bold text-vg-navy">Pts</span>
                                                 </div>
                                             ) : null}
 
@@ -236,7 +236,7 @@ const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = fa
             {/* Footer / Copyright */}
             <div className="mt-12 pt-4 border-t border-gray-300 text-center text-[10px] text-gray-500 font-medium">
                 <p>
-                    Desenvolvido por <a href="https://vilaguaracy.com.br" target="_blank" rel="noopener noreferrer" className="text-indigo-600 font-bold hover:underline">Vila Guaracy</a> - Realize sua avaliação também acessando: <span className="font-mono">vilaguaracy.com.br</span>
+                    Desenvolvido por <a href="https://vilaguaracy.com.br" target="_blank" rel="noopener noreferrer" className="text-vg-dark font-bold hover:underline">Vila Guaracy</a> - Realize sua avaliação também acessando: <span className="font-mono">vilaguaracy.com.br</span>
                 </p>
             </div>
         </div>

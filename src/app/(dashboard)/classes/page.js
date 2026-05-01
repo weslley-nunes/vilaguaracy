@@ -102,7 +102,7 @@ export default function ClassesPage() {
                 <div className="card h-fit lg:col-span-1 border-2 border-transparent transition-colors duration-300">
                     <h2 className="font-bold text-lg mb-4 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            {editingClassId ? <Edit2 size={20} className="text-indigo-600" /> : <Plus size={20} className="text-indigo-600" />}
+                            {editingClassId ? <Edit2 size={20} className="text-vg-dark" /> : <Plus size={20} className="text-vg-dark" />}
                             {editingClassId ? "Editar Turma" : "Nova Turma"}
                         </div>
                         {editingClassId && (
@@ -119,7 +119,7 @@ export default function ClassesPage() {
                                 value={newClassName}
                                 onChange={(e) => setNewClassName(e.target.value)}
                                 placeholder="Ex: 3º Ano B"
-                                className={`w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 ${editingClassId ? 'bg-indigo-50/30' : ''}`}
+                                className={`w-full border-gray-300 rounded-md focus:ring-vg-dark focus:border-vg-dark ${editingClassId ? 'bg-vg-light/30' : ''}`}
                                 required
                             />
                         </div>
@@ -130,13 +130,13 @@ export default function ClassesPage() {
                                 value={newClassSchool}
                                 onChange={(e) => setNewClassSchool(e.target.value)}
                                 placeholder="Ex: Colégio Estadual"
-                                className={`w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 ${editingClassId ? 'bg-indigo-50/30' : ''}`}
+                                className={`w-full border-gray-300 rounded-md focus:ring-vg-dark focus:border-vg-dark ${editingClassId ? 'bg-vg-light/30' : ''}`}
                             />
                         </div>
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className={`w-full btn flex justify-center items-center gap-2 ${editingClassId ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'btn-primary'}`}
+                            className={`w-full btn flex justify-center items-center gap-2 ${editingClassId ? 'bg-vg-dark hover:bg-vg-hover text-white' : 'btn-primary'}`}
                         >
                             {isSubmitting ? "Salvando..." : (editingClassId ? "Salvar Alterações" : "Criar Turma")}
                         </button>
@@ -153,10 +153,10 @@ export default function ClassesPage() {
                         </div>
                     ) : (
                         localClasses.map((classItem) => (
-                            <div key={classItem.id} className={`card p-0 overflow-hidden transition-all duration-300 ${editingClassId === classItem.id ? 'ring-2 ring-indigo-500 shadow-md' : 'hover:border-indigo-200'}`}>
+                            <div key={classItem.id} className={`card p-0 overflow-hidden transition-all duration-300 ${editingClassId === classItem.id ? 'ring-2 ring-vg-dark shadow-md' : 'hover:border-vg-light'}`}>
                                 <div className="p-5 flex items-center justify-between">
                                     <div className="flex items-center gap-4">
-                                        <div className={`p-3 rounded-lg ${editingClassId === classItem.id ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-600'} transition-colors`}>
+                                        <div className={`p-3 rounded-lg ${editingClassId === classItem.id ? 'bg-vg-dark text-white' : 'bg-vg-light text-vg-dark'} transition-colors`}>
                                             <Users size={24} />
                                         </div>
                                         <div>
@@ -173,14 +173,14 @@ export default function ClassesPage() {
                                 <div className="bg-gray-50 px-5 py-3 border-t border-gray-100 flex justify-between items-center">
                                     <Link
                                         href={`/classes/${classItem.id}`}
-                                        className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+                                        className="text-sm font-medium text-vg-dark hover:text-vg-hover"
                                     >
                                         Gerenciar Alunos →
                                     </Link>
                                     <div className="flex gap-1.5">
                                         <button
                                             onClick={() => startEdit(classItem)}
-                                            className="p-1.5 text-gray-500 hover:text-indigo-600 hover:bg-indigo-100 rounded transition-colors flex items-center gap-1 text-sm border border-transparent hover:border-indigo-200"
+                                            className="p-1.5 text-gray-500 hover:text-vg-dark hover:bg-vg-light rounded transition-colors flex items-center gap-1 text-sm border border-transparent hover:border-vg-light"
                                             title="Editar Turma"
                                         >
                                             <Edit2 size={16} />

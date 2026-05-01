@@ -2,7 +2,7 @@
 import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Wand2, QrCode, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { CheckCircle2, Shield, QrCode, ArrowRight, Eye, EyeOff } from "lucide-react";
 
 export default function Home() {
   const { user, googleLogin, emailLogin, emailRegister, loading } = useAuth();
@@ -43,7 +43,7 @@ export default function Home() {
 
           <h1 className="text-5xl lg:text-7xl font-bold leading-tight text-white drop-shadow-lg">
             Avaliações com <br />
-            <span className="text-gradient-primary">Inteligência Artificial</span>
+            <span className="text-gradient-primary">Excelência Escolar</span>
           </h1>
 
           <p className="text-lg text-gray-300 max-w-xl mx-auto lg:mx-0">
@@ -66,8 +66,8 @@ export default function Home() {
 
           <div className="flex items-center justify-center lg:justify-start gap-8 pt-8 opacity-80">
             <div className="flex items-center gap-2">
-              <Wand2 className="text-purple-400" size={20} />
-              <span className="text-sm">IA Generativa</span>
+              <Shield className="text-vg-gold" size={20} />
+              <span className="text-sm">Escola Estadual</span>
             </div>
             <div className="flex items-center gap-2">
               <QrCode className="text-cyan-400" size={20} />
@@ -80,8 +80,8 @@ export default function Home() {
         <div className="flex justify-center animate-float">
           <div className="backdrop-blur-2xl bg-black/40 rounded-3xl p-6 sm:p-8 max-w-md w-full border border-white/10 shadow-2xl">
             <div className="mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
-                <Wand2 size={20} />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-vg-dark to-vg-navy flex items-center justify-center text-white shadow-lg">
+                <Shield size={20} />
               </div>
               <div>
                 <h3 className="text-white text-lg font-bold">Portal Vila Guaracy</h3>
@@ -139,7 +139,7 @@ export default function Home() {
                   placeholder="E-mail ou 'admin'" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-vg-dark"
                   required
                   autoCapitalize="none"
                 />
@@ -150,7 +150,7 @@ export default function Home() {
                   placeholder="Senha" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 pr-12"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-vg-dark pr-12"
                   required
                 />
                 <button

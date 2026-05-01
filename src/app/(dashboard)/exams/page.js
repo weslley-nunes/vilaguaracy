@@ -41,7 +41,7 @@ export default function MyExamsPage() {
         }
     };
 
-    if (loading) return <div className="flex justify-center items-center h-full"><Loader2 className="animate-spin text-indigo-600" size={40} /></div>;
+    if (loading) return <div className="flex justify-center items-center h-full"><Loader2 className="animate-spin text-vg-dark" size={40} /></div>;
 
     return (
         <div className="max-w-6xl mx-auto p-6">
@@ -79,7 +79,7 @@ export default function MyExamsPage() {
                                     <div className="flex gap-2">
                                         {/* TODO: Implement Edit/View Logic. For now just standard print view or load into builder? */}
                                         {/* Loading into builder would require handling 'edit mode' in builder page. Future task. */}
-                                        <button className="text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors">
+                                        <button className="text-vg-dark dark:text-vg-navy hover:bg-vg-light dark:hover:bg-vg-navy/20 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors">
                                             Ver / Imprimir
                                         </button>
                                     </div>

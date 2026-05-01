@@ -7,7 +7,7 @@ export default function TutorialPage() {
         {
             title: "Como Criar Avaliações com IA",
             icon: Sparkles,
-            color: "text-indigo-600 bg-indigo-50",
+            color: "text-vg-dark bg-vg-light",
             description: "Aprenda a gerar questões automaticamente definindo tema, nível e dificuldade.",
             steps: [
                 "Acesse o menu 'Criar Avaliação'.",
@@ -20,7 +20,7 @@ export default function TutorialPage() {
         {
             title: "Impressão e Gabarito",
             icon: Printer,
-            color: "text-purple-600 bg-purple-50",
+            color: "text-vg-navy bg-vg-light",
             description: "Configure cabeçalhos, embaralhamento e folhas de resposta.",
             steps: [
                 "Na tela de criação, clique no botão 'Imprimir / PDF'.",
@@ -47,7 +47,7 @@ export default function TutorialPage() {
     return (
         <div className="max-w-4xl mx-auto pb-20">
             <div className="mb-10 text-center max-w-2xl mx-auto">
-                <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 mb-4">
+                <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-vg-dark to-vg-navy mb-4">
                     Como usar o Portal
                 </h1>
                 <p className="text-gray-500 dark:text-gray-400">Tudo o que você precisa saber para aproveitar o Vila Guaracy.</p>
@@ -67,7 +67,7 @@ export default function TutorialPage() {
                             <ul className="space-y-3">
                                 {guide.steps.map((step, idx) => (
                                     <li key={idx} className="flex gap-3 text-sm text-gray-700 dark:text-gray-300">
-                                        <span className="font-bold text-indigo-500">{idx + 1}.</span>
+                                        <span className="font-bold text-vg-dark">{idx + 1}.</span>
                                         {step}
                                     </li>
                                 ))}
@@ -77,13 +77,13 @@ export default function TutorialPage() {
                 ))}
 
                 {/* Video Placeholder */}
-                <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-8 text-white flex flex-col items-center justify-center text-center shadow-xl shadow-indigo-500/20">
+                <div className="bg-gradient-to-br from-vg-dark to-vg-navy rounded-2xl p-8 text-white flex flex-col items-center justify-center text-center shadow-xl shadow-vg-dark/20">
                     <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-6 backdrop-blur-sm cursor-pointer hover:scale-110 transition-transform">
                         <Youtube size={32} className="text-white" />
                     </div>
                     <h3 className="text-2xl font-bold mb-2">Vídeo Tutorial</h3>
                     <p className="opacity-80 text-sm max-w-xs">Assista ao nosso guia completo de 5 minutos sobre como transformar suas avaliações.</p>
-                    <button className="mt-6 px-6 py-2 bg-white text-indigo-700 rounded-full font-bold text-sm hover:bg-indigo-50 transition-colors">
+                    <button className="mt-6 px-6 py-2 bg-white text-vg-hover rounded-full font-bold text-sm hover:bg-vg-light transition-colors">
                         Assistir Agora
                     </button>
                 </div>

@@ -43,7 +43,7 @@ export default function CheckPage() {
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
             <div className="max-w-md w-full bg-white rounded-3xl shadow-xl overflow-hidden">
-                <div className="bg-indigo-600 p-8 text-center text-white">
+                <div className="bg-vg-dark p-8 text-center text-white">
                     <h1 className="text-3xl font-bold mb-2">Vila Guaracy</h1>
                     <p className="opacity-80">Portal do Aluno</p>
                 </div>
@@ -60,7 +60,7 @@ export default function CheckPage() {
                                         value={examId}
                                         onChange={(e) => setExamId(e.target.value)}
                                         placeholder="Ex: 1713401923"
-                                        className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all text-lg font-mono"
+                                        className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 focus:border-vg-dark focus:ring-2 focus:ring-vg-light outline-none transition-all text-lg font-mono"
                                         required
                                     />
                                 </div>
@@ -68,7 +68,7 @@ export default function CheckPage() {
                             <button 
                                 type="submit" 
                                 disabled={loading}
-                                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition-colors flex items-center justify-center gap-2"
+                                className="w-full bg-vg-dark hover:bg-vg-hover text-white font-bold py-4 rounded-xl transition-colors flex items-center justify-center gap-2"
                             >
                                 {loading ? "Buscando..." : "Verificar Resultado"}
                             </button>
@@ -80,9 +80,9 @@ export default function CheckPage() {
                                 <p className="text-gray-500">{result.examTitle}</p>
                             </div>
                             
-                            <div className="bg-indigo-50 rounded-2xl p-6 text-center border border-indigo-100">
-                                <span className="block text-sm font-bold text-indigo-400 uppercase tracking-wide mb-1">Nota Final</span>
-                                <span className="text-5xl font-black text-indigo-600">{result.score.toFixed(1)}</span>
+                            <div className="bg-vg-light rounded-2xl p-6 text-center border border-vg-light">
+                                <span className="block text-sm font-bold text-vg-navy uppercase tracking-wide mb-1">Nota Final</span>
+                                <span className="text-5xl font-black text-vg-dark">{result.score.toFixed(1)}</span>
                             </div>
 
                             <div className="space-y-4">

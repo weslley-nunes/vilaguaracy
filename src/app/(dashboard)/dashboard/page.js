@@ -54,14 +54,14 @@ export default function Dashboard() {
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                <div className="card flex items-center gap-4 border-l-4 border-indigo-500 bg-white dark:bg-white/5 p-4 rounded-lg shadow-sm">
-                    <div className="p-3 bg-indigo-50 dark:bg-indigo-500/20 rounded-full text-indigo-600 dark:text-indigo-400">
+                <div className="card flex items-center gap-4 border-l-4 border-vg-dark bg-white dark:bg-white/5 p-4 rounded-lg shadow-sm">
+                    <div className="p-3 bg-vg-light dark:bg-vg-dark/20 rounded-full text-vg-dark dark:text-vg-navy">
                         <FileText size={24} />
                     </div>
                     <div>
                         <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Avaliações Criadas</p>
                         <p className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                            {isLoading ? <Loader2 size={20} className="animate-spin text-indigo-400" /> : stats.examsCount}
+                            {isLoading ? <Loader2 size={20} className="animate-spin text-vg-navy" /> : stats.examsCount}
                         </p>
                     </div>
                 </div>
@@ -81,8 +81,8 @@ export default function Dashboard() {
 
             <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Acesso Rápido</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <Link href="/builder" className="group p-6 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:shadow-md transition-all hover:border-indigo-300 dark:hover:border-indigo-500 flex flex-col items-center text-center">
-                    <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Link href="/builder" className="group p-6 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:shadow-md transition-all hover:border-vg-navy dark:hover:border-vg-dark flex flex-col items-center text-center">
+                    <div className="w-12 h-12 bg-vg-light dark:bg-vg-dark/20 text-vg-dark dark:text-vg-navy rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                         <Plus size={24} />
                     </div>
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Nova Avaliação</h3>

@@ -31,7 +31,7 @@ export default function AcompanhamentoPage() {
     return (
         <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <header>
-                <h1 className="text-4xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
+                <h1 className="text-4xl font-black bg-gradient-to-r from-vg-dark to-vg-navy dark:from-vg-navy dark:to-purple-400 bg-clip-text text-transparent">
                     Acompanhamento de Desempenho
                 </h1>
                 <p className="text-gray-500 dark:text-gray-400 mt-2 text-lg">
@@ -54,16 +54,16 @@ export default function AcompanhamentoPage() {
                     value="342"
                     subtitle="Neste semestre"
                     icon={Presentation}
-                    color="text-indigo-500"
-                    bg="bg-indigo-500/10"
+                    color="text-vg-dark"
+                    bg="bg-vg-dark/10"
                 />
                 <StatCard
                     title="Alunos Avaliados"
                     value="128"
                     subtitle="Ativos na plataforma"
                     icon={Users}
-                    color="text-blue-500"
-                    bg="bg-blue-500/10"
+                    color="text-vg-dark"
+                    bg="bg-vg-dark/10"
                 />
                 <StatCard
                     title="Atenção Necessária"

@@ -316,7 +316,7 @@ export default function BuilderPage() {
             {/* --- Left Sidebar: AI & Controls --- */}
             <div className="w-full md:w-1/3 bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col overflow-hidden relative">
                 <div className="p-4 border-b border-gray-100 bg-gray-50/50">
-                    <h2 className="font-bold flex items-center gap-2 text-indigo-700">
+                    <h2 className="font-bold flex items-center gap-2 text-vg-hover">
                         <Sparkles size={18} />
                         Gerador de Questões
                     </h2>
@@ -332,7 +332,7 @@ export default function BuilderPage() {
                                 value={topic}
                                 onChange={(e) => setTopic(e.target.value)}
                                 placeholder="Ex: Revolução Francesa..."
-                                className="w-full p-3 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-500/30 outline-none transition-all bg-white dark:bg-white/5"
+                                className="w-full p-3 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 focus:border-vg-dark focus:ring-2 focus:ring-vg-light dark:focus:ring-vg-dark/30 outline-none transition-all bg-white dark:bg-white/5"
                             />
                         </div>
 
@@ -346,7 +346,7 @@ export default function BuilderPage() {
                                         setLevel(newLevel);
                                         setYear(LEVEL_YEARS[newLevel][0]); // Reset year to first option of new level
                                     }}
-                                    className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-gray-100 bg-white dark:bg-white/5 focus:border-indigo-500 outline-none text-sm"
+                                    className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-gray-100 bg-white dark:bg-white/5 focus:border-vg-dark outline-none text-sm"
                                 >
                                     {Object.keys(LEVEL_YEARS).map(l => (
                                         <option key={l} value={l}>{l}</option>
@@ -355,7 +355,7 @@ export default function BuilderPage() {
                             </div>
                             <div>
                                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Ano/Série</label>
-                                <select value={year} onChange={(e) => setYear(e.target.value)} className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-gray-100 bg-white dark:bg-white/5 focus:border-indigo-500 outline-none text-sm">
+                                <select value={year} onChange={(e) => setYear(e.target.value)} className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-gray-100 bg-white dark:bg-white/5 focus:border-vg-dark outline-none text-sm">
                                     {LEVEL_YEARS[level]?.map(y => (
                                         <option key={y} value={y}>{y}</option>
                                     ))}
@@ -363,7 +363,7 @@ export default function BuilderPage() {
                             </div>
                             <div>
                                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Dificuldade</label>
-                                <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)} className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-gray-100 bg-white dark:bg-white/5 focus:border-indigo-500 outline-none text-sm">
+                                <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)} className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-gray-100 bg-white dark:bg-white/5 focus:border-vg-dark outline-none text-sm">
                                     <option>Fácil</option><option>Médio</option><option>Difícil</option>
                                 </select>
                             </div>
@@ -375,7 +375,7 @@ export default function BuilderPage() {
                                 <span>Gerar</span>
                             </button>
                             {generatedQuestions.length > 0 && (
-                                <button type="button" onClick={() => generateQuestions(null, true)} disabled={isGenerating} className="px-4 py-3 rounded-xl font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-all">+ Mais</button>
+                                <button type="button" onClick={() => generateQuestions(null, true)} disabled={isGenerating} className="px-4 py-3 rounded-xl font-bold text-vg-dark bg-vg-light hover:bg-vg-light border border-vg-light transition-all">+ Mais</button>
                             )}
                         </div>
                     </form>
@@ -384,13 +384,13 @@ export default function BuilderPage() {
                     <div className="space-y-4">
                         <div className="flex justify-between items-center">
                             {generatedQuestions.length > 0 && <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Sugestões</h3>}
-                            <button onClick={openManualModal} className="text-xs font-bold text-indigo-600 hover:underline uppercase tracking-wider flex items-center gap-1">
+                            <button onClick={openManualModal} className="text-xs font-bold text-vg-dark hover:underline uppercase tracking-wider flex items-center gap-1">
                                 <PlusCircle size={14} /> Criar Manualmente
                             </button>
                         </div>
                         {generatedQuestions.map((q, i) => (
-                            <div key={i} className="p-3 rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 cursor-pointer transition-all group relative bg-white" onClick={() => addToExam(q)}>
-                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"><PlusCircle size={18} className="text-indigo-600" /></div>
+                            <div key={i} className="p-3 rounded-lg border border-gray-200 hover:border-vg-navy hover:bg-vg-light cursor-pointer transition-all group relative bg-white" onClick={() => addToExam(q)}>
+                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"><PlusCircle size={18} className="text-vg-dark" /></div>
                                 <p className="text-sm font-medium text-gray-800 line-clamp-3 mb-1">{q.text}</p>
                                 <span className="text-[10px] uppercase font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{q.type === 'multiple_choice' ? 'Múltipla Escolha' : 'Dissertativa'}</span>
                             </div>
@@ -401,7 +401,7 @@ export default function BuilderPage() {
                                 type="button"
                                 onClick={() => generateQuestions(null, true)}
                                 disabled={isGenerating}
-                                className="w-full py-3 rounded-xl font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-all flex items-center justify-center gap-2"
+                                className="w-full py-3 rounded-xl font-bold text-vg-dark bg-vg-light hover:bg-vg-light border border-vg-light transition-all flex items-center justify-center gap-2"
                             >
                                 {isGenerating ? <Loader2 className="animate-spin" size={18} /> : <Sparkles size={18} />}
                                 Gerar Mais Questões
@@ -416,13 +416,13 @@ export default function BuilderPage() {
                 {/* Toolbar */}
                 <div className="bg-white p-3 rounded-xl border border-gray-200 flex flex-wrap gap-4 items-center justify-between shadow-sm">
                     <div className="flex gap-4 flex-1">
-                        <input type="text" value={examTitle} onChange={(e) => setExamTitle(e.target.value)} className="font-bold text-lg border-transparent hover:border-gray-300 focus:border-indigo-500 bg-transparent flex-1" />
+                        <input type="text" value={examTitle} onChange={(e) => setExamTitle(e.target.value)} className="font-bold text-lg border-transparent hover:border-gray-300 focus:border-vg-dark bg-transparent flex-1" />
                     </div>
                     <div className="flex gap-2">
                         {/* Toggle Answers Button */}
                         <button
                             onClick={() => setShowAnswers(!showAnswers)}
-                            className={`btn py-2 border ${showAnswers ? 'bg-indigo-100 border-indigo-300 text-indigo-800' : 'btn-outline border-gray-300 text-gray-600'}`}
+                            className={`btn py-2 border ${showAnswers ? 'bg-vg-light border-vg-navy text-vg-hover' : 'btn-outline border-gray-300 text-gray-600'}`}
                             title={showAnswers ? "Ocultar Gabarito" : "Ver Gabarito"}
                         >
                             {showAnswers ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -430,8 +430,8 @@ export default function BuilderPage() {
 
                         <button onClick={() => setExamQuestions([])} className="btn btn-outline py-2 text-red-500 border-red-200 hover:bg-red-50 hover:border-red-300" title="Limpar"><Trash size={18} /></button>
                         <button onClick={handleDiagnostics} className="btn btn-outline py-2 text-gray-500 border-gray-200 hover:bg-gray-100" title="Diagnóstico de Conexão"><Activity size={18} /></button>
-                        <button onClick={saveExam} disabled={isSaving} className="btn btn-outline py-2 text-indigo-600 border-indigo-200 hover:bg-indigo-50">{isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} <span className="hidden sm:inline">Salvar</span></button>
-                        <button onClick={handlePrintRequest} className="btn btn-primary py-2 shadow-lg shadow-indigo-200"><Printer size={18} /> <span className="hidden sm:inline">Imprimir / PDF</span></button>
+                        <button onClick={saveExam} disabled={isSaving} className="btn btn-outline py-2 text-vg-dark border-vg-light hover:bg-vg-light">{isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} <span className="hidden sm:inline">Salvar</span></button>
+                        <button onClick={handlePrintRequest} className="btn btn-primary py-2 shadow-lg shadow-vg-light"><Printer size={18} /> <span className="hidden sm:inline">Imprimir / PDF</span></button>
                     </div>
                 </div>
 
@@ -441,7 +441,7 @@ export default function BuilderPage() {
                         <div className="flex items-center gap-6">
                             <div>
                                 <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Sistema de Pontuação</label>
-                                <select value={scoringMode} onChange={(e) => setScoringMode(e.target.value)} className="p-2 border border-gray-300 rounded-lg text-sm outline-none focus:border-indigo-500 bg-white">
+                                <select value={scoringMode} onChange={(e) => setScoringMode(e.target.value)} className="p-2 border border-gray-300 rounded-lg text-sm outline-none focus:border-vg-dark bg-white">
                                     <option value="auto">Automático (Igualitário)</option>
                                     <option value="manual">Manual (Por Questão)</option>
                                 </select>
@@ -449,21 +449,21 @@ export default function BuilderPage() {
                             {scoringMode === 'auto' && (
                                 <div>
                                     <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Nota Total da Prova</label>
-                                    <input type="number" step="0.5" min="0" value={totalScore === "" ? "" : totalScore} onBlur={(e) => { if (e.target.value === "" || Number(e.target.value) <= 0) setTotalScore(10); }} onChange={(e) => setTotalScore(e.target.value === "" ? "" : Number(e.target.value))} className="p-2 border border-gray-300 rounded-lg text-sm outline-none focus:border-indigo-500 w-24 bg-white" placeholder="10" />
+                                    <input type="number" step="0.5" min="0" value={totalScore === "" ? "" : totalScore} onBlur={(e) => { if (e.target.value === "" || Number(e.target.value) <= 0) setTotalScore(10); }} onChange={(e) => setTotalScore(e.target.value === "" ? "" : Number(e.target.value))} className="p-2 border border-gray-300 rounded-lg text-sm outline-none focus:border-vg-dark w-24 bg-white" placeholder="10" />
                                 </div>
                             )}
                         </div>
                         <div>
                             {scoringMode === 'auto' ? (
                                 <div className="text-right">
-                                    <span className="text-sm font-bold text-indigo-600 block">
+                                    <span className="text-sm font-bold text-vg-dark block">
                                         {examQuestions.length > 0 ? ((Number(totalScore) || 10) / examQuestions.length).toFixed(1) : 0} pts por questão
                                     </span>
                                     <span className="text-[10px] text-gray-500 uppercase font-bold">Valor distribuído igualmente</span>
                                 </div>
                             ) : (
                                 <div className="text-right">
-                                    <span className="text-sm font-bold text-indigo-600 block">
+                                    <span className="text-sm font-bold text-vg-dark block">
                                         Total: {examQuestions.reduce((acc, q) => acc + (Number(q.points) || 0), 0)} pts
                                     </span>
                                     <span className="text-[10px] text-gray-500 uppercase font-bold">Soma da pontuação manual</span>
@@ -480,7 +480,7 @@ export default function BuilderPage() {
                         <h3 className="font-bold text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2"><FileText size={16} /> Configuração do Cabeçalho</h3>
                         <div className="flex items-center gap-2">
                             <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Personalizar Cabeçalho da Escola</span>
-                            <button onClick={() => setHeaderConfig({ ...headerConfig, useCustomHeader: !headerConfig.useCustomHeader })} className={`w-8 h-4 flex items-center rounded-full p-0.5 duration-300 ease-in-out ${headerConfig.useCustomHeader ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                            <button onClick={() => setHeaderConfig({ ...headerConfig, useCustomHeader: !headerConfig.useCustomHeader })} className={`w-8 h-4 flex items-center rounded-full p-0.5 duration-300 ease-in-out ${headerConfig.useCustomHeader ? 'bg-vg-dark' : 'bg-gray-300 dark:bg-gray-600'}`}>
                                 <div className={`bg-white w-3 h-3 rounded-full shadow-md transform duration-300 ease-in-out ${headerConfig.useCustomHeader ? 'translate-x-4' : ''}`}></div>
                             </button>
                         </div>
@@ -490,7 +490,7 @@ export default function BuilderPage() {
                             <div>
                                 <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 block">Upload da Imagem do Cabeçalho</label>
                                 <div className="flex items-center gap-4">
-                                    <label className="cursor-pointer bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50 px-4 py-2 flex items-center gap-2 rounded-lg font-bold text-sm transition-colors border border-indigo-200 dark:border-indigo-800">
+                                    <label className="cursor-pointer bg-vg-light text-vg-hover hover:bg-vg-light dark:bg-vg-navy/30 dark:text-vg-navy dark:hover:bg-vg-navy/50 px-4 py-2 flex items-center gap-2 rounded-lg font-bold text-sm transition-colors border border-vg-light dark:border-vg-hover">
                                         <PlusCircle size={16} />
                                         Escolher Arquivo
                                         <input
@@ -665,7 +665,7 @@ export default function BuilderPage() {
                         <div className="p-6 border-b border-gray-100 dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-white/5">
                             <div>
                                 <h3 className="font-bold text-xl text-gray-800 dark:text-white flex items-center gap-2">
-                                    <Printer className="text-indigo-600" /> Configurar Impressão
+                                    <Printer className="text-vg-dark" /> Configurar Impressão
                                 </h3>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">Personalize as cópias e variações da prova.</p>
                             </div>
@@ -681,7 +681,7 @@ export default function BuilderPage() {
                                     <h4 className="font-bold text-sm text-gray-400 uppercase tracking-wide">Variações</h4>
 
                                     <label className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-white/10 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                                        <div className={`w-5 h-5 rounded flex items-center justify-center border ${printConfig.shuffleQuestions ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-gray-300'}`}>
+                                        <div className={`w-5 h-5 rounded flex items-center justify-center border ${printConfig.shuffleQuestions ? 'bg-vg-dark border-vg-dark text-white' : 'border-gray-300'}`}>
                                             {printConfig.shuffleQuestions && <Check size={14} />}
                                         </div>
                                         <input type="checkbox" className="hidden" checked={printConfig.shuffleQuestions} onChange={(e) => setPrintConfig({ ...printConfig, shuffleQuestions: e.target.checked })} />
@@ -694,7 +694,7 @@ export default function BuilderPage() {
                                     </label>
 
                                     <label className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-white/10 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                                        <div className={`w-5 h-5 rounded flex items-center justify-center border ${printConfig.shuffleOptions ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-gray-300'}`}>
+                                        <div className={`w-5 h-5 rounded flex items-center justify-center border ${printConfig.shuffleOptions ? 'bg-vg-dark border-vg-dark text-white' : 'border-gray-300'}`}>
                                             {printConfig.shuffleOptions && <Check size={14} />}
                                         </div>
                                         <input type="checkbox" className="hidden" checked={printConfig.shuffleOptions} onChange={(e) => setPrintConfig({ ...printConfig, shuffleOptions: e.target.checked })} />
@@ -707,7 +707,7 @@ export default function BuilderPage() {
                                     </label>
 
                                     <label className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-white/10 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                                        <div className={`w-5 h-5 rounded flex items-center justify-center border ${printConfig.showHabilidades ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-gray-300'}`}>
+                                        <div className={`w-5 h-5 rounded flex items-center justify-center border ${printConfig.showHabilidades ? 'bg-vg-dark border-vg-dark text-white' : 'border-gray-300'}`}>
                                             {printConfig.showHabilidades && <Check size={14} />}
                                         </div>
                                         <input type="checkbox" className="hidden" checked={printConfig.showHabilidades} onChange={(e) => setPrintConfig({ ...printConfig, showHabilidades: e.target.checked })} />
@@ -730,7 +730,7 @@ export default function BuilderPage() {
                                         Importar Turma
                                     </label>
                                     <select
-                                        className="w-full p-3 rounded-xl border border-gray-300 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:border-indigo-500 outline-none"
+                                        className="w-full p-3 rounded-xl border border-gray-300 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:border-vg-dark outline-none"
                                         value={selectedClass}
                                         onChange={(e) => {
                                             const classId = e.target.value;
@@ -756,7 +756,7 @@ export default function BuilderPage() {
                                         Lista de Alunos (1 por linha)
                                     </label>
                                     <textarea
-                                        className="w-full h-40 p-3 rounded-xl border border-gray-300 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:border-indigo-500 outline-none resize-none custom-scrollbar"
+                                        className="w-full h-40 p-3 rounded-xl border border-gray-300 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:border-vg-dark outline-none resize-none custom-scrollbar"
                                         placeholder="Joao Silva&#10;Maria Oliveira&#10;..."
                                         value={printConfig.studentList}
                                         onChange={(e) => setPrintConfig({ ...printConfig, studentList: e.target.value })}
@@ -784,18 +784,18 @@ export default function BuilderPage() {
                                 </div>
 
                                 <div className={`transition-all ${printConfig.studentList.trim().length > 0 ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
-                                    <label className="text-xs font-bold text-indigo-600 dark:text-indigo-400 block mb-2 flex items-center gap-2">
+                                    <label className="text-xs font-bold text-vg-dark dark:text-vg-navy block mb-2 flex items-center gap-2">
                                         <Eye size={14} /> Cópias Adaptadas (Fonte Ampliada)
                                     </label>
                                     <div className="flex items-center gap-3">
-                                        <Copy size={18} className="text-indigo-400" />
+                                        <Copy size={18} className="text-vg-navy" />
                                         <input
                                             type="number"
                                             min="0"
                                             max="50"
                                             value={printConfig.adaptedCopies}
                                             onChange={(e) => setPrintConfig({ ...printConfig, adaptedCopies: parseInt(e.target.value) || 0 })}
-                                            className="w-full p-3 rounded-xl border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-900/10 font-bold text-indigo-700 dark:text-indigo-300"
+                                            className="w-full p-3 rounded-xl border border-vg-light dark:border-vg-dark/30 bg-vg-light dark:bg-vg-navy/10 font-bold text-vg-hover dark:text-vg-navy"
                                         />
                                     </div>
                                     <p className="text-[10px] text-gray-400 mt-1">Gera versões com fonte maior e sem serifa para baixa visão.</p>
@@ -810,7 +810,7 @@ export default function BuilderPage() {
                             <button
                                 onClick={generateAndPrint}
                                 disabled={isPreparingPrint}
-                                className="btn btn-primary px-8 flex items-center gap-2 shadow-xl shadow-indigo-500/20"
+                                className="btn btn-primary px-8 flex items-center gap-2 shadow-xl shadow-vg-dark/20"
                             >
                                 {isPreparingPrint ? <Loader2 className="animate-spin" /> : <Printer size={18} />}
                                 {isPreparingPrint ? "Gerando..." : "Gerar e Imprimir"}
@@ -829,11 +829,11 @@ export default function BuilderPage() {
                             <button onClick={() => setIsManualModalOpen(false)} className="text-gray-400 hover:text-red-500"><Trash size={20} className="rotate-45" /></button>
                         </div>
                         <div className="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar space-y-4">
-                            <div><label className="block text-sm font-bold text-gray-700 mb-1">Enunciado</label><textarea value={manualQuestion.text} onChange={(e) => setManualQuestion({ ...manualQuestion, text: e.target.value })} className="w-full p-3 rounded-lg border border-gray-300 focus:border-indigo-500 outline-none min-h-[100px]" placeholder="Digite a pergunta aqui..." /></div>
-                            <div><label className="block text-sm font-bold text-gray-700 mb-1">Link de Imagem (Opcional)</label><input type="text" value={manualQuestion.imageUrl || ""} onChange={(e) => setManualQuestion({ ...manualQuestion, imageUrl: e.target.value })} className="w-full p-3 rounded-lg border border-gray-300 focus:border-indigo-500 outline-none text-sm" placeholder="https://exemplo.com/imagem.jpg" /></div>
+                            <div><label className="block text-sm font-bold text-gray-700 mb-1">Enunciado</label><textarea value={manualQuestion.text} onChange={(e) => setManualQuestion({ ...manualQuestion, text: e.target.value })} className="w-full p-3 rounded-lg border border-gray-300 focus:border-vg-dark outline-none min-h-[100px]" placeholder="Digite a pergunta aqui..." /></div>
+                            <div><label className="block text-sm font-bold text-gray-700 mb-1">Link de Imagem (Opcional)</label><input type="text" value={manualQuestion.imageUrl || ""} onChange={(e) => setManualQuestion({ ...manualQuestion, imageUrl: e.target.value })} className="w-full p-3 rounded-lg border border-gray-300 focus:border-vg-dark outline-none text-sm" placeholder="https://exemplo.com/imagem.jpg" /></div>
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-1">Habilidade / BNCC (Opcional)</label>
-                                <input type="text" value={manualQuestion.habilidade || ""} onChange={(e) => setManualQuestion({ ...manualQuestion, habilidade: e.target.value })} className="w-full p-3 rounded-lg border border-gray-300 focus:border-indigo-500 outline-none" placeholder="Ex: EF06HI02..." />
+                                <input type="text" value={manualQuestion.habilidade || ""} onChange={(e) => setManualQuestion({ ...manualQuestion, habilidade: e.target.value })} className="w-full p-3 rounded-lg border border-gray-300 focus:border-vg-dark outline-none" placeholder="Ex: EF06HI02..." />
                             </div>
                             {manualQuestion.type === 'multiple_choice' && (
                                 <div className="space-y-3">
@@ -841,11 +841,11 @@ export default function BuilderPage() {
                                     {manualQuestion.options.map((opt, idx) => (
                                         <div key={idx} className="flex gap-2 items-center">
                                             <span className="font-mono font-bold text-gray-400 w-6">{String.fromCharCode(65 + idx)})</span>
-                                            <input type="text" value={opt} onChange={(e) => updateOption(idx, e.target.value)} className="flex-1 p-2 rounded border border-gray-300 focus:border-indigo-500 outline-none text-sm" placeholder={`Opção ${idx + 1}`} />
+                                            <input type="text" value={opt} onChange={(e) => updateOption(idx, e.target.value)} className="flex-1 p-2 rounded border border-gray-300 focus:border-vg-dark outline-none text-sm" placeholder={`Opção ${idx + 1}`} />
                                             <button onClick={() => removeOption(idx)} className="text-red-400 hover:text-red-600 p-1"><Trash size={16} /></button>
                                         </div>
                                     ))}
-                                    <button onClick={() => setManualQuestion({ ...manualQuestion, options: [...manualQuestion.options, ""] })} className="text-sm font-bold text-indigo-600 hover:underline flex items-center gap-1 mt-2"><PlusCircle size={16} /> Adicionar Alternativa</button>
+                                    <button onClick={() => setManualQuestion({ ...manualQuestion, options: [...manualQuestion.options, ""] })} className="text-sm font-bold text-vg-dark hover:underline flex items-center gap-1 mt-2"><PlusCircle size={16} /> Adicionar Alternativa</button>
                                 </div>
                             )}
                         </div>

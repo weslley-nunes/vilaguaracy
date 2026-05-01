@@ -57,7 +57,7 @@ export default function ScannerPage() {
                     <ChevronLeft size={24} className="text-gray-600 dark:text-gray-300" />
                 </Link>
                 <div>
-                    <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+                    <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-vg-dark to-vg-navy">
                         Scanner de Provas
                     </h1>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Digitalize e corrija automaticamente.</p>
@@ -69,8 +69,8 @@ export default function ScannerPage() {
                 {/* Main Action Area */}
                 {!imagePreview && !result && (
                     <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-8">
-                        <div className="w-24 h-24 bg-indigo-50 dark:bg-indigo-500/20 rounded-full flex items-center justify-center animate-pulse-slow">
-                            <Camera size={40} className="text-indigo-600 dark:text-indigo-400" />
+                        <div className="w-24 h-24 bg-vg-light dark:bg-vg-dark/20 rounded-full flex items-center justify-center animate-pulse-slow">
+                            <Camera size={40} className="text-vg-dark dark:text-vg-navy" />
                         </div>
 
                         <div className="space-y-2">
@@ -83,7 +83,7 @@ export default function ScannerPage() {
                         <div className="flex flex-col gap-3 w-full max-w-xs">
                             <button
                                 onClick={triggerCamera}
-                                className="btn btn-primary py-4 text-lg shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-3"
+                                className="btn btn-primary py-4 text-lg shadow-lg shadow-vg-dark/30 flex items-center justify-center gap-3"
                             >
                                 <Camera size={24} />
                                 Abrir Câmera
@@ -117,7 +117,7 @@ export default function ScannerPage() {
                         <img src={imagePreview} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-50 blur-sm" />
 
                         <div className="text-center z-10 relative">
-                            <Loader2 size={60} className="text-indigo-400 animate-spin mx-auto mb-4" />
+                            <Loader2 size={60} className="text-vg-navy animate-spin mx-auto mb-4" />
                             <h3 className="text-white font-bold text-xl animate-pulse">Analisando Gabarito...</h3>
                             <p className="text-white/60 text-sm mt-2">IA verificando respostas...</p>
                         </div>
@@ -159,7 +159,7 @@ export default function ScannerPage() {
 
                             <button
                                 onClick={() => { setImagePreview(null); setResult(null); }}
-                                className="btn btn-primary w-full py-4 shadow-lg shadow-indigo-500/20"
+                                className="btn btn-primary w-full py-4 shadow-lg shadow-vg-dark/20"
                             >
                                 Próxima Prova
                             </button>

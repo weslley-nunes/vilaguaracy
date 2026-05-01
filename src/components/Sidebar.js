@@ -39,12 +39,12 @@ export default function Sidebar() {
     return (
         <aside className="w-72 h-screen flex flex-col fixed left-0 top-0 z-50 glass border-r-0">
             <div className="p-8 flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-vg-dark to-vg-navy flex items-center justify-center text-white shadow-lg">
                     <Sparkles size={20} />
                 </div>
                 <div>
                     <span className="font-bold text-xl text-gray-800 dark:text-white block leading-none">Vila</span>
-                    <span className="text-xs text-indigo-500 dark:text-indigo-300 font-medium tracking-wide">GUARACY</span>
+                    <span className="text-xs text-vg-dark dark:text-vg-navy font-medium tracking-wide">GUARACY</span>
                 </div>
             </div>
 
@@ -57,14 +57,14 @@ export default function Sidebar() {
                             key={link.href}
                             href={link.href}
                             className={`flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all relative overflow-hidden group ${isActive
-                                ? "bg-indigo-600/10 dark:bg-indigo-600/20 text-indigo-700 dark:text-white shadow-lg border border-indigo-500/30"
-                                : "text-gray-500 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-indigo-600 dark:hover:text-white"
+                                ? "bg-vg-dark/10 dark:bg-vg-dark/20 text-vg-hover dark:text-white shadow-lg border border-vg-dark/30"
+                                : "text-gray-500 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-vg-dark dark:hover:text-white"
                                 }`}
                         >
-                            <Icon size={20} className={isActive ? "text-indigo-600 dark:text-indigo-400" : "group-hover:text-indigo-600 dark:group-hover:text-white transition-colors"} />
+                            <Icon size={20} className={isActive ? "text-vg-dark dark:text-vg-navy" : "group-hover:text-vg-dark dark:group-hover:text-white transition-colors"} />
                             <span className="font-medium relative z-10">{link.label}</span>
                             {isActive && (
-                                <div className="absolute inset-0 bg-indigo-500/10 blur-xl"></div>
+                                <div className="absolute inset-0 bg-vg-dark/10 blur-xl"></div>
                             )}
                         </Link>
                     );
@@ -77,7 +77,7 @@ export default function Sidebar() {
                         <div className="glass-card p-4 rounded-2xl mb-2 flex items-center gap-3 border border-gray-200 dark:border-white/5 bg-white/50 dark:bg-white/5">
                             {user?.photoURL ? (
                                 // eslint-disable-next-line @next/next/no-img-element
-                                <img src={user.photoURL} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-indigo-500/50" />
+                                <img src={user.photoURL} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-vg-dark/50" />
                             ) : (
                                 <UserCircle size={40} className="text-gray-400" />
                             )}

@@ -57,7 +57,7 @@ export default function UsuariosPage() {
             <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                        <UserCircle className="text-indigo-600" />
+                        <UserCircle className="text-vg-dark" />
                         Gestão de Usuários
                     </h1>
                     <p className="text-gray-500 text-sm mt-1">Gerencie acessos, alunos e professores do Vila Guaracy.</p>
@@ -89,9 +89,9 @@ export default function UsuariosPage() {
                                 </td>
                                 <td className="p-4">
                                     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold uppercase ${
-                                        u.role === 'gestao' ? 'bg-purple-100 text-purple-700' :
-                                        u.role === 'coordenador' ? 'bg-blue-100 text-blue-700' :
-                                        u.role === 'professor' ? 'bg-indigo-100 text-indigo-700' :
+                                        u.role === 'gestao' ? 'bg-vg-light text-vg-navy' :
+                                        u.role === 'coordenador' ? 'bg-vg-light text-vg-navy' :
+                                        u.role === 'professor' ? 'bg-vg-light text-vg-hover' :
                                         'bg-gray-100 text-gray-600'
                                     }`}>
                                         {u.role}
@@ -133,15 +133,15 @@ export default function UsuariosPage() {
                             <div className="p-6 space-y-4">
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-1">Nome Completo</label>
-                                    <input required type="text" value={newUser.name} onChange={e => setNewUser({...newUser, name: e.target.value})} className="w-full p-3 rounded-lg border border-gray-300 focus:border-indigo-500 outline-none" />
+                                    <input required type="text" value={newUser.name} onChange={e => setNewUser({...newUser, name: e.target.value})} className="w-full p-3 rounded-lg border border-gray-300 focus:border-vg-dark outline-none" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-1">E-mail</label>
-                                    <input required type="email" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} className="w-full p-3 rounded-lg border border-gray-300 focus:border-indigo-500 outline-none" />
+                                    <input required type="email" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} className="w-full p-3 rounded-lg border border-gray-300 focus:border-vg-dark outline-none" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-1">Perfil de Acesso</label>
-                                    <select value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})} className="w-full p-3 rounded-lg border border-gray-300 focus:border-indigo-500 outline-none">
+                                    <select value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})} className="w-full p-3 rounded-lg border border-gray-300 focus:border-vg-dark outline-none">
                                         <option value="aluno">Aluno</option>
                                         <option value="professor">Professor</option>
                                         <option value="coordenador">Coordenador de Área</option>

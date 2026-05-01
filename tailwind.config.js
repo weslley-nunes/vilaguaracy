@@ -10,6 +10,13 @@ module.exports = {
             colors: {
                 background: "var(--background)",
                 foreground: "var(--foreground)",
+                vg: {
+                    dark: '#0e4a2d',
+                    light: '#e1f4e5',
+                    navy: '#151c5b',
+                    gold: '#f0b70c',
+                    hover: '#135c38'
+                }
             },
         },
     },

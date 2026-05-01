@@ -42,15 +42,15 @@ export default function HabilidadesPage() {
             <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                        <Target className="text-indigo-600" />
+                        <Target className="text-vg-dark" />
                         Desempenho & Habilidades
                     </h1>
                     <p className="text-gray-500 text-sm mt-1">Análise de proficiência por habilidade (BNCC/Própria) em toda a instituição.</p>
                 </div>
                 <div className="flex gap-4">
-                    <div className="bg-indigo-50 px-4 py-2 rounded-xl border border-indigo-100">
-                        <span className="block text-[10px] uppercase font-bold text-indigo-500">Total Provas</span>
-                        <span className="text-xl font-black text-indigo-700">1,245</span>
+                    <div className="bg-vg-light px-4 py-2 rounded-xl border border-vg-light">
+                        <span className="block text-[10px] uppercase font-bold text-vg-dark">Total Provas</span>
+                        <span className="text-xl font-black text-vg-hover">1,245</span>
                     </div>
                     <div className="bg-green-50 px-4 py-2 rounded-xl border border-green-100">
                         <span className="block text-[10px] uppercase font-bold text-green-600">Habilidades Mapeadas</span>
@@ -63,7 +63,7 @@ export default function HabilidadesPage() {
                 {/* Gráfico Radar de Proficiência */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                     <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <Target size={18} className="text-purple-500" />
+                        <Target size={18} className="text-vg-dark" />
                         Radar de Proficiência Geral
                     </h3>
                     <div className="h-80 w-full">
@@ -83,7 +83,7 @@ export default function HabilidadesPage() {
                 {/* Gráfico de Barras por Turma */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                     <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <Users size={18} className="text-indigo-500" />
+                        <Users size={18} className="text-vg-dark" />
                         Desempenho por Turma
                     </h3>
                     <div className="h-80 w-full">
@@ -136,7 +136,7 @@ export default function HabilidadesPage() {
                                         </span>
                                     </td>
                                     <td className="p-4">
-                                        <button className="text-sm text-indigo-600 font-bold hover:underline">Solicitar Revisão</button>
+                                        <button className="text-sm text-vg-dark font-bold hover:underline">Solicitar Revisão</button>
                                     </td>
                                 </tr>
                             ))}

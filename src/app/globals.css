@@ -12,15 +12,12 @@
     --foreground: #0f172a;
     /* Slate-900 */
 
-    --primary-hue: 260;
-    --primary: hsl(var(--primary-hue), 90%, 60%);
-    --primary-dark: hsl(var(--primary-hue), 90%, 45%);
-    --primary-light: hsl(var(--primary-hue), 90%, 90%);
+    --primary: #0e4a2d;
+    --primary-dark: #135c38;
+    --primary-light: #e1f4e5;
 
-    --secondary: #0891b2;
-    /* Cyan-600 */
-    --accent: #db2777;
-    /* Pink-600 */
+    --secondary: #151c5b; /* Navy */
+    --accent: #f0b70c; /* Gold */
 
     /* Glass/Surface Defaults (Light) */
     --glass-bg: rgba(255, 255, 255, 0.7);
@@ -46,12 +43,12 @@
     --background: #0f0c29;
     --foreground: #ffffff;
 
-    --primary: hsl(var(--primary-hue), 90%, 65%);
-    --primary-dark: hsl(var(--primary-hue), 90%, 45%);
-    --primary-light: hsl(var(--primary-hue), 100%, 85%);
+    --primary: #135c38;
+    --primary-dark: #0e4a2d;
+    --primary-light: #e1f4e5;
 
-    --secondary: #06b6d4;
-    --accent: #f472b6;
+    --secondary: #273085;
+    --accent: #f0b70c;
 
     --glass-bg: rgba(255, 255, 255, 0.05);
     --glass-border: rgba(255, 255, 255, 0.2);
@@ -100,7 +97,7 @@
   }
 
   .btn-primary {
-    @apply text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:-translate-y-0.5;
+    @apply text-white shadow-lg shadow-vg-dark/30 hover:shadow-vg-dark/50 hover:-translate-y-0.5;
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
   }
 
@@ -111,13 +108,13 @@
 
   /* Inputs */
   .input-field {
-    @apply w-full p-4 rounded-xl text-[var(--text-main)] placeholder-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all;
+    @apply w-full p-4 rounded-xl text-[var(--text-main)] placeholder-gray-400 focus:outline-none focus:border-vg-dark focus:ring-1 focus:ring-vg-dark transition-all;
     background: var(--input-bg);
     border: 1px solid var(--input-border);
   }
 
   .text-gradient-primary {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-cyan-500 dark:from-indigo-400 dark:to-cyan-400;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-vg-dark to-cyan-500 dark:from-vg-navy dark:to-cyan-400;
   }
 }
 

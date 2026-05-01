@@ -151,7 +151,7 @@ export default function ClassDetailsPage() {
         <div className="max-w-5xl mx-auto pb-10">
             {/* Header */}
             <div className="mb-8">
-                <Link href="/classes" className="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-800 mb-4 transition-colors">
+                <Link href="/classes" className="inline-flex items-center text-sm font-medium text-vg-dark hover:text-vg-hover mb-4 transition-colors">
                     <ArrowLeft size={16} className="mr-1" /> Voltar para turmas
                 </Link>
                 <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4">
@@ -160,7 +160,7 @@ export default function ClassDetailsPage() {
                         <p className="text-gray-500 mt-1">{classData.school}</p>
                     </div>
                     <div className="bg-white px-4 py-2 rounded-lg border border-gray-200 flex items-center gap-3 shadow-sm">
-                        <Users size={20} className="text-indigo-500" />
+                        <Users size={20} className="text-vg-dark" />
                         <div>
                             <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Total de Alunos</p>
                             <p className="text-xl font-bold text-gray-900 leading-none">{students.length}</p>
@@ -174,7 +174,7 @@ export default function ClassDetailsPage() {
                 <div className="card h-fit lg:col-span-1 shadow-sm border border-gray-100 flex flex-col">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="font-bold text-lg flex items-center gap-2">
-                            <UserPlus size={20} className="text-indigo-600" />
+                            <UserPlus size={20} className="text-vg-dark" />
                             Novo Cadastro
                         </h2>
                     </div>
@@ -184,14 +184,14 @@ export default function ClassDetailsPage() {
                         <button
                             type="button"
                             onClick={() => setAddMode("single")}
-                            className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${addMode === 'single' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                            className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${addMode === 'single' ? 'bg-white text-vg-hover shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                         >
                             Individual
                         </button>
                         <button
                             type="button"
                             onClick={() => setAddMode("bulk")}
-                            className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${addMode === 'bulk' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                            className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${addMode === 'bulk' ? 'bg-white text-vg-hover shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                         >
                             Em Lote (Lista)
                         </button>
@@ -207,7 +207,7 @@ export default function ClassDetailsPage() {
                                         value={newStudentName}
                                         onChange={(e) => setNewStudentName(e.target.value)}
                                         placeholder="Ex: Maria Luiza Silva"
-                                        className="w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                                        className="w-full border-gray-300 rounded-md focus:ring-vg-dark focus:border-vg-dark"
                                         required={addMode === "single"}
                                     />
                                 </div>
@@ -218,7 +218,7 @@ export default function ClassDetailsPage() {
                                         value={newStudentEnrollment}
                                         onChange={(e) => setNewStudentEnrollment(e.target.value)}
                                         placeholder="Ex: 2024001"
-                                        className="w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                                        className="w-full border-gray-300 rounded-md focus:ring-vg-dark focus:border-vg-dark"
                                     />
                                 </div>
                             </>
@@ -229,7 +229,7 @@ export default function ClassDetailsPage() {
                                     value={bulkStudents}
                                     onChange={(e) => setBulkStudents(e.target.value)}
                                     placeholder="João da Silva&#10;Maria Santos&#10;Pedro Alves"
-                                    className="w-full h-32 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 resize-none text-sm"
+                                    className="w-full h-32 border-gray-300 rounded-md focus:ring-vg-dark focus:border-vg-dark resize-none text-sm"
                                     required={addMode === "bulk"}
                                 ></textarea>
                                 <p className="text-[10px] text-gray-500 mt-1">
@@ -291,7 +291,7 @@ export default function ClassDetailsPage() {
                                         <div className="sm:col-span-5">
                                             <h3 className="font-bold text-gray-900 truncate" title={student.name}>{student.name}</h3>
                                             <div className="flex items-center gap-2 mt-0.5">
-                                                <span className="text-xs text-indigo-700 font-bold tracking-widest bg-indigo-100 px-2 py-0.5 rounded border border-indigo-200" title="Código de Acesso">
+                                                <span className="text-xs text-vg-hover font-bold tracking-widest bg-vg-light px-2 py-0.5 rounded border border-vg-light" title="Código de Acesso">
                                                     {student.accessCode || String(student.id).substring(0, 6).toUpperCase()}
                                                 </span>
                                                 {/* Mobile only enrollment */}
@@ -314,7 +314,7 @@ export default function ClassDetailsPage() {
                                         <div className="flex items-center justify-end gap-2 sm:col-span-3">
                                             <button
                                                 onClick={() => downloadQR(student.id, student.name)}
-                                                className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors flex items-center justify-center border border-transparent hover:border-indigo-100"
+                                                className="p-2 text-gray-500 hover:text-vg-dark hover:bg-vg-light rounded-lg transition-colors flex items-center justify-center border border-transparent hover:border-vg-light"
                                                 title="Baixar Cartão QR"
                                             >
                                                 <Download size={18} />
