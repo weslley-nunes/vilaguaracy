@@ -41,9 +41,12 @@ export default function Home() {
             v1.0 Disponível
           </div>
 
+          <div className="mb-4 animate-fade-in">
+             <img src="/logo.png" alt="Escola Estadual Vila Guaracy" className="w-24 h-24 lg:w-32 lg:h-32 object-contain drop-shadow-2xl" />
+          </div>
           <h1 className="text-5xl lg:text-7xl font-bold leading-tight text-white drop-shadow-lg">
             Avaliações com <br />
-            <span className="text-gradient-primary">Excelência Escolar</span>
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-vg-gold to-vg-light">Excelência Escolar</span>
           </h1>
 
           <p className="text-lg text-gray-300 max-w-xl mx-auto lg:mx-0">
@@ -80,8 +83,8 @@ export default function Home() {
         <div className="flex justify-center animate-float">
           <div className="backdrop-blur-2xl bg-black/40 rounded-3xl p-6 sm:p-8 max-w-md w-full border border-white/10 shadow-2xl">
             <div className="mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-vg-dark to-vg-navy flex items-center justify-center text-white shadow-lg">
-                <Shield size={20} />
+              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1 shadow-lg">
+                <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
               </div>
               <div>
                 <h3 className="text-white text-lg font-bold">Portal Vila Guaracy</h3>
@@ -139,7 +142,7 @@ export default function Home() {
                   placeholder="E-mail ou 'admin'" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-vg-dark"
+                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-vg-gold focus:bg-white/20 transition-all"
                   required
                   autoCapitalize="none"
                 />
@@ -150,7 +153,7 @@ export default function Home() {
                   placeholder="Senha" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-vg-dark pr-12"
+                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-vg-gold focus:bg-white/20 transition-all pr-12"
                   required
                 />
                 <button
