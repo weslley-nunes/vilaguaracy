@@ -32,9 +32,8 @@ export const createClass = async (userId, classData) => {
     }
 };
 
-/**
- * Busca todas as turmas de um professor
- */
+export const getClassesByUser = async () => {
+    try {
         // Removido o filtro por userId para que todos compartilhem a mesma base de dados
         const q = query(
             collection(db, COLLECTION_NAME)
