@@ -33,9 +33,9 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
       </div>
 
-      <div className="container relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <div className="container mx-auto px-6 lg:px-16 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[90vh]">
         {/* Left Side: Text Content */}
-        <div className="text-center lg:text-left space-y-8 animate-fade-in">
+        <div className="text-center lg:text-left space-y-8 animate-fade-in lg:pr-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-white/20 text-sm font-medium text-white/90">
             <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
             v1.0 Disponível
