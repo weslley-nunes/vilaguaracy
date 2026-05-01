@@ -1,5 +1,5 @@
 import { db } from "@/services/firebase";
-import { collection, addDoc, getDocs, query, where, orderBy, doc, deleteDoc, updateDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, orderBy, doc, deleteDoc, updateDoc, or } from "firebase/firestore";
 
 export const ExamService = {
     // Save Exam (with Fallback)
@@ -11,78 +11,62 @@ export const ExamService = {
             ...examData,
             teacherId: user.uid,
             teacherName: user.displayName || "Professor",
-            createdAt: new Date(), // Client timestamp
+            collaborators: examData.collaborators || [], // Objetos {userId, subject, quota}
+            collaboratorIds: (examData.collaborators || []).map(c => c.userId), // IDs para busca
+            createdAt: new Date(),
             updatedAt: new Date(),
             status: "published",
-            studentCount: 0 // Default
+            studentCount: 0
         }));
 
-        // Restore Date objects (JSON.stringify converts them to strings)
+        // Restore Date objects
         cleanData.createdAt = new Date();
         cleanData.updatedAt = new Date();
 
         try {
-            // 2. Try Direct Firestore Write with Timeout
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error("Direct write timeout")), 15000)
-            );
-
-            console.log("Attempting direct Firestore save...");
-            const docRef = await Promise.race([
-                addDoc(collection(db, "exams"), cleanData),
-                timeoutPromise
-            ]);
-
-            console.log("Direct save success:", docRef.id);
+            const docRef = await addDoc(collection(db, "exams"), cleanData);
             return { success: true, id: docRef.id, method: "direct" };
         } catch (error) {
-            console.warn("Direct save failed, trying API fallback...", error.message || error);
-
-            // 3. Fallback to API
-            try {
-                console.log("Attempting API fallback save...");
-                const res = await fetch('/api/exams/save', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ examData: cleanData })
-                });
-
-                const data = await res.json();
-                if (!res.ok) {
-                    console.error("API Fallback Error Response:", data);
-                    throw new Error(data.error || "Server error");
-                }
-
-                console.log("API fallback success:", data.id);
-                return { success: true, id: data.id, method: "fallback" };
-            } catch (apiError) {
-                console.error("All save methods failed. Last error:", apiError.message || apiError);
-                throw new Error("Não foi possível salvar a prova. Verifique sua conexão.");
-            }
+            console.error("Direct save failed", error);
+            throw error;
         }
     },
 
-    // List Exams for Teacher
-    listByTeacher: async (teacherId) => {
-        if (!teacherId) return [];
+    // List Exams for Teacher (Owned + Collaborations)
+    listByTeacher: async (userId) => {
+        if (!userId) return [];
         try {
-            // Try ordered query first
+            // Busca provas onde o usuário é dono OU é colaborador (via array de IDs)
             const q = query(
                 collection(db, "exams"),
-                where("teacherId", "==", teacherId),
-                orderBy("createdAt", "desc")
+                or(
+                    where("teacherId", "==", userId),
+                    where("collaboratorIds", "array-contains", userId)
+                )
             );
-            const snapshot = await getDocs(q);
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } catch (e) {
-            console.warn("Ordered query failed (idx?), trying simple query", e);
-            // Fallback: Simple query (client-side sort if needed)
-            const q = query(collection(db, "exams"), where("teacherId", "==", teacherId));
+            
             const snapshot = await getDocs(q);
             const exams = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            // Sort in memory
-            return exams.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds);
+            
+            // Ordenação manual (createdAt)
+            return exams.sort((a, b) => {
+                const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+                const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+                return dateB - dateA;
+            });
+        } catch (e) {
+            console.error("Error listing exams", e);
+            return [];
         }
+    },
+
+    // Update Collaborators
+    updateCollaborators: async (examId, collaborators) => {
+        const docRef = doc(db, "exams", examId);
+        await updateDoc(docRef, {
+            collaborators: collaborators,
+            updatedAt: new Date()
+        });
     },
 
     // Delete Exam

@@ -11,6 +11,7 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthContextProvider = ({ children }) => {
     const [user, setUser] = useState(null);
+    const [activeRole, setActiveRole] = useState(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
@@ -34,14 +35,35 @@ export const AuthContextProvider = ({ children }) => {
                     photoURL: firebaseUser.photoURL,
                     role: role
                 });
+
+                // Carregar perfil ativo do localStorage ou usar o padrão
+                const savedRole = localStorage.getItem(`activeRole_${firebaseUser.uid}`);
+                setActiveRole(savedRole || role);
             } else {
                 setUser(null);
+                setActiveRole(null);
             }
             setLoading(false);
         });
 
         return () => unsubscribe();
     }, []);
+
+    const switchRole = (newRole) => {
+        if (!user) return;
+        
+        // Validação de permissões
+        const canSwitch = 
+            (user.role === 'gestao') || 
+            (user.role === 'coordenador' && newRole !== 'gestao') ||
+            (user.role === newRole);
+
+        if (canSwitch) {
+            setActiveRole(newRole);
+            localStorage.setItem(`activeRole_${user.uid}`, newRole);
+            router.push("/dashboard"); // Redireciona para o início do novo perfil
+        }
+    };
 
     const googleLogin = async () => {
         try {
@@ -73,7 +95,21 @@ export const AuthContextProvider = ({ children }) => {
 
     const emailLogin = async (email, password) => {
         try {
-            const loginEmail = email.toLowerCase() === 'admin' ? 'admin@vilaguaracy.com.br' : email;
+            let loginEmail = email.toLowerCase().trim();
+            
+            console.log("Tentativa de login com:", loginEmail);
+
+            if (loginEmail === 'admin') {
+                loginEmail = 'admin@vilaguaracy.com.br';
+            } else {
+                // Remove qualquer caractere que não seja número (pontos, traços)
+                const cpfOnlyNumbers = loginEmail.replace(/\D/g, '');
+                if (cpfOnlyNumbers.length === 11) {
+                    loginEmail = `${cpfOnlyNumbers}@vilaguaracy.com.br`;
+                    console.log("CPF detectado. Mapeado para:", loginEmail);
+                }
+            }
+
             await signInWithEmailAndPassword(auth, loginEmail, password);
             router.push("/dashboard");
         } catch (error) {
@@ -84,8 +120,16 @@ export const AuthContextProvider = ({ children }) => {
 
     const emailRegister = async (email, password) => {
         try {
-            const isAdmin = email.toLowerCase() === 'admin';
-            const loginEmail = isAdmin ? 'admin@vilaguaracy.com.br' : email;
+            let loginEmail = email.toLowerCase().trim();
+            
+            if (loginEmail === 'admin') {
+                loginEmail = 'admin@vilaguaracy.com.br';
+            } else {
+                const cpfOnlyNumbers = loginEmail.replace(/\D/g, '');
+                if (cpfOnlyNumbers.length === 11) {
+                    loginEmail = `${cpfOnlyNumbers}@vilaguaracy.com.br`;
+                }
+            }
             
             const userCredential = await createUserWithEmailAndPassword(auth, loginEmail, password);
             
@@ -105,7 +149,7 @@ export const AuthContextProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, googleLogin, emailLogin, emailRegister, logout, loading }}>
+        <AuthContext.Provider value={{ user, activeRole, switchRole, googleLogin, emailLogin, emailRegister, logout, loading }}>
             {loading ? <div className="flex-center" style={{ height: '100vh' }}>Loading...</div> : children}
         </AuthContext.Provider>
     );

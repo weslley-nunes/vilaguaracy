@@ -5,6 +5,7 @@ import { db } from "@/services/firebase";
 import { collection, addDoc, getDocs, limit, query, deleteDoc, doc } from "firebase/firestore";
 import { ExamService } from "@/services/examService";
 import { getClassesByUser } from "@/services/classesService";
+import { UserService } from "@/services/userService";
 import ExamPaper from "@/components/ExamPaper";
 // AnswerSheet import removed as it is now integrated
 import { useReactToPrint } from "react-to-print";
@@ -24,6 +25,11 @@ export default function BuilderPage() {
 
     const [classes, setClasses] = useState([]);
     const [selectedClass, setSelectedClass] = useState("");
+
+    const [collaborators, setCollaborators] = useState([]);
+    const [staffMembers, setStaffMembers] = useState([]);
+    const [isCollaboratorModalOpen, setIsCollaboratorModalOpen] = useState(false);
+    const [editingCollaborator, setEditingCollaborator] = useState(null); // { userId, name, subject, quota }
 
     const [scoringMode, setScoringMode] = useState("auto"); // "auto" | "manual"
     const [totalScore, setTotalScore] = useState(10);
@@ -45,6 +51,7 @@ export default function BuilderPage() {
         logoUrl: "",
         customHeaderImageUrl: "",
         useCustomHeader: false,
+        subject: "Geral",
         instructions: "Leia atentamente cada questão antes de responder.\nUtilize caneta esferográfica azul ou preta para preencher o gabarito."
     });
 
@@ -98,6 +105,33 @@ export default function BuilderPage() {
                 console.error("Erro ao buscar turmas:", error);
             }
         }
+    };
+
+    // Load Staff Members
+    useEffect(() => {
+        const loadStaff = async () => {
+            if (user && (user.role === 'gestao' || user.role === 'coordenador')) {
+                const staff = await UserService.listStaff();
+                // Remove self from list
+                setStaffMembers(staff.filter(s => s.uid !== user.uid));
+            }
+        };
+        loadStaff();
+    }, [user]);
+
+    const toggleCollaborator = (staff) => {
+        const existing = collaborators.find(c => c.userId === staff.uid);
+        if (existing) {
+            setCollaborators(collaborators.filter(c => c.userId !== staff.uid));
+        } else {
+            setEditingCollaborator({ userId: staff.uid, name: staff.name, subject: "", quota: 5 });
+        }
+    };
+
+    const saveCollaboratorConfig = () => {
+        if (!editingCollaborator.subject || !editingCollaborator.quota) return alert("Preencha a disciplina e a cota!");
+        setCollaborators([...collaborators, editingCollaborator]);
+        setEditingCollaborator(null);
     };
 
     const generateAndPrint = async () => {
@@ -235,6 +269,14 @@ export default function BuilderPage() {
     const saveExam = async () => {
         if (!user || examQuestions.length === 0) return alert("Adicione questões antes de salvar!");
 
+        // Validação de Cotas
+        for (const collab of collaborators) {
+            const count = examQuestions.filter(q => q.ownerId === collab.userId).length;
+            if (count !== Number(collab.quota)) {
+                return alert(`O bloco de ${collab.subject} (${collab.name}) está incompleto! Esperado: ${collab.quota}, Atual: ${count}`);
+            }
+        }
+
         setIsSaving(true);
         try {
             const examData = {
@@ -242,7 +284,8 @@ export default function BuilderPage() {
                 headerConfig,
                 questions: examQuestions,
                 scoringMode,
-                totalScore: scoringMode === 'auto' ? (Number(totalScore) || 10) : examQuestions.reduce((sum, q) => sum + (Number(q.points) || 0), 0)
+                totalScore: scoringMode === 'auto' ? (Number(totalScore) || 10) : examQuestions.reduce((sum, q) => sum + (Number(q.points) || 0), 0),
+                collaborators: collaborators
                 // Status, dates, and teacherId are handled by the service
             };
 
@@ -287,7 +330,14 @@ export default function BuilderPage() {
     };
 
     const addToExam = (question) => {
-        setExamQuestions([...examQuestions, { ...question, id: Date.now() + Math.random(), points: 1 }]);
+        const isCollaborator = collaborators.find(c => c.userId === user.uid);
+        if (isCollaborator) {
+            const currentCount = examQuestions.filter(q => q.ownerId === user.uid).length;
+            if (currentCount >= Number(isCollaborator.quota)) {
+                return alert(`Você já atingiu sua cota de ${isCollaborator.quota} questões!`);
+            }
+        }
+        setExamQuestions([...examQuestions, { ...question, id: Date.now() + Math.random(), points: 1, ownerId: user.uid }]);
     };
 
     const updateQuestion = (id, updates) => {
@@ -434,6 +484,18 @@ export default function BuilderPage() {
                         </button>
 
                         <button onClick={() => setExamQuestions([])} className="btn btn-outline py-2 text-red-500 border-red-200 hover:bg-red-50 hover:border-red-300" title="Limpar"><Trash size={18} /></button>
+                        
+                        {(user?.role === 'gestao' || user?.role === 'coordenador') && (
+                            <button 
+                                onClick={() => setIsCollaboratorModalOpen(true)} 
+                                className={`btn py-2 border ${collaborators.length > 0 ? 'bg-vg-light border-vg-navy text-vg-hover' : 'btn-outline border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+                                title="Gerenciar Colaboradores"
+                            >
+                                <Users size={18} />
+                                {collaborators.length > 0 && <span className="ml-1 text-xs">{collaborators.length}</span>}
+                            </button>
+                        )}
+
                         <button onClick={handleDiagnostics} className="btn btn-outline py-2 text-gray-500 border-gray-200 hover:bg-gray-100" title="Diagnóstico de Conexão"><Activity size={18} /></button>
                         <button onClick={saveExam} disabled={isSaving} className="btn btn-outline py-2 text-vg-dark border-vg-light hover:bg-vg-light">{isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} <span className="hidden sm:inline">Salvar</span></button>
                         <button onClick={handlePrintRequest} className="btn btn-primary py-2 shadow-lg shadow-vg-light"><Printer size={18} /> <span className="hidden sm:inline">Imprimir / PDF</span></button>
@@ -556,6 +618,7 @@ export default function BuilderPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                                 <div><label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Escola</label><input type="text" value={headerConfig.schoolName} onChange={(e) => setHeaderConfig({ ...headerConfig, schoolName: e.target.value })} className="w-full p-2 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white bg-white dark:bg-black/20 text-sm" /></div>
                             <div><label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Professor</label><input type="text" value={headerConfig.teacherName} onChange={(e) => setHeaderConfig({ ...headerConfig, teacherName: e.target.value })} className="w-full p-2 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white bg-white dark:bg-black/20 text-sm" /></div>
+                            <div><label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Sua Disciplina</label><input type="text" value={headerConfig.subject} onChange={(e) => setHeaderConfig({ ...headerConfig, subject: e.target.value })} placeholder="Ex: Ciências" className="w-full p-2 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white bg-white dark:bg-black/20 text-sm" /></div>
                             <div className="flex flex-col flex-1 pl-2">
                                 <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Logo Turma</label>
                                 {headerConfig.logoUrl ? (
@@ -619,6 +682,7 @@ export default function BuilderPage() {
                         <ExamPaper
                             questions={examQuestions}
                             title={examTitle}
+                            collaborators={collaborators}
                             headerConfig={headerConfig}
                             showAnswers={showAnswers}
                             scoringMode={scoringMode}
@@ -641,6 +705,7 @@ export default function BuilderPage() {
                             <ExamPaper
                                 questions={v.questions}
                                 title={examTitle}
+                                collaborators={collaborators}
                                 headerConfig={{
                                     ...headerConfig,
                                     studentName: v.student || "________________",
@@ -664,7 +729,76 @@ export default function BuilderPage() {
             </div>
 
 
-            {/* --- Print Settings Modal --- */}
+            {/* --- Collaborators Modal --- */}
+            {isCollaboratorModalOpen && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100 dark:border-white/10">
+                        <div className="p-6 border-b border-gray-100 dark:border-white/10 flex justify-between items-center bg-gray-50 dark:bg-white/5">
+                            <div>
+                                <h3 className="font-bold text-xl text-gray-800 dark:text-white flex items-center gap-2">
+                                    <Users className="text-vg-dark" /> Colaboradores
+                                </h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Quem pode editar esta prova?</p>
+                            </div>
+                            <button onClick={() => setIsCollaboratorModalOpen(false)} className="text-gray-400 hover:text-red-500 transition-colors">
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div className="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                            <div className="space-y-2">
+                                {staffMembers.map(member => (
+                                    <div key={member.uid} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${collaborators.find(c => c.userId === member.uid) ? 'bg-vg-light border-vg-navy' : 'border-gray-100'}`}>
+                                        <div className="flex-1">
+                                            <p className="font-bold text-sm text-gray-800">{member.name}</p>
+                                            <p className="text-[10px] text-gray-400 uppercase font-bold">{member.role}</p>
+                                        </div>
+                                        {collaborators.find(c => c.userId === member.uid) ? (
+                                            <button onClick={() => toggleCollaborator(member)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors"><Trash size={18} /></button>
+                                        ) : (
+                                            <button onClick={() => toggleCollaborator(member)} className="btn btn-outline py-1 px-3 text-xs">Adicionar</button>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="p-4 bg-gray-50 dark:bg-white/5 text-center">
+                            <button onClick={() => setIsCollaboratorModalOpen(false)} className="btn btn-primary w-full py-2">Concluir</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- Collaborator Config Modal --- */}
+            {editingCollaborator && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden p-6 space-y-4">
+                        <h3 className="font-bold text-lg text-gray-800">Configurar Bloco: {editingCollaborator.name}</h3>
+                        <div>
+                            <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Disciplina / Bloco</label>
+                            <input 
+                                type="text" 
+                                value={editingCollaborator.subject} 
+                                onChange={(e) => setEditingCollaborator({...editingCollaborator, subject: e.target.value})}
+                                placeholder="Ex: Matemática"
+                                className="w-full p-3 rounded-xl border border-gray-300 outline-none focus:border-vg-dark"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Cota de Questões</label>
+                            <input 
+                                type="number" 
+                                value={editingCollaborator.quota} 
+                                onChange={(e) => setEditingCollaborator({...editingCollaborator, quota: e.target.value})}
+                                className="w-full p-3 rounded-xl border border-gray-300 outline-none focus:border-vg-dark"
+                            />
+                        </div>
+                        <div className="flex gap-2">
+                            <button onClick={() => setEditingCollaborator(null)} className="btn btn-outline flex-1 py-2">Cancelar</button>
+                            <button onClick={saveCollaboratorConfig} className="btn btn-primary flex-1 py-2">Salvar</button>
+                        </div>
+                    </div>
+                </div>
+            )}
             {isPrintModalOpen && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
                     <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100 dark:border-white/10">

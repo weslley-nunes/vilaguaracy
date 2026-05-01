@@ -1,7 +1,7 @@
 import React, { forwardRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 
-const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = false, isAdapted = false, scoringMode = "auto", totalScore = 10, onQuestionChange = null, printConfig = {} }, ref) => {
+const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConfig, showAnswers = false, isAdapted = false, scoringMode = "auto", totalScore = 10, onQuestionChange = null, printConfig = {} }, ref) => {
     // Determine exam ID for QR (fallback to timestamp if not provided in headerConfig)
     const examId = headerConfig?.examId || "PREVIEW";
     const studentName = headerConfig?.studentName || "";
@@ -139,100 +139,109 @@ const ExamPaper = forwardRef(({ questions, title, headerConfig, showAnswers = fa
                 </div>
             )}
 
-            {/* Questions List */}
+            {/* Questions List Grouped by Blocks */}
             <div className={spacing}>
-                {questions.map((q, index) => {
-                    const autoPoints = questions.length > 0 ? (totalScore / questions.length) : 0;
-                    const questionPoints = scoringMode === 'auto' ? autoPoints : (Number(q.points) || 0);
+                {(() => {
+                    // 1. Identify all unique owners in the current questions
+                    const ownerIds = [...new Set(questions.map(q => q.ownerId))];
+                    
+                    // 2. Render each block
+                    return ownerIds.map((ownerId, blockIdx) => {
+                        const blockQuestions = questions.filter(q => q.ownerId === ownerId);
+                        const collabInfo = collaborators.find(c => c.userId === ownerId);
+                        const blockTitle = collabInfo ? collabInfo.subject : (headerConfig?.subject || "Geral");
 
-                    return (
-                        <div key={q.id || index} className="break-inside-avoid">
-                            <div className="flex gap-2">
-                                <div className="flex flex-col items-center gap-1 w-8 shrink-0">
-                                    <span className="font-bold">{index + 1}.</span>
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex justify-between items-start gap-4 mb-2">
-                                        <div className="flex-1">
-                                            <p className={`whitespace-pre-wrap inline ${isAdapted ? 'font-medium' : ''} ${lineHeight}`}>
-                                                {typeof q.text === 'string' ? q.text : String(q.text || "")}
-                                                {q.habilidade && q.habilidade !== "N/A" && printConfig?.showHabilidades !== false && (
-                                                    <span className="ml-2 px-2 py-0.5 bg-vg-light text-vg-hover border border-vg-light text-[9px] font-bold rounded-full uppercase tracking-wider inline-flex items-center align-middle relative -top-0.5 print:border-gray-300 print:text-gray-500 print:bg-transparent">
-                                                        {typeof q.habilidade === 'string' ? q.habilidade : String(q.habilidade)}
-                                                    </span>
-                                                )}
-                                            </p>
-                                        </div>
-
-                                        {/* Pontuação da Questão */}
-                                        <div className="flex items-center gap-1 shrink-0 whitespace-nowrap text-gray-500">
-                                            {scoringMode === 'manual' && onQuestionChange ? (
-                                                <div className="print:hidden flex items-center gap-1 bg-vg-light/50 p-1 rounded-lg border border-vg-light">
-                                                    <input
-                                                        type="number"
-                                                        step="0.5"
-                                                        className="w-14 p-1 text-xs border border-vg-navy rounded bg-white outline-none focus:border-vg-dark focus:ring-1 focus:ring-vg-dark text-center font-bold text-vg-hover"
-                                                        value={q.points !== undefined ? q.points : 1}
-                                                        onChange={(e) => onQuestionChange(q.id, { points: e.target.value })}
-                                                        title="Valor desta questão"
-                                                    />
-                                                    <span className="text-[10px] uppercase font-bold text-vg-navy">Pts</span>
-                                                </div>
-                                            ) : null}
-
-                                            {/* Display Points (Print View or Auto Mode) */}
-                                            {(!onQuestionChange || scoringMode === 'auto') && (
-                                                <span className="font-bold text-[10px] bg-gray-100 px-2 py-0.5 rounded border border-gray-200 text-gray-600 shadow-sm print:bg-transparent print:border-none print:shadow-none print:text-xs pt-1">
-                                                    {Number.isInteger(questionPoints) ? questionPoints : questionPoints.toFixed(1)} <span className="uppercase font-normal">Pts</span>
-                                                </span>
-                                            )}
-                                        </div>
+                        return (
+                            <div key={ownerId || blockIdx} className="space-y-4">
+                                {collaborators.length > 0 && (
+                                    <div className="bg-gray-100 py-1 px-4 border-l-4 border-black mb-4 print:bg-gray-50">
+                                        <h3 className="font-bold text-sm uppercase tracking-widest">
+                                            Bloco: {blockTitle}
+                                        </h3>
                                     </div>
-                                    {q.imageUrl && (
-                                        <div className="my-2">
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img src={q.imageUrl} alt="Questão" className="max-h-40 object-contain border rounded-lg" />
-                                        </div>
-                                    )}
+                                )}
+                                
+                                {blockQuestions.map((q, qIdx) => {
+                                    const index = questions.indexOf(q);
+                                    const autoPoints = questions.length > 0 ? (totalScore / questions.length) : 0;
+                                    const questionPoints = scoringMode === 'auto' ? autoPoints : (Number(q.points) || 0);
 
-                                    {q.type === 'multiple_choice' && Array.isArray(q.options) && (
-                                        <div className={`pl-4 ${isAdapted ? 'space-y-3' : 'space-y-1'}`}>
-                                            {q.options.map((opt, i) => {
-                                                const optStr = typeof opt === 'string' ? opt : String(opt || "");
-                                                const cleanOpt = optStr.replace(/^[a-zA-Z\d]+[).:-]\s*/, "");
-                                                const correctStr = String(q.correct || "");
-
-                                                const isCorrect = showAnswers && (
-                                                    correctStr === optStr ||
-                                                    correctStr === cleanOpt ||
-                                                    // Try to match index if correct is a letter
-                                                    correctStr.toLowerCase() === String.fromCharCode(97 + i)
-                                                );
-
-                                                return (
-                                                    <div key={i} className={`flex items-start gap-2 p-1 rounded ${isCorrect ? 'bg-green-100 dark:bg-green-900/30 -ml-1 pl-1' : ''}`}>
-                                                        <span className={`font-medium ${isAdapted ? 'text-lg font-bold' : 'text-sm'} ${isCorrect ? 'text-green-700 font-bold' : ''}`}>({String.fromCharCode(97 + i)})</span>
-                                                        <span className={`${isAdapted ? 'text-lg' : ''} ${isCorrect ? 'text-green-700 font-bold' : ''}`}>{cleanOpt}</span>
-                                                        {isCorrect && <span className="text-green-600 text-xs ml-2 font-bold">✔ Correta</span>}
+                                    return (
+                                        <div key={q.id || index} className="break-inside-avoid mb-6">
+                                            {/* Question Render Logic (Simplified for this replacement, but keep the full logic) */}
+                                            <div className="flex gap-2">
+                                                <div className="flex flex-col items-center gap-1 w-8 shrink-0">
+                                                    <span className="font-bold">{index + 1}.</span>
+                                                </div>
+                                                <div className="flex-1">
+                                                    {/* ... full question content ... */}
+                                                    <div className="flex justify-between items-start gap-4 mb-2">
+                                                        <div className="flex-1">
+                                                            <p className={`whitespace-pre-wrap inline ${isAdapted ? 'font-medium' : ''} ${lineHeight}`}>
+                                                                {typeof q.text === 'string' ? q.text : String(q.text || "")}
+                                                                {q.habilidade && q.habilidade !== "N/A" && printConfig?.showHabilidades !== false && (
+                                                                    <span className="ml-2 px-2 py-0.5 bg-vg-light text-vg-hover border border-vg-light text-[9px] font-bold rounded-full uppercase tracking-wider inline-flex items-center align-middle relative -top-0.5 print:border-gray-300 print:text-gray-500 print:bg-transparent">
+                                                                        {typeof q.habilidade === 'string' ? q.habilidade : String(q.habilidade)}
+                                                                    </span>
+                                                                )}
+                                                            </p>
+                                                        </div>
+                                                        <div className="flex items-center gap-1 shrink-0 whitespace-nowrap text-gray-500">
+                                                            {scoringMode === 'manual' && onQuestionChange ? (
+                                                                <div className="print:hidden flex items-center gap-1 bg-vg-light/50 p-1 rounded-lg border border-vg-light">
+                                                                    <input
+                                                                        type="number"
+                                                                        step="0.5"
+                                                                        className="w-14 p-1 text-xs border border-vg-navy rounded bg-white outline-none focus:border-vg-dark focus:ring-1 focus:ring-vg-dark text-center font-bold text-vg-hover"
+                                                                        value={q.points !== undefined ? q.points : 1}
+                                                                        onChange={(e) => onQuestionChange(q.id, { points: e.target.value })}
+                                                                    />
+                                                                    <span className="text-[10px] uppercase font-bold text-vg-navy">Pts</span>
+                                                                </div>
+                                                            ) : null}
+                                                            {(!onQuestionChange || scoringMode === 'auto') && (
+                                                                <span className="font-bold text-[10px] bg-gray-100 px-2 py-0.5 rounded border border-gray-200 text-gray-600 shadow-sm print:bg-transparent print:border-none print:shadow-none print:text-xs pt-1">
+                                                                    {Number.isInteger(questionPoints) ? questionPoints : questionPoints.toFixed(1)} <span className="uppercase font-normal">Pts</span>
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
+                                                    
+                                                    {q.imageUrl && <div className="my-2"><img src={q.imageUrl} alt="Questão" className="max-h-40 object-contain border rounded-lg" /></div>}
 
-                                    {q.type === 'text' && (
-                                        <div className="mt-2 border-t border-b border-gray-300 h-24 w-full">
-                                            {/* Linhas para resposta */}
-                                            <div className="border-b border-gray-200 h-8"></div>
-                                            <div className="border-b border-gray-200 h-8"></div>
-                                            <div className="border-b border-gray-200 h-8"></div>
+                                                    {q.type === 'multiple_choice' && Array.isArray(q.options) && (
+                                                        <div className={`pl-4 ${isAdapted ? 'space-y-3' : 'space-y-1'}`}>
+                                                            {q.options.map((opt, i) => {
+                                                                const optStr = typeof opt === 'string' ? opt : String(opt || "");
+                                                                const cleanOpt = optStr.replace(/^[a-zA-Z\d]+[).:-]\s*/, "");
+                                                                const correctStr = String(q.correct || "");
+                                                                const isCorrect = showAnswers && (correctStr === optStr || correctStr === cleanOpt || correctStr.toLowerCase() === String.fromCharCode(97 + i));
+                                                                return (
+                                                                    <div key={i} className={`flex items-start gap-2 p-1 rounded ${isCorrect ? 'bg-green-100 dark:bg-green-900/30 -ml-1 pl-1' : ''}`}>
+                                                                        <span className={`font-medium ${isAdapted ? 'text-lg font-bold' : 'text-sm'} ${isCorrect ? 'text-green-700 font-bold' : ''}`}>({String.fromCharCode(97 + i)})</span>
+                                                                        <span className={`${isAdapted ? 'text-lg' : ''} ${isCorrect ? 'text-green-700 font-bold' : ''}`}>{cleanOpt}</span>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+
+                                                    {q.type === 'text' && (
+                                                        <div className="mt-2 border-t border-b border-gray-300 h-24 w-full">
+                                                            <div className="border-b border-gray-200 h-8"></div>
+                                                            <div className="border-b border-gray-200 h-8"></div>
+                                                            <div className="border-b border-gray-200 h-8"></div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
-                                    )}
-                                </div>
+                                    );
+                                })}
                             </div>
-                        </div>
-                    );
-                })}
+                        );
+                    });
+                })()}
             </div>
             {/* Footer / Copyright */}
             <div className="mt-12 pt-4 border-t border-gray-300 text-center text-[10px] text-gray-500 font-medium">

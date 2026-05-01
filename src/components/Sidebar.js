@@ -7,20 +7,28 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function Sidebar() {
     const pathname = usePathname();
-    const { user, logout } = useAuth();
+    const { user, activeRole, switchRole, logout } = useAuth();
 
-    const role = user?.role || 'professor';
+    const role = activeRole || 'professor';
 
     let links = [];
-    if (role === 'gestao' || role === 'coordenador') {
+    if (role === 'gestao') {
         links = [
-            { href: "/dashboard", label: "Visão Geral", icon: LayoutDashboard },
+            { href: "/dashboard", label: "Gestão Geral", icon: LayoutDashboard },
             { href: "/usuarios", label: "Gestão de Usuários", icon: UserCircle },
             { href: "/classes", label: "Turmas & Alunos", icon: GraduationCap },
             { href: "/builder", label: "Criar Avaliação Base", icon: FileText },
             { href: "/exams", label: "Todas as Provas", icon: FileText },
             { href: "/habilidades", label: "Habilidades & Gráficos", icon: BarChart2 },
             { href: "/tutorial", label: "Ajuda & Tutoriais", icon: BookOpen },
+        ];
+    } else if (role === 'coordenador') {
+        links = [
+            { href: "/dashboard", label: "Painel Coord.", icon: LayoutDashboard },
+            { href: "/classes", label: "Minhas Turmas", icon: GraduationCap },
+            { href: "/exams", label: "Acompanhamento", icon: FileText },
+            { href: "/habilidades", label: "Habilidades", icon: BarChart2 },
+            { href: "/tutorial", label: "Tutoriais", icon: BookOpen },
         ];
     } else {
         links = [
@@ -74,25 +82,57 @@ export default function Sidebar() {
             <div className="p-6 mt-auto">
                 {mounted && (
                     <>
-                        <div className="glass-card p-4 rounded-2xl mb-2 flex items-center gap-3 border border-gray-200 dark:border-white/5 bg-white/50 dark:bg-white/5">
-                            {user?.photoURL ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={user.photoURL} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-vg-dark/50" />
-                            ) : (
-                                <UserCircle size={40} className="text-gray-400" />
-                            )}
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-bold text-gray-800 dark:text-white truncate">{user?.displayName?.split(" ")[0] || "Professor"}</p>
-                                <p className="text-xs text-gray-500 truncate">Plano Pro</p>
+                        <div className="glass-card p-4 rounded-2xl mb-2 border border-gray-200 dark:border-white/5 bg-white/50 dark:bg-white/5">
+                            <div className="flex items-center gap-3 mb-3">
+                                {user?.photoURL ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={user.photoURL} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-vg-dark/50" />
+                                ) : (
+                                    <UserCircle size={40} className="text-gray-400" />
+                                )}
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-bold text-gray-800 dark:text-white truncate">{user?.displayName?.split(" ")[0] || "Professor"}</p>
+                                    <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">{role}</p>
+                                </div>
                             </div>
+
+                            {/* Seletor de Perfil Integrado */}
+                            {(user?.role === 'gestao' || user?.role === 'coordenador') && (
+                                <div className="flex gap-1 p-1 bg-gray-100 dark:bg-black/20 rounded-xl mb-2">
+                                    {user.role === 'gestao' && (
+                                        <button 
+                                            onClick={() => switchRole('gestao')}
+                                            className={`flex-1 text-[9px] py-1 rounded-lg transition-all font-bold ${role === 'gestao' ? 'bg-vg-dark text-white shadow-sm' : 'text-gray-400'}`}
+                                            title="Perfil Gestão"
+                                        >
+                                            GESTÃO
+                                        </button>
+                                    )}
+                                    <button 
+                                        onClick={() => switchRole('coordenador')}
+                                        className={`flex-1 text-[9px] py-1 rounded-lg transition-all font-bold ${role === 'coordenador' ? 'bg-vg-dark text-white shadow-sm' : 'text-gray-400'}`}
+                                        title="Perfil Coordenador"
+                                    >
+                                        COORD.
+                                    </button>
+                                    <button 
+                                        onClick={() => switchRole('professor')}
+                                        className={`flex-1 text-[9px] py-1 rounded-lg transition-all font-bold ${role === 'professor' ? 'bg-vg-dark text-white shadow-sm' : 'text-gray-400'}`}
+                                        title="Perfil Professor"
+                                    >
+                                        PROF.
+                                    </button>
+                                </div>
+                            )}
+
+                            <button
+                                onClick={logout}
+                                className="w-full flex items-center justify-center gap-2 py-2 text-xs text-red-400 hover:bg-red-500/10 rounded-lg transition-colors font-medium"
+                            >
+                                <LogOut size={14} />
+                                Sair do Portal
+                            </button>
                         </div>
-                        <button
-                            onClick={logout}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 rounded-xl transition-colors font-medium border border-transparent hover:border-red-500/20"
-                        >
-                            <LogOut size={16} />
-                            Sair do Portal
-                        </button>
                     </>
                 )}
             </div>

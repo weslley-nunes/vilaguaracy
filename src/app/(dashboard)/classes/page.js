@@ -21,7 +21,7 @@ export default function ClassesPage() {
         const fetchClasses = async () => {
             setLoading(true);
             try {
-                const data = await getClassesByUser(user.uid);
+                const data = await getClassesByUser(); // Removido user.uid para pegar todas
                 setLocalClasses(data);
             } catch (error) {
                 console.error("Erro ao carregar turmas", error);
@@ -92,8 +92,8 @@ export default function ClassesPage() {
         <div className="max-w-5xl mx-auto">
             <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Minhas Turmas</h1>
-                    <p className="text-gray-500">Organize seus alunos por turmas para aplicar avaliações.</p>
+                    <h1 className="text-2xl font-bold text-gray-900">Turmas da Unidade</h1>
+                    <p className="text-gray-500">Base de dados compartilhada de alunos e turmas.</p>
                 </div>
             </div>
 
