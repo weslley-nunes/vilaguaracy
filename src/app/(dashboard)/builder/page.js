@@ -131,9 +131,14 @@ export default function BuilderPage() {
                 });
             }
 
+            // Find student access code if class is selected
+            const selectedClassObj = classes.find(c => c.id === selectedClass);
+            const studentInfo = selectedClassObj?.students?.find(s => s.name === students[i]);
+
             newVariations.push({
                 id: `${Date.now()}-${i}`, // Unique ID for this specific paper
                 student: students[i] || "",
+                accessCode: studentInfo?.accessCode || "",
                 questions: currentQuestions,
                 variationIndex: i,
                 isAdapted: false, // Standard version
@@ -639,6 +644,7 @@ export default function BuilderPage() {
                                 headerConfig={{
                                     ...headerConfig,
                                     studentName: v.student || "________________",
+                                    accessCode: v.accessCode || "",
                                     examId: v.id,
                                     classId: v.classId,
                                 }}

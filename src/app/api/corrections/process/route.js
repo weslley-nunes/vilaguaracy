@@ -86,7 +86,8 @@ export async function POST(req) {
         // 4. Save to Database
         const correctionData = {
             examId,
-            studentName,
+            studentName: studentName || aiResults.s || "Anônimo",
+            accessCode: aiResults.ac || "", // Extract accessCode from QR data if present
             score: finalScore.toFixed(1),
             results: detailedResults,
             skills: skillsStats,
