@@ -1,7 +1,7 @@
 import React, { forwardRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 
-const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConfig, showAnswers = false, isAdapted = false, scoringMode = "auto", totalScore = 10, onQuestionChange = null, printConfig = {} }, ref) => {
+const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConfig, showAnswers = false, isAdapted = false, scoringMode = "auto", totalScore = 3, onQuestionChange = null, printConfig = {} }, ref) => {
     // Determine exam ID for QR (fallback to timestamp if not provided in headerConfig)
     const examId = headerConfig?.examId || "PREVIEW";
     const studentName = headerConfig?.studentName || "";
@@ -210,7 +210,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                                                             ) : null}
                                                             {(!onQuestionChange || scoringMode === 'auto') && (
                                                                 <span className="font-bold text-[10px] bg-gray-100 px-2 py-0.5 rounded border border-gray-200 text-gray-600 shadow-sm print:bg-transparent print:border-none print:shadow-none print:text-xs pt-1">
-                                                                    {Number.isInteger(questionPoints) ? questionPoints : questionPoints.toFixed(1)} <span className="uppercase font-normal">Pts</span>
+                                                                    {Number.isInteger(questionPoints) ? questionPoints : questionPoints.toFixed(2)} <span className="uppercase font-normal">Pts</span>
                                                                 </span>
                                                             )}
                                                         </div>

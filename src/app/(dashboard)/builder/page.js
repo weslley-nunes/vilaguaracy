@@ -118,7 +118,7 @@ export default function BuilderPage() {
     };
 
     const [scoringMode, setScoringMode] = useState("auto"); // "auto" | "manual"
-    const [totalScore, setTotalScore] = useState(10);
+    const [totalScore, setTotalScore] = useState(3);
 
     // Level & Year Mapping
     const LEVEL_YEARS = {
@@ -647,7 +647,7 @@ export default function BuilderPage() {
                             {scoringMode === 'auto' && (
                                 <div>
                                     <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Nota Total da Prova</label>
-                                    <input type="number" step="0.5" min="0" value={totalScore === "" ? "" : totalScore} onBlur={(e) => { if (e.target.value === "" || Number(e.target.value) <= 0) setTotalScore(10); }} onChange={(e) => setTotalScore(e.target.value === "" ? "" : Number(e.target.value))} className="p-2 border border-gray-300 rounded-lg text-sm outline-none focus:border-vg-dark w-24 bg-white" placeholder="10" />
+                                    <input type="number" step="0.1" min="0" value={totalScore === "" ? "" : totalScore} onBlur={(e) => { if (e.target.value === "" || Number(e.target.value) <= 0) setTotalScore(3); }} onChange={(e) => setTotalScore(e.target.value === "" ? "" : Number(e.target.value))} className="p-2 border border-gray-300 rounded-lg text-sm outline-none focus:border-vg-dark w-24 bg-white" placeholder="3.0" />
                                 </div>
                             )}
                         </div>
@@ -655,7 +655,7 @@ export default function BuilderPage() {
                             {scoringMode === 'auto' ? (
                                 <div className="text-right">
                                     <span className="text-sm font-bold text-vg-dark block">
-                                        {examQuestions.length > 0 ? ((Number(totalScore) || 10) / examQuestions.length).toFixed(1) : 0} pts por questão
+                                        {examQuestions.length > 0 ? ((Number(totalScore) || 3) / examQuestions.length).toFixed(2) : 0} pts por questão
                                     </span>
                                     <span className="text-[10px] text-gray-500 uppercase font-bold">Valor distribuído igualmente</span>
                                 </div>
