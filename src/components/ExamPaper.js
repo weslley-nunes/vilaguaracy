@@ -142,18 +142,27 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
             {/* Questions List Grouped by Blocks */}
             <div className={spacing}>
                 {(() => {
-                    // 1. Identify all unique owners in the current questions
-                    const ownerIds = [...new Set(questions.map(q => q.ownerId))];
+                    // 1. Group questions by block (owner + subject combination)
+                    const blocks = [];
+                    questions.forEach(q => {
+                        const subject = q.subject || (collaborators.find(c => c.userId === q.ownerId)?.subject) || (headerConfig?.subject || "Geral");
+                        const blockKey = `${q.ownerId}-${subject}`;
+                        
+                        let block = blocks.find(b => b.key === blockKey);
+                        if (!block) {
+                            block = { key: blockKey, ownerId: q.ownerId, subject: subject, questions: [] };
+                            blocks.push(block);
+                        }
+                        block.questions.push(q);
+                    });
                     
                     // 2. Render each block
-                    return ownerIds.map((ownerId, blockIdx) => {
-                        const blockQuestions = questions.filter(q => q.ownerId === ownerId);
-                        const collabInfo = collaborators.find(c => c.userId === ownerId);
-                        const blockTitle = collabInfo ? collabInfo.subject : (headerConfig?.subject || "Geral");
+                    return blocks.map((block, blockIdx) => {
+                        const blockTitle = block.subject;
 
                         return (
-                            <div key={ownerId || blockIdx} className="space-y-4">
-                                {collaborators.length > 0 && (
+                            <div key={block.key || blockIdx} className="space-y-4">
+                                {(blocks.length > 1 || collaborators.length > 0) && (
                                     <div className="bg-gray-100 py-1 px-4 border-l-4 border-black mb-4 print:bg-gray-50">
                                         <h3 className="font-bold text-sm uppercase tracking-widest">
                                             Bloco: {blockTitle}
@@ -161,7 +170,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                                     </div>
                                 )}
                                 
-                                {blockQuestions.map((q, qIdx) => {
+                                {block.questions.map((q, qIdx) => {
                                     const index = questions.indexOf(q);
                                     const autoPoints = questions.length > 0 ? (totalScore / questions.length) : 0;
                                     const questionPoints = scoringMode === 'auto' ? autoPoints : (Number(q.points) || 0);

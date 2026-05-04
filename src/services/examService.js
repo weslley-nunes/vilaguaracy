@@ -32,6 +32,18 @@ export const ExamService = {
         }
     },
 
+    // List All Exams (For Management/Coordination)
+    listAll: async () => {
+        try {
+            const q = query(collection(db, "exams"), orderBy("createdAt", "desc"));
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (e) {
+            console.error("Error listing all exams", e);
+            return [];
+        }
+    },
+
     // List Exams for Teacher (Owned + Collaborations)
     listByTeacher: async (userId) => {
         if (!userId) return [];

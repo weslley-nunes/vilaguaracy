@@ -19,6 +19,7 @@ export default function Sidebar() {
             { href: "/classes", label: "Turmas & Alunos", icon: GraduationCap },
             { href: "/builder", label: "Criar Avaliação Base", icon: FileText },
             { href: "/exams", label: "Todas as Provas", icon: FileText },
+            { href: "/coordenacao", label: "Progresso de Provas", icon: BarChart2 },
             { href: "/habilidades", label: "Habilidades & Gráficos", icon: BarChart2 },
             { href: "/tutorial", label: "Ajuda & Tutoriais", icon: BookOpen },
         ];
@@ -26,6 +27,7 @@ export default function Sidebar() {
         links = [
             { href: "/dashboard", label: "Painel Coord.", icon: LayoutDashboard },
             { href: "/classes", label: "Minhas Turmas", icon: GraduationCap },
+            { href: "/coordenacao", label: "Progresso de Provas", icon: BarChart2 },
             { href: "/exams", label: "Acompanhamento", icon: FileText },
             { href: "/habilidades", label: "Habilidades", icon: BarChart2 },
             { href: "/tutorial", label: "Tutoriais", icon: BookOpen },

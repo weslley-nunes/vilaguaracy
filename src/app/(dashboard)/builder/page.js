@@ -31,6 +31,92 @@ export default function BuilderPage() {
     const [isCollaboratorModalOpen, setIsCollaboratorModalOpen] = useState(false);
     const [editingCollaborator, setEditingCollaborator] = useState(null); // { userId, name, subject, quota }
 
+    // Bimester & Templates
+    const [selectedBimester, setSelectedBimester] = useState("1º Bimestre");
+    const [selectedTemplate, setSelectedTemplate] = useState(null);
+
+    const EXAM_TEMPLATES = {
+        "Linguagens": {
+            title: "Avaliação de Linguagens",
+            subjects: [
+                { name: "Língua Portuguesa", quota: 5 },
+                { name: "Arte", quota: 5 },
+                { name: "Língua Inglesa", quota: 5 },
+                { name: "Educação Física", quota: 5 }
+            ]
+        },
+        "Humanas": {
+            title: "Avaliação de Ciências Humanas",
+            subjects: [
+                { name: "História", quota: 10 },
+                { name: "Geografia", quota: 10 }
+            ]
+        },
+        "Ciências": {
+            title: "Avaliação de Ciências da Natureza e Matemática",
+            subjects: [
+                { name: "Matemática", quota: 10 },
+                { name: "Ciências", quota: 10 }
+            ]
+        }
+    };
+
+    const applyTemplate = (templateKey) => {
+        const template = EXAM_TEMPLATES[templateKey];
+        if (!template) return;
+
+        setSelectedTemplate(templateKey);
+        setExamTitle(`${selectedBimester} - ${template.title}`);
+        setHeaderConfig(prev => ({ ...prev, subject: templateKey }));
+        
+        // Clear current questions if user confirms or just setup for generation
+        if (examQuestions.length > 0 && !confirm("Deseja limpar as questões atuais e aplicar este modelo?")) return;
+        setExamQuestions([]);
+    };
+
+    const generateFromTemplate = async () => {
+        const template = EXAM_TEMPLATES[selectedTemplate];
+        if (!template) return;
+
+        setIsGenerating(true);
+        setExamQuestions([]);
+
+        try {
+            const allQuestions = [];
+            for (const sub of template.subjects) {
+                // Topic for the AI is the subject name + some context from the bimester if needed
+                const res = await fetch('/api/generate', {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        topic: sub.name, 
+                        difficulty, 
+                        level, 
+                        year,
+                        count: sub.quota 
+                    }),
+                });
+                const data = await res.json();
+                if (data.questions) {
+                    const questionsWithMeta = data.questions.map(q => ({
+                        ...q,
+                        id: Math.random() + Date.now(),
+                        points: 1,
+                        ownerId: user?.uid,
+                        subject: sub.name
+                    }));
+                    allQuestions.push(...questionsWithMeta);
+                }
+            }
+            setExamQuestions(allQuestions);
+            alert("Avaliação gerada com sucesso!");
+        } catch (err) {
+            console.error(err);
+            alert("Erro ao gerar avaliação completa.");
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
     const [scoringMode, setScoringMode] = useState("auto"); // "auto" | "manual"
     const [totalScore, setTotalScore] = useState(10);
 
@@ -285,7 +371,9 @@ export default function BuilderPage() {
                 questions: examQuestions,
                 scoringMode,
                 totalScore: scoringMode === 'auto' ? (Number(totalScore) || 10) : examQuestions.reduce((sum, q) => sum + (Number(q.points) || 0), 0),
-                collaborators: collaborators
+                collaborators: collaborators,
+                bimester: selectedBimester,
+                templateType: selectedTemplate
                 // Status, dates, and teacherId are handled by the service
             };
 
@@ -372,8 +460,51 @@ export default function BuilderPage() {
             <div className="w-full md:w-1/3 bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col overflow-hidden relative">
                 <div className="p-4 border-b border-gray-100 bg-gray-50/50">
                     <h2 className="font-bold flex items-center gap-2 text-vg-hover">
+                        <FileText size={18} />
+                        Modelos de Avaliação
+                    </h2>
+                </div>
+
+                <div className="p-4 bg-white border-b border-gray-100">
+                    <div className="flex flex-col gap-3">
+                        <select 
+                            value={selectedBimester} 
+                            onChange={(e) => setSelectedBimester(e.target.value)}
+                            className="w-full p-2 rounded-lg border border-gray-200 text-sm font-medium"
+                        >
+                            <option>1º Bimestre</option>
+                            <option>2º Bimestre</option>
+                            <option>3º Bimestre</option>
+                            <option>4º Bimestre</option>
+                        </select>
+                        <div className="grid grid-cols-3 gap-2">
+                            {Object.keys(EXAM_TEMPLATES).map(key => (
+                                <button
+                                    key={key}
+                                    onClick={() => applyTemplate(key)}
+                                    className={`py-2 px-1 rounded-lg text-[10px] font-bold border transition-all ${selectedTemplate === key ? 'bg-vg-dark text-white border-vg-dark' : 'bg-white text-gray-600 border-gray-200 hover:border-vg-dark'}`}
+                                >
+                                    {key}
+                                </button>
+                            ))}
+                        </div>
+                        {selectedTemplate && (
+                            <button
+                                onClick={generateFromTemplate}
+                                disabled={isGenerating}
+                                className="w-full py-2 bg-vg-light text-vg-hover rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-vg-navy hover:text-white transition-all disabled:opacity-50"
+                            >
+                                {isGenerating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                                Gerar Prova Completa (20 Questões)
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                <div className="p-4 border-b border-gray-100 bg-gray-50/50">
+                    <h2 className="font-bold flex items-center gap-2 text-vg-hover">
                         <Sparkles size={18} />
-                        Gerador de Questões
+                        Gerador Avulso
                     </h2>
                 </div>
 

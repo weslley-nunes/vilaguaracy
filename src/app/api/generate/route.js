@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function POST(req) {
     try {
-        const { topic, difficulty = "Médio", level = "Ensino Médio", year = "Geral" } = await req.json();
+        const { topic, difficulty = "Médio", level = "Ensino Médio", year = "Geral", count = 3 } = await req.json();
 
         // Use Gemini API Key
         const apiKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY; // Fallback to avoid breaking if they put it in the old var
@@ -11,25 +11,21 @@ export async function POST(req) {
         if (!apiKey || apiKey.startsWith("your_")) {
             // Mock Data when no valid key is present
             await new Promise(r => setTimeout(r, 1000));
+            
+            const mockQuestions = [];
+            for (let i = 0; i < count; i++) {
+                mockQuestions.push({
+                    id: Date.now() + i,
+                    type: 'multiple_choice',
+                    text: `MOCK: Questão ${i+1} de ${topic} (${difficulty}) para ${level} - ${year}`,
+                    options: ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D', 'Alternativa E'],
+                    correct: 'A',
+                    habilidade: 'EF06HI02 - Mock Habilidade'
+                });
+            }
+
             return NextResponse.json({
-                questions: [
-                    {
-                        id: Date.now() + 1,
-                        type: 'multiple_choice',
-                        text: `MOCK: Questão de ${topic} (${difficulty}) para ${level} - ${year}`,
-                        options: ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D', 'Alternativa E'],
-                        correct: 'A',
-                        habilidade: 'EF06HI02 - Mock Habilidade'
-                    },
-                    {
-                        id: Date.now() + 2,
-                        type: 'multiple_choice',
-                        text: `MOCK 2: Outra questão de ${topic}.`,
-                        options: ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D', 'Alternativa E'],
-                        correct: 'B',
-                        habilidade: 'EM13CHS101 - Mock Habilidade 2'
-                    }
-                ]
+                questions: mockQuestions
             });
         }
 
@@ -37,7 +33,6 @@ export async function POST(req) {
 
         // List of models to try in order of preference/likelihood of working
         const modelsToTry = [
-            "gemini-2.5-flash",
             "gemini-2.0-flash",
             "gemini-2.0-flash-001",
             "gemini-2.0-flash-lite-001",
@@ -59,8 +54,9 @@ export async function POST(req) {
                     Nível de Ensino: ${level}
                     Ano Escolar/Série: ${year}
                     Dificuldade: ${difficulty}
+                    Quantidade de questões: ${count}
                     
-                    Gere 3 questões seguindo estritamente este nível, ano escolar e dificuldade. Use vocabulário adequado para a idade dos alunos desta etapa formativa.
+                    Gere ${count} questões seguindo estritamente este nível, ano escolar e dificuldade. Use vocabulário adequado para a idade dos alunos desta etapa formativa.
                     Gere APENAS questões de múltipla escolha. NUNCA gere questões dissertativas.
                     Como especialista, identifique a habilidade (ou código da BNCC) mais adequada que está sendo avaliada em cada questão.
                     
@@ -84,8 +80,6 @@ export async function POST(req) {
             } catch (e) {
                 console.warn(`Failed with model ${modelName}:`, e.message);
                 lastError = e;
-                // If it's a 429 specific to quota 0, we continue. 
-                // If it's 404, we continue.
                 continue;
             }
         }
