@@ -414,7 +414,7 @@ export default function BuilderPage() {
             }
         } catch (err) {
             console.error(err);
-            alert("Erro ao conectar com o servidor.");
+            alert("Erro na IA: " + (err.message || "Verifique sua conexão."));
         }
         setIsGenerating(false);
     };
