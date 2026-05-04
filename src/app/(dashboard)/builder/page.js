@@ -130,11 +130,11 @@ export default function BuilderPage() {
 
     // Header Configuration
     const [headerConfig, setHeaderConfig] = useState({
-        schoolName: "Escola Exemplo",
+        schoolName: "Escola Estadual Vila Guaracy",
         teacherName: user?.displayName || "Professor",
         className: "",
         showDate: true,
-        logoUrl: "",
+        logoUrl: "https://vilaguaracy.com.br/logo.png", // Fallback to site logo
         customHeaderImageUrl: "",
         useCustomHeader: false,
         subject: "Geral",
@@ -671,141 +671,12 @@ export default function BuilderPage() {
                     </div>
                 </div>
 
-                {/* Header Config Panel */}
+                {/* Header Config Panel - Hidden as per user request to use standardized school header */}
+                {false && (
                 <div className="bg-white dark:bg-white/5 p-4 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm">
-                    {/* ... Header configuration (Same as before) ... */}
-                    <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-bold text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2"><FileText size={16} /> Configuração do Cabeçalho</h3>
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Personalizar Cabeçalho da Escola</span>
-                            <button onClick={() => setHeaderConfig({ ...headerConfig, useCustomHeader: !headerConfig.useCustomHeader })} className={`w-8 h-4 flex items-center rounded-full p-0.5 duration-300 ease-in-out ${headerConfig.useCustomHeader ? 'bg-vg-dark' : 'bg-gray-300 dark:bg-gray-600'}`}>
-                                <div className={`bg-white w-3 h-3 rounded-full shadow-md transform duration-300 ease-in-out ${headerConfig.useCustomHeader ? 'translate-x-4' : ''}`}></div>
-                            </button>
-                        </div>
-                    </div>
-                    {headerConfig.useCustomHeader ? (
-                        <div className="flex flex-col gap-3">
-                            <div>
-                                <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 block">Upload da Imagem do Cabeçalho</label>
-                                <div className="flex items-center gap-4">
-                                    <label className="cursor-pointer bg-vg-light text-vg-hover hover:bg-vg-light dark:bg-vg-navy/30 dark:text-vg-navy dark:hover:bg-vg-navy/50 px-4 py-2 flex items-center gap-2 rounded-lg font-bold text-sm transition-colors border border-vg-light dark:border-vg-hover">
-                                        <PlusCircle size={16} />
-                                        Escolher Arquivo
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            className="hidden"
-                                            onChange={(e) => {
-                                                const file = e.target.files[0];
-                                                if (file) {
-                                                    const reader = new FileReader();
-                                                    reader.onload = (event) => {
-                                                        const img = new Image();
-                                                        img.onload = () => {
-                                                            const canvas = document.createElement('canvas');
-                                                            let width = img.width;
-                                                            let height = img.height;
-                                                            const MAX_WIDTH = 1000; // max width optimized for printing
-
-                                                            if (width > MAX_WIDTH) {
-                                                                height = Math.round((height * MAX_WIDTH) / width);
-                                                                width = MAX_WIDTH;
-                                                            }
-
-                                                            canvas.width = width;
-                                                            canvas.height = height;
-
-                                                            const ctx = canvas.getContext('2d');
-                                                            ctx.drawImage(img, 0, 0, width, height);
-
-                                                            // Convert back to Base64 using JPEG and 80% quality
-                                                            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
-                                                            setHeaderConfig({ ...headerConfig, customHeaderImageUrl: compressedBase64 });
-                                                        };
-                                                        img.src = event.target.result;
-                                                    };
-                                                    reader.readAsDataURL(file);
-                                                }
-                                            }}
-                                        />
-                                    </label>
-                                    {headerConfig.customHeaderImageUrl && (
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-xs text-green-600 font-bold flex items-center gap-1"><Check size={14} /> Imagem Selecionada</span>
-                                            <button
-                                                onClick={() => setHeaderConfig({ ...headerConfig, customHeaderImageUrl: "" })}
-                                                className="text-xs text-red-500 hover:underline"
-                                            >
-                                                Remover
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                                <p className="text-[10px] text-gray-400 mt-2">Dica: Use uma imagem retangular que substitua todo o espaço original (Escola, Professor, etc).</p>
-                            </div>
-                        </div>
-                    ) : (
-                        <>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                                <div><label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Escola</label><input type="text" value={headerConfig.schoolName} onChange={(e) => setHeaderConfig({ ...headerConfig, schoolName: e.target.value })} className="w-full p-2 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white bg-white dark:bg-black/20 text-sm" /></div>
-                            <div><label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Professor</label><input type="text" value={headerConfig.teacherName} onChange={(e) => setHeaderConfig({ ...headerConfig, teacherName: e.target.value })} className="w-full p-2 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white bg-white dark:bg-black/20 text-sm" /></div>
-                            <div><label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Sua Disciplina</label><input type="text" value={headerConfig.subject} onChange={(e) => setHeaderConfig({ ...headerConfig, subject: e.target.value })} placeholder="Ex: Ciências" className="w-full p-2 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white bg-white dark:bg-black/20 text-sm" /></div>
-                            <div className="flex flex-col flex-1 pl-2">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Logo Turma</label>
-                                {headerConfig.logoUrl ? (
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <div className="w-8 h-8 rounded border overflow-hidden">
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img src={headerConfig.logoUrl} alt="Logo" className="w-full h-full object-cover" />
-                                        </div>
-                                        <button onClick={() => setHeaderConfig({ ...headerConfig, logoUrl: "" })} className="text-xs text-red-500 hover:underline flex items-center"><X size={12} /> Remover</button>
-                                    </div>
-                                ) : (
-                                    <label className="cursor-pointer text-xs flex justify-center py-2 px-1 border border-dashed border-gray-400 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 text-gray-600 dark:text-gray-300">
-                                        <span className="flex items-center gap-1"><PlusCircle size={14} /> Enviar Logo</span>
-                                        <input
-                                            type="file" accept="image/*" className="hidden"
-                                            onChange={(e) => {
-                                                const file = e.target.files[0];
-                                                if (!file) return;
-                                                const reader = new FileReader();
-                                                reader.onload = (event) => {
-                                                    const img = new Image();
-                                                    img.onload = () => {
-                                                        const canvas = document.createElement('canvas');
-                                                        let width = img.width; let height = img.height;
-                                                        const MAX_WIDTH = 200; // tamanho moderado para logos pequenas
-                                                        if (width > MAX_WIDTH) { height = Math.round((height * MAX_WIDTH) / width); width = MAX_WIDTH; }
-                                                        canvas.width = width; canvas.height = height;
-                                                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-                                                        setHeaderConfig({ ...headerConfig, logoUrl: canvas.toDataURL('image/png', 0.9) });
-                                                    };
-                                                    img.src = event.target.result;
-                                                };
-                                                reader.readAsDataURL(file);
-                                            }}
-                                        />
-                                    </label>
-                                )}
-                            </div>
-                            <div className="flex gap-2 items-end">
-                                <div className="flex-1"><label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Turma</label><input type="text" value={headerConfig.className} onChange={(e) => setHeaderConfig({ ...headerConfig, className: e.target.value })} className="w-full p-2 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white bg-white dark:bg-black/20 text-sm" /></div>
-                                <div className="flex items-center gap-1 mb-2">
-                                    <input type="checkbox" checked={headerConfig.showDate} onChange={(e) => setHeaderConfig({ ...headerConfig, showDate: e.target.checked })} /> <span className="text-xs text-gray-700 dark:text-gray-300">Data</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/5">
-                            <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Orientações da Avaliação (Opcional)</label>
-                            <textarea 
-                                value={headerConfig.instructions || ""} 
-                                onChange={(e) => setHeaderConfig({ ...headerConfig, instructions: e.target.value })} 
-                                className="w-full p-2 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white bg-white dark:bg-black/20 text-sm h-20 resize-none custom-scrollbar" 
-                                placeholder="Regras e orientações para o aluno..." 
-                            />
-                        </div>
-                    </>)}
+                    {/* ... Header configuration ... */}
                 </div>
+                )}
 
                 {/* Preview Area (Shows Standard Exam) */}
                 <div className="flex-1 overflow-y-auto bg-gray-200/50 dark:bg-black/20 rounded-xl p-8 flex justify-center items-start shadow-inner">

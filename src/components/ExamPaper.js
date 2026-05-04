@@ -29,6 +29,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
 
             {/* Header */}
             <div className="border-b-2 border-black pb-4 mb-4">
+
                 {headerConfig?.useCustomHeader && headerConfig?.customHeaderImageUrl ? (
                     <div className="w-full flex items-center justify-center">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -142,7 +143,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
             {/* Questions List Grouped by Blocks */}
             <div className={spacing}>
                 {(() => {
-                    // 1. Group questions by block (owner + subject combination)
+                    // 1. Group existing questions by block
                     const blocks = [];
                     questions.forEach(q => {
                         const subject = q.subject || (collaborators.find(c => c.userId === q.ownerId)?.subject) || (headerConfig?.subject || "Geral");
@@ -150,40 +151,80 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                         
                         let block = blocks.find(b => b.key === blockKey);
                         if (!block) {
-                            block = { key: blockKey, ownerId: q.ownerId, subject: subject, questions: [] };
+                            block = { key: blockKey, ownerId: q.ownerId, subject: subject, questions: [], quota: 0 };
                             blocks.push(block);
                         }
                         block.questions.push(q);
                     });
+
+                    // 2. Add empty blocks for collaborators who haven't added questions yet, or for missing quota
+                    collaborators.forEach(collab => {
+                        const blockKey = `${collab.userId}-${collab.subject}`;
+                        let block = blocks.find(b => b.key === blockKey);
+                        if (!block) {
+                            block = { key: blockKey, ownerId: collab.userId, subject: collab.subject, questions: [], quota: collab.quota };
+                            blocks.push(block);
+                        } else {
+                            block.quota = collab.quota;
+                        }
+                    });
                     
-                    // 2. Render each block
+                    // 3. Render blocks
+                    let globalQuestionIndex = 0;
                     return blocks.map((block, blockIdx) => {
                         const blockTitle = block.subject;
+                        const questionsToRender = [...block.questions];
+                        const missingCount = Math.max(0, (block.quota || 0) - questionsToRender.length);
+                        
+                        // Add placeholders for missing questions
+                        for (let i = 0; i < missingCount; i++) {
+                            questionsToRender.push({ isPlaceholder: true, id: `placeholder-${block.key}-${i}` });
+                        }
+
+                        if (questionsToRender.length === 0) return null;
 
                         return (
                             <div key={block.key || blockIdx} className="space-y-4">
-                                {(blocks.length > 1 || collaborators.length > 0) && (
-                                    <div className="bg-gray-100 py-1 px-4 border-l-4 border-black mb-4 print:bg-gray-50">
-                                        <h3 className="font-bold text-sm uppercase tracking-widest">
-                                            Bloco: {blockTitle}
-                                        </h3>
-                                    </div>
-                                )}
+                                <div className="bg-gray-100 py-1 px-4 border-l-4 border-black mb-4 print:bg-gray-50 flex justify-between items-center">
+                                    <h3 className="font-bold text-sm uppercase tracking-widest">
+                                        {blockTitle}
+                                    </h3>
+                                    <span className="text-[10px] font-bold text-gray-500 uppercase">{block.quota || questionsToRender.length} Questões</span>
+                                </div>
                                 
-                                {block.questions.map((q, qIdx) => {
-                                    const index = questions.indexOf(q);
-                                    const autoPoints = questions.length > 0 ? (totalScore / questions.length) : 0;
+                                {questionsToRender.map((q, qIdx) => {
+                                    const index = globalQuestionIndex++;
+                                    const totalExpected = questions.length + (blocks.reduce((acc, b) => acc + Math.max(0, (b.quota || 0) - b.questions.length), 0));
+                                    const autoPoints = totalExpected > 0 ? (totalScore / totalExpected) : 0;
                                     const questionPoints = scoringMode === 'auto' ? autoPoints : (Number(q.points) || 0);
+
+                                    if (q.isPlaceholder) {
+                                        return (
+                                            <div key={q.id} className="break-inside-avoid mb-10 opacity-40">
+                                                <div className="flex gap-2">
+                                                    <span className="font-bold w-8 shrink-0">{index + 1}.</span>
+                                                    <div className="flex-1 space-y-4">
+                                                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                                                        <div className="grid grid-cols-1 gap-2 pl-4">
+                                                            <div className="flex items-center gap-2"><div className="w-4 h-4 rounded-full border border-gray-300"></div> <div className="h-2 bg-gray-100 rounded w-1/2"></div></div>
+                                                            <div className="flex items-center gap-2"><div className="w-4 h-4 rounded-full border border-gray-300"></div> <div className="h-2 bg-gray-100 rounded w-1/3"></div></div>
+                                                            <div className="flex items-center gap-2"><div className="w-4 h-4 rounded-full border border-gray-300"></div> <div className="h-2 bg-gray-100 rounded w-2/3"></div></div>
+                                                            <div className="flex items-center gap-2"><div className="w-4 h-4 rounded-full border border-gray-300"></div> <div className="h-2 bg-gray-100 rounded w-1/4"></div></div>
+                                                        </div>
+                                                        <p className="text-[10px] font-bold italic text-gray-400">Aguardando questão do professor...</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    }
 
                                     return (
                                         <div key={q.id || index} className="break-inside-avoid mb-6">
-                                            {/* Question Render Logic (Simplified for this replacement, but keep the full logic) */}
                                             <div className="flex gap-2">
                                                 <div className="flex flex-col items-center gap-1 w-8 shrink-0">
                                                     <span className="font-bold">{index + 1}.</span>
                                                 </div>
                                                 <div className="flex-1">
-                                                    {/* ... full question content ... */}
                                                     <div className="flex justify-between items-start gap-4 mb-2">
                                                         <div className="flex-1">
                                                             <p className={`whitespace-pre-wrap inline ${isAdapted ? 'font-medium' : ''} ${lineHeight}`}>
