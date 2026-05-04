@@ -29,9 +29,15 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
     match /exams/{docId} {
-      allow read, write: if request.auth != null && (
+      allow read: if request.auth != null && (
         request.auth.uid == resource.data.teacherId || 
-        request.auth.uid in resource.data.collaborators
+        request.auth.uid in resource.data.collaboratorIds ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['gestao', 'coordenador']
+      );
+      allow write: if request.auth != null && (
+        request.auth.uid == resource.data.teacherId || 
+        request.auth.uid in resource.data.collaboratorIds ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['gestao', 'coordenador']
       );
       allow create: if request.auth != null;
     }

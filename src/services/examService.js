@@ -35,11 +35,16 @@ export const ExamService = {
     // List All Exams (For Management/Coordination)
     listAll: async () => {
         try {
-            console.log("ExamService: listAll starting...");
             const q = query(collection(db, "exams"));
             const snapshot = await getDocs(q);
-            console.log("ExamService: snapshot docs count:", snapshot.size);
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const exams = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            // Ordenação manual (createdAt) para as mais novas aparecerem primeiro
+            return exams.sort((a, b) => {
+                const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : (a.createdAt?.seconds ? new Date(a.createdAt.seconds * 1000) : new Date(a.createdAt || 0));
+                const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : (b.createdAt?.seconds ? new Date(b.createdAt.seconds * 1000) : new Date(b.createdAt || 0));
+                return dateB - dateA;
+            });
         } catch (e) {
             console.error("Critical Error in ExamService.listAll:", e);
             return [];
