@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function MyExamsPage() {
-    const { user } = useAuth();
+    const { user, activeRole } = useAuth();
     const [exams, setExams] = useState([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
@@ -16,26 +16,30 @@ export default function MyExamsPage() {
         if (user) {
             loadExams();
         }
-    }, [user]);
+    }, [user, activeRole]);
 
     const loadExams = async () => {
         setLoading(true);
         try {
             const data = await ExamService.listByTeacher(user.uid);
-            
-            // Refined filtering:
-            // Show only if:
-            // 1. User is a collaborator (multidisciplinary tasks)
-            // 2. OR User is the owner AND it's NOT a collaborative template (personal standalone exams)
-            const filtered = data.filter(exam => {
-                const isCollab = exam.collaboratorIds?.includes(user.uid);
-                const isOwner = exam.teacherId === user.uid;
-                const isTemplate = !!exam.templateType;
-                
-                return isCollab || (isOwner && !isTemplate);
-            });
+            const isManagement = activeRole === 'gestao' || activeRole === 'coordenador';
 
-            setExams(filtered);
+            if (isManagement) {
+                // Coordenadores veem tudo o que eles "donos" ou que estão no sistema (se listByTeacher retornou)
+                // Para garantir visão total, podemos usar listAll se for coordenador
+                const allData = await ExamService.listAll();
+                setExams(allData);
+            } else {
+                // Professores veem apenas o que lhes cabe
+                const filtered = data.filter(exam => {
+                    const isCollab = exam.collaboratorIds?.includes(user.uid);
+                    const isOwner = exam.teacherId === user.uid;
+                    const isTemplate = !!exam.templateType;
+                    
+                    return isCollab || (isOwner && !isTemplate);
+                });
+                setExams(filtered);
+            }
         } catch (error) {
             console.error("Error loading exams:", error);
             alert("Erro ao carregar avaliações.");
