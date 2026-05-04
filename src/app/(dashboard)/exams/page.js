@@ -94,11 +94,12 @@ export default function MyExamsPage() {
                                         <Trash2 size={18} />
                                     </button>
                                     <div className="flex gap-2">
-                                        {/* TODO: Implement Edit/View Logic. For now just standard print view or load into builder? */}
-                                        {/* Loading into builder would require handling 'edit mode' in builder page. Future task. */}
-                                        <button className="text-vg-dark dark:text-vg-navy hover:bg-vg-light dark:hover:bg-vg-navy/20 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors">
+                                        <Link 
+                                            href={`/builder?id=${exam.id}`}
+                                            className="text-vg-dark dark:text-vg-navy hover:bg-vg-light dark:hover:bg-vg-navy/20 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors"
+                                        >
                                             Ver / Imprimir
-                                        </button>
+                                        </Link>
                                     </div>
                                 </div>
                             </div>
