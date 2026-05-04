@@ -35,18 +35,13 @@ export const ExamService = {
     // List All Exams (For Management/Coordination)
     listAll: async () => {
         try {
+            console.log("ExamService: listAll starting...");
             const q = query(collection(db, "exams"));
             const snapshot = await getDocs(q);
-            const exams = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            
-            // Ordenação manual (createdAt) para evitar erros de índice no Firebase
-            return exams.sort((a, b) => {
-                const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
-                const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
-                return dateB - dateA;
-            });
+            console.log("ExamService: snapshot docs count:", snapshot.size);
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         } catch (e) {
-            console.error("Error listing all exams", e);
+            console.error("Critical Error in ExamService.listAll:", e);
             return [];
         }
     },
