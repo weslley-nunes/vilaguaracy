@@ -20,12 +20,15 @@ export default function Dashboard() {
             try {
                 // If coordinator or management, we want to see the global stats
                 const isManagement = activeRole === 'gestao' || activeRole === 'coordenador';
+                console.log("Dashboard: Loading stats for role:", activeRole, "isManagement:", isManagement);
                 
                 // Fetch exams and classes concurrently
                 const [exams, classes] = await Promise.all([
                     isManagement ? ExamService.listAll() : ExamService.listByTeacher(user.uid),
                     getClassesByUser(user.uid)
                 ]);
+
+                console.log("Dashboard: Exams fetched:", exams.length);
 
                 // Calculate total students
                 let totalStudents = 0;
