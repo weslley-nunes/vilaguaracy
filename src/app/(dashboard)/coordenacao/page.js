@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { ExamService } from "@/services/examService";
+import Link from "next/link";
 import { 
     BarChart2, 
     Users, 
