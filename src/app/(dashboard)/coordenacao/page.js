@@ -23,10 +23,10 @@ export default function CoordenacaoPage() {
     const [filterBimester, setFilterBimester] = useState("Todos");
 
     useEffect(() => {
-        if (user && (activeRole === 'gestao' || activeRole === 'coordenador')) {
+        if (user) {
             loadExams();
         }
-    }, [user, activeRole]);
+    }, [user]);
 
     const loadExams = async () => {
         setLoading(true);
