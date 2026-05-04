@@ -53,7 +53,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                             )}
                         </div>
                         <div className="grid grid-cols-2 gap-2 text-sm border-t border-gray-300 pt-2">
-                            <p><span className="font-bold">Professor(a):</span> {headerConfig?.teacherName}</p>
+                            <p className="col-span-2"><span className="font-bold">Professores:</span> {collaborators.length > 0 ? collaborators.map(c => c.name).join(", ") : headerConfig?.teacherName}</p>
                             {headerConfig?.showDate && <p><span className="font-bold">Data:</span> ____/____/______</p>}
                             <p><span className="font-bold">Aluno(a):</span> {studentName || "_________________________________________________"}</p>
                             <p><span className="font-bold">Turma:</span> {headerConfig?.className || "________"}</p>
@@ -105,32 +105,40 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                             </div>
                         </div>
 
-                        {/* Bubbles Grid Section */}
-                        <div className="flex gap-6 justify-center items-start p-4 bg-white border-2 border-black rounded-lg">
-                            {gridColumns.map((col, colIdx) => (
-                                <div key={colIdx} className="space-y-2">
-                                    <div className="flex gap-2 pl-8 mb-1 text-[12px] font-black">
-                                        <span className="w-4 text-center">A</span>
-                                        <span className="w-4 text-center">B</span>
-                                        <span className="w-4 text-center">C</span>
-                                        <span className="w-4 text-center">D</span>
-                                        <span className="w-4 text-center">E</span>
-                                    </div>
-                                    {col.map((q, qIdx) => {
-                                        const realIndex = questions.indexOf(q) + 1;
-                                        return (
-                                            <div key={q.id || qIdx} className="flex items-center gap-2 text-sm">
-                                                <span className="font-black w-6 text-right mr-2">{realIndex}.</span>
-                                                {[0, 1, 2, 3, 4].map((optIdx) => {
+                        {/* Bubbles Grid Section Grouped by Blocks */}
+                        <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 p-4 bg-white border-2 border-black rounded-lg overflow-y-auto max-h-[400px]">
+                            {(() => {
+                                let globalIdx = 1;
+                                const subjects = collaborators.length > 0 ? collaborators : [{subject: "Geral", quota: multipleChoiceQuestions.length, userId: "owner"}];
+                                
+                                return subjects.map((sub, sIdx) => {
+                                    const quota = Number(sub.quota) || 0;
+                                    if (quota <= 0) return null;
+
+                                    return (
+                                        <div key={sIdx} className="border border-gray-100 p-2 rounded bg-gray-50/50 print:bg-transparent print:border-black">
+                                            <p className="text-[9px] font-black uppercase mb-2 border-b border-gray-200 pb-1 print:border-black">{sub.subject}</p>
+                                            <div className="space-y-1.5">
+                                                {Array.from({ length: quota }).map((_, i) => {
+                                                    const qNum = globalIdx++;
                                                     return (
-                                                        <div key={optIdx} className="w-4 h-4 rounded-full border-2 border-black bg-white"></div>
+                                                        <div key={i} className="flex items-center gap-2 text-[10px]">
+                                                            <span className="font-black w-5 text-right">{qNum}.</span>
+                                                            <div className="flex gap-1">
+                                                                {['A', 'B', 'C', 'D', 'E'].map((opt) => (
+                                                                    <div key={opt} className="w-3.5 h-3.5 rounded-full border border-black bg-white flex items-center justify-center text-[7px] font-bold">
+                                                                        {opt}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
                                                     )
                                                 })}
                                             </div>
-                                        )
-                                    })}
-                                </div>
-                            ))}
+                                        </div>
+                                    );
+                                });
+                            })()}
                         </div>
                     </div>
                     

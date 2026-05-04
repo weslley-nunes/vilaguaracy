@@ -200,9 +200,9 @@ function ExamProgressCard({ exam }) {
                     <Calendar size={14} />
                     <span>Criada em {new Date(exam.createdAt?.seconds * 1000).toLocaleDateString()}</span>
                 </div>
-                <button className="text-xs font-bold text-vg-dark hover:underline flex items-center gap-1">
+                <Link href={`/builder?id=${exam.id}`} className="text-xs font-bold text-vg-dark hover:underline flex items-center gap-1">
                     <FileText size={14} /> Ver Detalhes
-                </button>
+                </Link>
             </div>
         </div>
     );
