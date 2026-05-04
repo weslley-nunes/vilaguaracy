@@ -353,7 +353,9 @@ export default function BuilderPage() {
     // --- Existing API Logic ---
     // --- Centralized Save Logic ---
     const saveExam = async () => {
-        if (!user || examQuestions.length === 0) return alert("Adicione questões antes de salvar!");
+        // Allow saving if it's a template or has collaborators, even if questions are 0 (for initial setup)
+        const isCollaborative = collaborators.length > 0 || selectedTemplate;
+        if (!user || (examQuestions.length === 0 && !isCollaborative)) return alert("Adicione questões antes de salvar!");
 
         // Validação de Cotas
         for (const collab of collaborators) {

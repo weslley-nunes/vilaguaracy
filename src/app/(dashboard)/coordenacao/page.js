@@ -33,8 +33,8 @@ export default function CoordenacaoPage() {
         try {
             // Fetch all exams for coordination view
             const data = await ExamService.listAll(); 
-            // Filter only collaborative exams or those with templates
-            setExams(data.filter(e => (e.collaborators && e.collaborators.length > 0) || e.templateType));
+            // Filter only collaborative exams or those with templates (even if 0 questions)
+            setExams(data.filter(e => (e.collaborators && e.collaborators.length > 0) || e.templateType || e.questions?.length > 0));
         } catch (error) {
             console.error("Error loading exams:", error);
         } finally {
