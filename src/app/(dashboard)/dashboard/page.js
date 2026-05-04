@@ -7,7 +7,7 @@ import { getClassesByUser } from "@/services/classesService";
 import { ExamService } from "@/services/examService";
 
 export default function Dashboard() {
-    const { user } = useAuth();
+    const { user, activeRole } = useAuth();
 
     const [stats, setStats] = useState({ examsCount: 0, studentsCount: 0 });
     const [isLoading, setIsLoading] = useState(true);
@@ -18,9 +18,12 @@ export default function Dashboard() {
         const loadStats = async () => {
             setIsLoading(true);
             try {
+                // If coordinator or management, we want to see the global stats
+                const isManagement = activeRole === 'gestao' || activeRole === 'coordenador';
+                
                 // Fetch exams and classes concurrently
                 const [exams, classes] = await Promise.all([
-                    ExamService.listByTeacher(user.uid),
+                    isManagement ? ExamService.listAll() : ExamService.listByTeacher(user.uid),
                     getClassesByUser(user.uid)
                 ]);
 
@@ -44,7 +47,7 @@ export default function Dashboard() {
         };
 
         loadStats();
-    }, [user]);
+    }, [user, activeRole]);
 
     return (
         <div>
