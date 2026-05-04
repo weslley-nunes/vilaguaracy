@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
-import { FileText, Users, Plus, Loader2 } from "lucide-react";
+import { FileText, Users, Plus, Loader2, AlertCircle } from "lucide-react";
 import { getClassesByUser } from "@/services/classesService";
 import { ExamService } from "@/services/examService";
 
@@ -38,9 +38,20 @@ export default function Dashboard() {
                     }
                 });
 
+                // Find pending exams for teacher role
+                let pendingExams = [];
+                if (!isManagement) {
+                    pendingExams = exams.filter(exam => {
+                        if (!exam.collaborators) return false;
+                        const myBlock = exam.collaborators.find(c => c.userId === user.uid);
+                        return myBlock && (myBlock.current < myBlock.quota);
+                    });
+                }
+
                 setStats({
                     examsCount: exams.length,
-                    studentsCount: totalStudents
+                    studentsCount: totalStudents,
+                    pendingExams: pendingExams
                 });
             } catch (error) {
                 console.error("Erro ao carregar estatísticas do dashboard:", error);
@@ -84,6 +95,47 @@ export default function Dashboard() {
                     </div>
                 </div>
             </div>
+
+            {/* Pending Collaborative Blocks for Teachers */}
+            {!isLoading && stats.pendingExams?.length > 0 && (
+                <div className="mb-10">
+                    <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+                        <AlertCircle className="text-rose-500" size={20} /> Pendências de Blocos (Multidisciplinar)
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {stats.pendingExams.map(exam => {
+                            const myBlock = exam.collaborators.find(c => c.userId === user.uid);
+                            return (
+                                <div key={exam.id} className="bg-white dark:bg-gray-900 rounded-2xl border border-rose-100 dark:border-rose-500/20 p-5 shadow-sm hover:shadow-md transition-all">
+                                    <div className="flex justify-between items-start mb-3">
+                                        <div>
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-rose-500 mb-1">Pendente: {myBlock?.subject}</p>
+                                            <h3 className="font-bold text-gray-800 dark:text-white line-clamp-1">{exam.title}</h3>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-xl font-black text-rose-600">{myBlock?.current} <span className="text-xs text-gray-400">/ {myBlock?.quota}</span></p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between mt-4 gap-4">
+                                        <div className="flex-1 bg-gray-100 dark:bg-white/5 h-2 rounded-full overflow-hidden">
+                                            <div 
+                                                className="bg-rose-500 h-full transition-all duration-500" 
+                                                style={{ width: `${Math.min(100, (myBlock?.current / myBlock?.quota) * 100)}%` }}
+                                            ></div>
+                                        </div>
+                                        <Link 
+                                            href={`/builder?id=${exam.id}`}
+                                            className="btn btn-primary py-1.5 px-4 text-xs flex items-center gap-2 whitespace-nowrap"
+                                        >
+                                            <Plus size={14} /> Enviar Questões
+                                        </Link>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
 
             <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Acesso Rápido</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -22,7 +22,20 @@ export default function MyExamsPage() {
         setLoading(true);
         try {
             const data = await ExamService.listByTeacher(user.uid);
-            setExams(data);
+            
+            // Refined filtering:
+            // Show only if:
+            // 1. User is a collaborator (multidisciplinary tasks)
+            // 2. OR User is the owner AND it's NOT a collaborative template (personal standalone exams)
+            const filtered = data.filter(exam => {
+                const isCollab = exam.collaboratorIds?.includes(user.uid);
+                const isOwner = exam.teacherId === user.uid;
+                const isTemplate = !!exam.templateType;
+                
+                return isCollab || (isOwner && !isTemplate);
+            });
+
+            setExams(filtered);
         } catch (error) {
             console.error("Error loading exams:", error);
             alert("Erro ao carregar avaliações.");
