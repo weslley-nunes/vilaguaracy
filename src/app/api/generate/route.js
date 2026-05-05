@@ -5,10 +5,10 @@ export async function POST(req) {
     try {
         const { topic, difficulty = "Médio", level = "Ensino Médio", year = "Geral" } = await req.json();
 
-        // Use Gemini API Key
-        const apiKey = process.env.GEMINI_API_KEY;
+        // Forçando a chave diretamente no código para contornar cache do servidor
+        const apiKey = "AIzaSyASJEMYVXfEGJbJlgGXFBHPDcWG5QWrbnw";
 
-        if (!apiKey || apiKey.startsWith("your_")) {
+        if (!apiKey) {
             return NextResponse.json({ error: "Chave não configurada." }, { status: 500 });
         }
 
