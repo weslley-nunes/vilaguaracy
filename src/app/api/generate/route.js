@@ -111,6 +111,12 @@ export async function POST(req) {
 
     } catch (error) {
         console.error("AI API Error", error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        
+        // Diagnóstico para o usuário
+        const apiKey = process.env.GEMINI_API_KEY;
+        const keyPreview = apiKey ? `${apiKey.substring(0, 7)}...${apiKey.substring(apiKey.length - 4)}` : "NÃO ENCONTRADA";
+        const diagnosticMsg = `Erro na IA: ${error.message}. \nChave detectada: ${keyPreview} (Tamanho: ${apiKey?.length}). \nVerifique se esta chave está correta no Coolify.`;
+        
+        return NextResponse.json({ error: diagnosticMsg }, { status: 500 });
     }
 }
