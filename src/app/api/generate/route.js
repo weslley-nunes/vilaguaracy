@@ -53,3 +53,4 @@ export async function POST(req) {
         return NextResponse.json({ error: `[ERRO CRÍTICO] ${error.message}` }, { status: 500 });
     }
 }
+// Final Attempt Sync
