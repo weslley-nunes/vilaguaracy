@@ -14,7 +14,7 @@ export async function POST(req) {
 
         const genAI = new GoogleGenerativeAI(apiKey);
 
-        // List of models copied exactly from 'Corrige pra mim'
+        // Ordem exata do 'Corrige pra mim' priorizando 2.0
         const modelsToTry = [
             "gemini-2.0-flash",
             "gemini-2.0-flash-001",
