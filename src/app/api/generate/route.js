@@ -6,10 +6,14 @@ export async function POST(req) {
     try {
         const { topic, difficulty = "Médio", level = "Ensino Médio", year = "Geral", count = 3 } = await req.json();
 
-        // Use Gemini API Key
-        const apiKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY; // Fallback to avoid breaking if they put it in the old var
+        // Use Gemini API Key exclusively
+        const apiKey = process.env.GEMINI_API_KEY;
 
-        if (!apiKey || apiKey.startsWith("your_")) {
+        if (!apiKey) {
+            return NextResponse.json({ error: "Configuração incompleta: GEMINI_API_KEY não encontrada no servidor." }, { status: 500 });
+        }
+
+        if (apiKey.startsWith("your_") || apiKey.length < 10) {
             // Mock Data when no valid key is present
             await new Promise(r => setTimeout(r, 1000));
             
