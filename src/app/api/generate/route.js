@@ -70,6 +70,19 @@ export async function POST(req) {
 
         if (!response.ok) {
             const errorData = await response.json();
+            
+            // DIAGNOSTIC: If 404, list available models
+            if (response.status === 404) {
+                try {
+                    const listRes = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${apiKey}`);
+                    const listData = await listRes.json();
+                    const availableModels = listData.models?.map(m => m.name.replace('models/', '')).join(', ') || "Nenhum modelo encontrado";
+                    throw new Error(`Modelo não encontrado. Modelos disponíveis para sua chave: ${availableModels}`);
+                } catch (listErr) {
+                    throw new Error(`Google API Error (404): O modelo gemini-1.5-flash não foi encontrado e não conseguimos listar alternativas.`);
+                }
+            }
+            
             throw new Error(`Google API Error (${response.status}): ${errorData.error?.message || response.statusText}`);
         }
 
