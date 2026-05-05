@@ -2,7 +2,10 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req) {
     try {
-        const { topic, difficulty = "Médio", level = "Ensino Médio", year = "Geral", count = 3 } = await req.json();
+        let { topic, difficulty = "Médio", level = "Ensino Médio", year = "Geral", count = 3 } = await req.json();
+        
+        // Trava de segurança: Máximo de 3 questões por vez para estabilidade
+        count = 3;
         const apiKey = process.env.GEMINI_API_KEY;
 
         if (!apiKey) return NextResponse.json({ error: "Chave não encontrada." }, { status: 500 });
