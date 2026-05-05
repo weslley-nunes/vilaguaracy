@@ -34,15 +34,13 @@ export async function POST(req) {
             });
         }
 
-        const genAI = new GoogleGenerativeAI(apiKey);
+        const genAI = new GoogleGenerativeAI(apiKey, { apiVersion: 'v1' });
 
         // List of models to try in order of preference
         const modelsToTry = [
             "gemini-1.5-flash",
-            "gemini-1.5-flash-latest",
-            "gemini-2.0-flash-exp",
             "gemini-1.5-pro",
-            "gemini-pro"
+            "gemini-1.0-pro"
         ];
 
         let result;
