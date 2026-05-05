@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-// AI Question Generation Route - Updated with New Account Gemini Key
+// AI Question Generation Route - Force Redeploy after Key Cleanup
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function POST(req) {
