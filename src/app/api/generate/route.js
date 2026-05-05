@@ -34,7 +34,9 @@ export async function POST(req) {
 
         // List of models to try in order of preference/likelihood of working
         const modelsToTry = [
-            "gemini-1.5-flash"
+            "gemini-1.5-flash-latest",
+            "gemini-1.5-flash",
+            "gemini-1.5-pro"
         ];
 
         let result;
