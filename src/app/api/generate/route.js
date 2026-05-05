@@ -5,16 +5,12 @@ export async function POST(req) {
     try {
         const { topic, difficulty = "Médio", level = "Ensino Médio", year = "Geral" } = await req.json();
 
-        // A CHAVE REAL QUE FUNCIONA NO CORRIGE PRA MIM:
+        // Chave do projeto 'Corrige pra mim'
         const apiKey = "AIzaSyBzHts2NH4CQlyzaCol3ka0XvpFGxX_gYk";
-
-        if (!apiKey) {
-            return NextResponse.json({ error: "Chave não configurada." }, { status: 500 });
-        }
 
         const genAI = new GoogleGenerativeAI(apiKey);
 
-        // Ordem exata do 'Corrige pra mim' priorizando 2.0
+        // Modelos na ordem do 'Corrige pra mim'
         const modelsToTry = [
             "gemini-2.0-flash",
             "gemini-2.0-flash-001",
@@ -22,9 +18,7 @@ export async function POST(req) {
             "gemini-1.5-flash"
         ];
 
-        let result;
-        let usedModel = "";
-        let lastError;
+        let lastError = "";
 
         for (const modelName of modelsToTry) {
             try {
@@ -32,62 +26,30 @@ export async function POST(req) {
 
                 const prompt = `
                     Você é um professor especialista criando uma prova.
-                    
                     Tópico: ${topic}
                     Nível de Ensino: ${level}
                     Ano Escolar/Série: ${year}
                     Dificuldade: ${difficulty}
-                    
-                    Gere 3 questões seguindo estritamente este nível, ano escolar e dificuldade. Use vocabulário adequado para a idade dos alunos desta etapa formativa.
-                    Gere APENAS questões de múltipla escolha.
-                    Como especialista, identifique o código da habilidade da BNCC mais adequado para cada questão.
-                    
-                    Responda APENAS com um JSON válido seguindo esta estrutura, sem markdown (backticks):
-                    {
-                        "questions": [
-                            {
-                                "text": "Enunciado da questão",
-                                "type": "multiple_choice",
-                                "options": ["Opção A", "Opção B", "Opção C", "Opção D", "Opção E"],
-                                "correct": "A",
-                                "habilidade": "EF06HI02"
-                            }
-                        ]
-                    }
-                `;
+                    Gere 3 questões de múltipla escolha com a habilidade da BNCC.
+                    Responda APENAS JSON: {"questions": [{"text": "...", "options": ["A","B","C","D","E"], "correct": "A", "habilidade": "..."}]}`;
 
-                result = await model.generateContent(prompt);
-                usedModel = modelName;
-                break; // If successful, exit loop
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                const text = response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+                
+                const data = JSON.parse(text);
+                data.questions = data.questions.map((q, i) => ({ ...q, id: Date.now() + i }));
+                
+                return NextResponse.json(data);
             } catch (e) {
-                console.warn(`Failed with model ${modelName}:`, e.message);
-                lastError = e;
+                lastError = `Erro no modelo ${modelName}: ${e.message}`;
                 continue;
             }
         }
 
-        if (!result) {
-            throw lastError || new Error("Todos os modelos falharam.");
-        }
-
-        const response = await result.response;
-        let text = response.text();
-
-        // Clean markdown if present
-        text = text.replace(/```json/g, '').replace(/```/g, '').trim();
-
-        try {
-            const data = JSON.parse(text);
-            // Add unique IDs
-            data.questions = data.questions.map((q, i) => ({ ...q, id: Date.now() + i }));
-            return NextResponse.json(data);
-        } catch (e) {
-            console.error("JSON Parse Error", e, text);
-            return NextResponse.json({ error: "Erro ao processar resposta da IA" }, { status: 500 });
-        }
+        throw new Error(lastError || "Nenhum modelo funcionou.");
 
     } catch (error) {
-        console.error("AI API Error", error);
-        return NextResponse.json({ error: `[PROJETO-CORRIGE] ${error.message}` }, { status: 500 });
+        return NextResponse.json({ error: `[ERRO CRÍTICO 2.0] ${error.message}` }, { status: 500 });
     }
 }
