@@ -7,25 +7,22 @@ export async function POST(req) {
 
         if (!apiKey) return NextResponse.json({ error: "Chave não encontrada." }, { status: 500 });
 
-        // DIAGNÓSTICO: Tentar listar modelos primeiro para ver o que a chave enxerga
-        const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
-        const listRes = await fetch(listUrl);
-        const listData = await listRes.json();
+        // A chave já está funcionando, então vamos direto ao modelo estável
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
-        if (!listRes.ok) {
-            throw new Error(`[ERRO DE LISTAGEM] O Google retornou: ${JSON.stringify(listData)}`);
-        }
-
-        const models = listData.models || [];
-        if (models.length === 0) {
-            throw new Error("Sua chave não tem nenhum modelo disponível. Verifique se a 'Generative Language API' está realmente ativa no Console do Google Cloud.");
-        }
-
-        // Tentar o primeiro modelo da lista que o Google nos deu
-        const firstModel = models.find(m => m.name.includes("flash")) || models[0];
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/${firstModel.name}:generateContent?key=${apiKey}`;
-
-        const prompt = `Gere ${count} questões de múltipla escolha sobre ${topic} para ${level} (${year}), dificuldade ${difficulty}. Responda apenas JSON.`;
+        const prompt = `Você é um professor especialista. Gere ${count} questões de múltipla escolha sobre "${topic}" para ${level} (${year}), com dificuldade ${difficulty}.
+        
+        IMPORTANTE: Responda APENAS um objeto JSON puro, sem markdown, seguindo exatamente este formato:
+        {
+          "questions": [
+            {
+              "text": "Enunciado",
+              "options": ["A", "B", "C", "D", "E"],
+              "correct": "A",
+              "habilidade": "BNCC code"
+            }
+          ]
+        }`;
 
         const response = await fetch(apiUrl, {
             method: 'POST',
@@ -34,17 +31,39 @@ export async function POST(req) {
         });
 
         const data = await response.json();
-        if (!response.ok) throw new Error(`[ERRO DE GERAÇÃO] ${JSON.stringify(data)}`);
+        if (!response.ok) throw new Error(data.error?.message || "Erro na geração");
 
         let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) throw new Error("A IA retornou uma resposta vazia.");
+
+        // Limpeza de Markdown
         text = text.replace(/```json/g, '').replace(/```/g, '').trim();
-        const parsedData = JSON.parse(text);
-        parsedData.questions = parsedData.questions.map((q, i) => ({ ...q, id: Date.now() + i }));
-        
-        return NextResponse.json(parsedData);
+
+        try {
+            const parsedData = JSON.parse(text);
+            
+            // Garantir que questions seja um array
+            const questions = Array.isArray(parsedData.questions) ? parsedData.questions : 
+                              (Array.isArray(parsedData) ? parsedData : []);
+
+            if (questions.length === 0) throw new Error("Formato de questões inválido.");
+
+            const finalizedQuestions = questions.map((q, i) => ({
+                id: Date.now() + i,
+                text: q.text || q.enunciado || "Questão sem texto",
+                options: Array.isArray(q.options) ? q.options : (q.alternativas || []),
+                correct: q.correct || q.resposta || "A",
+                habilidade: q.habilidade || "Geral"
+            }));
+
+            return NextResponse.json({ questions: finalizedQuestions });
+        } catch (e) {
+            console.error("Parse Error:", text);
+            throw new Error("Falha ao processar o formato da IA.");
+        }
 
     } catch (error) {
-        return NextResponse.json({ error: `[DIAGNÓSTICO] ${error.message}` }, { status: 500 });
+        console.error("Route Error:", error);
+        return NextResponse.json({ error: `[IA ATIVA] ${error.message}` }, { status: 500 });
     }
 }
-// Build Trigger: Confirmed Project Key
