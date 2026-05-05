@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-// AI Question Generation Route - Force Redeploy after Key Cleanup
+// AI Question Generation Route - Fixed and Stabilized
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function POST(req) {
@@ -36,11 +36,13 @@ export async function POST(req) {
 
         const genAI = new GoogleGenerativeAI(apiKey);
 
-        // List of models to try in order of preference/likelihood of working
+        // List of models to try in order of preference
         const modelsToTry = [
-            "gemini-1.5-flash-latest",
             "gemini-1.5-flash",
-            "gemini-1.5-pro"
+            "gemini-1.5-flash-latest",
+            "gemini-2.0-flash-exp",
+            "gemini-1.5-pro",
+            "gemini-pro"
         ];
 
         let result;
@@ -120,4 +122,3 @@ export async function POST(req) {
         return NextResponse.json({ error: diagnosticMsg }, { status: 500 });
     }
 }
-// Trigger
