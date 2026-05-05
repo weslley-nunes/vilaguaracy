@@ -47,3 +47,4 @@ export async function POST(req) {
         return NextResponse.json({ error: `[DIAGNÓSTICO] ${error.message}` }, { status: 500 });
     }
 }
+// Build Trigger: Confirmed Project Key
