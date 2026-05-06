@@ -71,7 +71,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
             </div>
 
             {/* Split Section: Instructions + QR Code */}
-            <div className="flex flex-col md:flex-row gap-4 mb-4">
+            <div className="flex flex-row items-stretch gap-4 mb-4 w-full">
                 {/* Instructions */}
                 <div className="flex-1 border border-gray-300 p-3 rounded-lg bg-gray-50 print:bg-transparent print:border-black">
                     <h3 className="font-bold text-[11px] uppercase mb-1">📝 Orientações Importantes:</h3>
