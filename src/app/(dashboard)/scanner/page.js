@@ -1,178 +1,299 @@
 "use client";
-import { useState, useRef } from "react";
-import { Camera, Upload, AlertCircle, Loader2, CheckCircle, ChevronLeft } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Camera, ChevronLeft, Loader2, CheckCircle, Save, XCircle } from "lucide-react";
 import Link from "next/link";
+import { Html5QrcodeScanner } from "html5-qrcode";
 
 export default function ScannerPage() {
-    const [isScanning, setIsScanning] = useState(false);
-    const [result, setResult] = useState(null);
+    const [scanResult, setScanResult] = useState(null); // The raw data from QR code
+    const [examData, setExamData] = useState(null); // Fetched exam from DB
+    const [isLoadingExam, setIsLoadingExam] = useState(false);
+    
+    // Interactive Grid State: questionIndex -> string (selected option A, B, C, D, E)
+    const [studentAnswers, setStudentAnswers] = useState({});
+    
+    const [correctionResult, setCorrectionResult] = useState(null);
+    const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState(null);
-    const [imagePreview, setImagePreview] = useState(null);
 
-    const fileInputRef = useRef(null);
+    // Initialize Scanner on load
+    useEffect(() => {
+        if (scanResult) return; // Stop scanning if we have a result
 
-    const handleFileUpload = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+        const scanner = new Html5QrcodeScanner(
+            "reader",
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            false
+        );
 
-        // Preview
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setImagePreview(reader.result);
+        scanner.render(
+            (decodedText) => {
+                try {
+                    const data = JSON.parse(decodedText);
+                    if (data.id && data.s) {
+                        scanner.clear();
+                        setScanResult(data);
+                        fetchExam(data.id);
+                    } else {
+                        setError("QR Code inválido. Não contém ID da prova ou aluno.");
+                    }
+                } catch (e) {
+                    setError("QR Code no formato incorreto.");
+                }
+            },
+            (errorMessage) => {
+                // Ignore background scanning errors
+            }
+        );
+
+        return () => {
+            scanner.clear().catch(e => console.error("Failed to clear scanner", e));
         };
-        reader.readAsDataURL(file);
+    }, [scanResult]);
 
-        // Mock Processing
-        processImage(file);
-    };
-
-    const processImage = async (file) => {
-        setIsScanning(true);
+    const fetchExam = async (examId) => {
+        setIsLoadingExam(true);
         setError(null);
-        setResult(null);
-
-        // Simulate AI Delay
-        setTimeout(() => {
-            setIsScanning(false);
-            // Mock Success Result
-            setResult({
-                student: "João Silva",
-                score: 8.5,
-                correctCount: 17,
-                totalCount: 20,
-                examId: "HIST-102"
+        try {
+            const res = await fetch(`/api/exams/get?id=${examId}`);
+            if (!res.ok) throw new Error("Prova não encontrada no banco de dados.");
+            const data = await res.json();
+            setExamData(data.exam);
+            
+            // Auto-fill answers with empty state
+            const initialAnswers = {};
+            data.exam.questions.forEach((_, idx) => {
+                initialAnswers[idx] = null;
             });
-        }, 3000);
+            setStudentAnswers(initialAnswers);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsLoadingExam(false);
+        }
     };
 
-    const triggerCamera = () => {
-        fileInputRef.current?.click();
+    const handleBubbleClick = (qIndex, option) => {
+        setStudentAnswers(prev => ({
+            ...prev,
+            [qIndex]: prev[qIndex] === option ? null : option // Toggle selection
+        }));
+    };
+
+    const submitCorrection = async () => {
+        if (!examData || !scanResult) return;
+        setIsSaving(true);
+        
+        let correctCount = 0;
+        const details = [];
+
+        examData.questions.forEach((q, idx) => {
+            const studentAns = studentAnswers[idx];
+            // Format correct answer for robust comparison
+            const correctStr = String(q.correct || "").trim();
+            const cleanCorrect = correctStr.length === 1 
+                ? correctStr.toUpperCase() 
+                : correctStr.replace(/^[a-zA-Z\d]+[).:-]\s*/, "").toUpperCase();
+            
+            const isCorrect = studentAns === cleanCorrect || studentAns === correctStr.toUpperCase();
+            
+            if (isCorrect) correctCount++;
+            
+            details.push({
+                questionIndex: idx,
+                habilidade: q.habilidade || "N/A",
+                subject: q.subject || "Geral",
+                isCorrect,
+                studentAnswer: studentAns || null,
+                correctAnswer: cleanCorrect || correctStr
+            });
+        });
+
+        const totalCount = examData.questions.length;
+        const rawScore = examData.totalScore || 10;
+        const score = (correctCount / totalCount) * rawScore;
+
+        const payload = {
+            examId: examData.id,
+            studentName: scanResult.s,
+            classId: scanResult.c || "Geral",
+            score,
+            correctCount,
+            totalCount,
+            details,
+            answers: studentAnswers
+        };
+
+        try {
+            const res = await fetch("/api/corrections/save", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) throw new Error("Falha ao salvar correção");
+            
+            setCorrectionResult({
+                score,
+                correctCount,
+                totalCount
+            });
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const resetScanner = () => {
+        setScanResult(null);
+        setExamData(null);
+        setCorrectionResult(null);
+        setStudentAnswers({});
+        setError(null);
     };
 
     return (
-        <div className="max-w-xl mx-auto">
-            {/* Header Mobile Style */}
+        <div className="max-w-3xl mx-auto pb-12">
             <div className="flex items-center gap-4 mb-8">
-                <Link href="/dashboard" className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
-                    <ChevronLeft size={24} className="text-gray-600 dark:text-gray-300" />
+                <Link href="/dashboard" className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                    <ChevronLeft size={24} className="text-gray-600" />
                 </Link>
                 <div>
-                    <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-vg-dark to-vg-navy">
-                        Scanner de Provas
-                    </h1>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Digitalize e corrija automaticamente.</p>
+                    <h1 className="text-2xl font-bold text-vg-dark">Scanner de Correção</h1>
+                    <p className="text-sm text-gray-500">Leia o QR Code para identificar o aluno e a prova.</p>
                 </div>
             </div>
 
-            <div className="bg-white dark:bg-white/5 rounded-3xl shadow-xl dark:shadow-none border border-gray-100 dark:border-white/10 overflow-hidden relative min-h-[500px] flex flex-col">
+            {error && (
+                <div className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-xl mb-6 flex items-center justify-between">
+                    <p>{error}</p>
+                    <button onClick={() => setError(null)} className="text-red-800"><XCircle size={20}/></button>
+                </div>
+            )}
 
-                {/* Main Action Area */}
-                {!imagePreview && !result && (
-                    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-8">
-                        <div className="w-24 h-24 bg-vg-light dark:bg-vg-dark/20 rounded-full flex items-center justify-center animate-pulse-slow">
-                            <Camera size={40} className="text-vg-dark dark:text-vg-navy" />
-                        </div>
+            {!scanResult && !isLoadingExam && (
+                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden relative">
+                    <div className="p-6 text-center">
+                        <Camera size={40} className="text-vg-navy mx-auto mb-4" />
+                        <h3 className="font-bold text-lg mb-2">Aponte a Câmera</h3>
+                        <p className="text-sm text-gray-500 mb-6">Enquadre o QR Code impresso no cabeçalho da prova do aluno.</p>
+                        
+                        {/* Scanner Div */}
+                        <div id="reader" className="w-full max-w-sm mx-auto overflow-hidden rounded-xl border-2 border-dashed border-gray-300"></div>
+                    </div>
+                </div>
+            )}
 
-                        <div className="space-y-2">
-                            <h3 className="font-bold text-lg text-gray-800 dark:text-white">Toque para Digitalizar</h3>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
-                                Aponte a câmera para o QR Code e o gabarito. Certifique-se de boa iluminação.
-                            </p>
-                        </div>
+            {isLoadingExam && (
+                <div className="bg-white rounded-3xl p-12 text-center shadow-sm border border-gray-100">
+                    <Loader2 size={40} className="text-vg-navy animate-spin mx-auto mb-4" />
+                    <h3 className="font-bold text-lg text-gray-800">Baixando Prova...</h3>
+                    <p className="text-gray-500 text-sm">O sistema identificou o aluno. Buscando o gabarito oficial...</p>
+                </div>
+            )}
 
-                        <div className="flex flex-col gap-3 w-full max-w-xs">
-                            <button
-                                onClick={triggerCamera}
-                                className="btn btn-primary py-4 text-lg shadow-lg shadow-vg-dark/30 flex items-center justify-center gap-3"
-                            >
-                                <Camera size={24} />
-                                Abrir Câmera
-                            </button>
-
-                            <div className="relative">
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept="image/*"
-                                    capture="environment" // Forces camera on mobile
-                                    className="hidden"
-                                    onChange={handleFileUpload}
-                                />
-                                <button
-                                    onClick={() => fileInputRef.current?.click()}
-                                    className="btn btn-outline w-full py-3 border-dashed border-2 flex items-center justify-center gap-2 text-gray-500"
-                                >
-                                    <Upload size={18} />
-                                    Carregar Arquivo
-                                </button>
+            {examData && !correctionResult && (
+                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="bg-vg-light border-b border-vg-dark p-6">
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <h2 className="text-xl font-bold text-vg-dark">{scanResult.s}</h2>
+                                <p className="text-sm text-gray-700 font-medium">Turma: {scanResult.c || "N/A"}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-xs text-gray-500 uppercase font-bold">Avaliação ID</p>
+                                <p className="font-mono text-sm">{scanResult.id.slice(-6)}</p>
                             </div>
                         </div>
                     </div>
-                )}
 
-                {/* Scanning State */}
-                {imagePreview && isScanning && (
-                    <div className="flex-1 relative flex flex-col items-center justify-center bg-black/90 z-20">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={imagePreview} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-50 blur-sm" />
-
-                        <div className="text-center z-10 relative">
-                            <Loader2 size={60} className="text-vg-navy animate-spin mx-auto mb-4" />
-                            <h3 className="text-white font-bold text-xl animate-pulse">Analisando Gabarito...</h3>
-                            <p className="text-white/60 text-sm mt-2">IA verificando respostas...</p>
-                        </div>
-                    </div>
-                )}
-
-                {/* Result State */}
-                {result && !isScanning && (
-                    <div className="flex-1 flex flex-col">
-                        <div className="bg-green-500 text-white p-6 text-center">
-                            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-sm">
-                                <CheckCircle size={32} className="text-white" />
+                    <div className="p-6">
+                        <div className="mb-6 flex justify-between items-center bg-yellow-50 border border-yellow-100 p-4 rounded-xl">
+                            <div>
+                                <h3 className="font-bold text-yellow-800">Lançamento de Respostas</h3>
+                                <p className="text-xs text-yellow-700">Toque nas bolinhas correspondentes ao que o aluno marcou no papel.</p>
                             </div>
-                            <h2 className="text-3xl font-bold">{result.score.toFixed(1)}</h2>
-                            <p className="opacity-90 font-medium">Nota Final</p>
                         </div>
 
-                        <div className="p-6 space-y-6 flex-1 bg-white dark:bg-gray-900">
-                            <div className="flex justify-between items-center border-b border-gray-100 dark:border-white/10 pb-4">
-                                <div>
-                                    <p className="text-xs text-gray-400 uppercase font-bold">Aluno Identified</p>
-                                    <h3 className="font-bold text-lg text-gray-800 dark:text-white">{result.student}</h3>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-xs text-gray-400 uppercase font-bold">Acertos</p>
-                                    <p className="font-bold text-lg text-green-600">{result.correctCount}/{result.totalCount}</p>
-                                </div>
-                            </div>
+                        {/* Interactive Answer Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 mb-8">
+                            {examData.questions.map((q, idx) => (
+                                <div key={idx} className="flex items-center gap-4 p-2 hover:bg-gray-50 rounded-lg border-b border-gray-100 pb-3">
+                                    <span className="font-bold text-gray-400 w-6 text-right">{idx + 1}.</span>
+                                    <div className="flex gap-2">
+                                        {['A', 'B', 'C', 'D', 'E'].map(opt => {
+                                            // Only render options that exist in the question (usually 4)
+                                            // Assuming standard 4 or 5 options. Let's just render 4 if not specified, or 5 if there's E.
+                                            const hasOption = q.options && q.options.length >= (opt.charCodeAt(0) - 64);
+                                            if (!hasOption && opt === 'E') return null; // Hide E if only 4 options
 
-                            <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4">
-                                <h4 className="font-bold text-sm text-gray-700 dark:text-gray-300 mb-3">Detalhes da Correção</h4>
-                                <div className="grid grid-cols-5 gap-2">
-                                    {Array.from({ length: 20 }).map((_, i) => (
-                                        <div key={i} className={`h-2 rounded-full ${i < result.correctCount ? 'bg-green-500' : 'bg-red-400'}`}></div>
-                                    ))}
+                                            const isSelected = studentAnswers[idx] === opt;
+                                            return (
+                                                <button
+                                                    key={opt}
+                                                    onClick={() => handleBubbleClick(idx, opt)}
+                                                    className={`w-8 h-8 rounded-full border-2 font-bold text-sm flex items-center justify-center transition-all ${
+                                                        isSelected 
+                                                            ? 'bg-vg-navy border-vg-navy text-white shadow-md transform scale-110' 
+                                                            : 'bg-white border-gray-300 text-gray-500 hover:border-vg-navy hover:text-vg-navy'
+                                                    }`}
+                                                >
+                                                    {opt}
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
+                                    <span className="text-[10px] uppercase font-bold text-gray-300 ml-auto">{q.subject || "Geral"}</span>
                                 </div>
-                                <p className="text-center text-xs text-gray-400 mt-2">Visualização simplificada</p>
-                            </div>
+                            ))}
+                        </div>
 
-                            <button
-                                onClick={() => { setImagePreview(null); setResult(null); }}
-                                className="btn btn-primary w-full py-4 shadow-lg shadow-vg-dark/20"
-                            >
-                                Próxima Prova
+                        <div className="flex gap-4">
+                            <button onClick={resetScanner} className="btn btn-outline py-3 flex-1 text-gray-600 border-gray-300">Cancelar</button>
+                            <button onClick={submitCorrection} disabled={isSaving} className="btn btn-primary py-3 flex-1 flex items-center justify-center gap-2 shadow-lg shadow-vg-dark/30">
+                                {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                                Salvar Correção
                             </button>
                         </div>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
 
-            <div className="mt-8 text-center">
-                <p className="text-xs text-gray-400 max-w-md mx-auto">
-                    Dica: Mantenha a câmera paralela à folha. Todos os cantos do QR Code devem estar visíveis.
-                </p>
-            </div>
+            {correctionResult && (
+                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden text-center">
+                    <div className="bg-green-500 text-white p-8">
+                        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
+                            <CheckCircle size={32} className="text-white" />
+                        </div>
+                        <h2 className="text-5xl font-bold mb-2">{correctionResult.score.toFixed(1)}</h2>
+                        <p className="opacity-90 font-medium text-lg">Nota Final de {scanResult.s}</p>
+                    </div>
+
+                    <div className="p-8">
+                        <div className="flex justify-center gap-12 mb-8 border-b border-gray-100 pb-8">
+                            <div>
+                                <p className="text-xs text-gray-400 uppercase font-bold mb-1">Acertos</p>
+                                <p className="text-3xl font-bold text-green-600">{correctionResult.correctCount}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-400 uppercase font-bold mb-1">Erros</p>
+                                <p className="text-3xl font-bold text-red-500">{correctionResult.totalCount - correctionResult.correctCount}</p>
+                            </div>
+                        </div>
+
+                        <button onClick={resetScanner} className="btn btn-primary py-4 w-full text-lg shadow-lg shadow-vg-dark/20">
+                            Escanear Próximo Aluno
+                        </button>
+                        
+                        <div className="mt-6">
+                            <Link href="/dashboard/resultados" className="text-sm font-bold text-vg-dark hover:underline">
+                                Ver Boletim Analítico Completo
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -14,11 +14,11 @@ export default function Sidebar() {
     let links = [];
     if (role === 'gestao') {
         links = [
-            { href: "/dashboard", label: "Gestão Geral", icon: LayoutDashboard },
-            { href: "/usuarios", label: "Gestão de Usuários", icon: UserCircle },
-            { href: "/classes", label: "Turmas & Alunos", icon: GraduationCap },
+            { href: "/dashboard", label: "Painel Geral", icon: LayoutDashboard },
             { href: "/builder", label: "Criar Avaliação Base", icon: FileText },
             { href: "/exams", label: "Todas as Provas", icon: FileText },
+            { href: "/scanner", label: "Scanner de Correção", icon: Sparkles },
+            { href: "/resultados", label: "Resultados Analíticos", icon: BarChart2 },
             { href: "/coordenacao", label: "Progresso de Provas", icon: BarChart2 },
             { href: "/habilidades", label: "Habilidades & Gráficos", icon: BarChart2 },
             { href: "/tutorial", label: "Ajuda & Tutoriais", icon: BookOpen },
@@ -27,6 +27,8 @@ export default function Sidebar() {
         links = [
             { href: "/dashboard", label: "Painel Coord.", icon: LayoutDashboard },
             { href: "/classes", label: "Minhas Turmas", icon: GraduationCap },
+            { href: "/scanner", label: "Scanner de Correção", icon: Sparkles },
+            { href: "/resultados", label: "Resultados Analíticos", icon: BarChart2 },
             { href: "/coordenacao", label: "Progresso de Provas", icon: BarChart2 },
             { href: "/exams", label: "Acompanhamento", icon: FileText },
             { href: "/habilidades", label: "Habilidades", icon: BarChart2 },
@@ -37,8 +39,8 @@ export default function Sidebar() {
             { href: "/dashboard", label: "Início", icon: LayoutDashboard },
             { href: "/builder", label: "Adicionar Questões", icon: FileText },
             { href: "/exams", label: "Minhas Avaliações", icon: FileText },
-            { href: "/scanner", label: "Correção IA", icon: Sparkles },
-            { href: "/acompanhamento", label: "Meus Resultados", icon: BarChart2 },
+            { href: "/scanner", label: "Scanner de Correção", icon: Sparkles },
+            { href: "/resultados", label: "Resultados Analíticos", icon: BarChart2 },
             { href: "/tutorial", label: "Ajuda & Tutoriais", icon: BookOpen },
         ];
     }
