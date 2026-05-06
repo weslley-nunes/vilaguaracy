@@ -52,11 +52,16 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                                 </div>
                             )}
                         </div>
-                        <div className="grid grid-cols-2 gap-2 text-sm border-t border-gray-300 pt-2">
-                            <p className="col-span-2"><span className="font-bold">Professores:</span> {[headerConfig?.teacherName, ...collaborators.map(c => c.name)].filter(Boolean).join(", ")}</p>
-                            {headerConfig?.showDate && <p><span className="font-bold">Data:</span> ____/____/______</p>}
-                            <p><span className="font-bold">Aluno(a):</span> {studentName || "_________________________________________________"}</p>
-                            <p><span className="font-bold">Turma:</span> {headerConfig?.className || "________"}</p>
+                        <div className="flex flex-col gap-3 text-sm border-t border-gray-300 pt-3">
+                            <p><span className="font-bold">Professores:</span> {[headerConfig?.teacherName, ...collaborators.map(c => c.name)].filter(Boolean).join(", ")}</p>
+                            <div className="flex justify-between items-center">
+                                {headerConfig?.showDate && <p><span className="font-bold">Data:</span> ____/____/______</p>}
+                                <p><span className="font-bold">Turma:</span> {headerConfig?.className || "________"}</p>
+                            </div>
+                            <div className="flex justify-between items-end mt-1">
+                                <p className="flex-1"><span className="font-bold">Aluno(a):</span> {studentName || "________________________________________________________"}</p>
+                                <p className="text-[10px] font-bold uppercase flex-1 text-right">Assinatura: ________________________________________</p>
+                            </div>
                         </div>
                         <div className="mt-4 text-center">
                             <h2 className={`${titleSize} font-bold uppercase`}>{title || "Avaliação"} {isAdapted && <span className="text-sm block normal-case mt-1">(Prova Adaptada - Fonte Ampliada)</span>}</h2>
@@ -67,9 +72,9 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
 
             {/* Configurable Instructions Section */}
             <div className="mb-6 border border-gray-300 p-4 rounded-lg bg-gray-50 print:bg-transparent print:border-black">
-                <h3 className="font-bold text-[12px] uppercase mb-1">Orientações:</h3>
+                <h3 className="font-bold text-[12px] uppercase mb-1">📝 Orientações Importantes:</h3>
                 <p className={`whitespace-pre-wrap text-[11px] ${isAdapted ? 'text-lg' : ''} leading-relaxed font-medium text-gray-800`}>
-                    {headerConfig?.instructions || "1. Leia atentamente cada questão antes de responder.\n2. Utilize caneta esferográfica de tinta azul ou preta para preencher o gabarito.\n3. Preencha completamente o alvéolo no gabarito, sem ultrapassar as bordas.\n4. Não haverá substituição da folha de respostas por erro de preenchimento.\n5. Evite rasuras, pois questões rasuradas poderão ser anuladas.\n6. Assine seu nome no local indicado na folha de respostas."}
+                    {headerConfig?.instructions || "Caneta: Utilize apenas caneta azul ou preta.\n\nQuestões: A prova possui 20 questões com alternativas de A a D.\n\nResposta: Marque apenas uma alternativa por questão.\n\nGabarito: Pinte a bolinha correspondente à sua resposta com muito cuidado e sem ultrapassar as bordas.\n\nNossa escola preparou você com muito carinho e dedicação. Acreditamos no seu esforço e confiamos plenamente no seu potencial!\n\nBoa avaliação!"}
                 </p>
             </div>
 
@@ -100,9 +105,6 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                             <div className="mt-2 flex flex-col items-center w-full px-2">
                                 <span className="text-[12px] font-bold font-mono">ID: {examId.slice(-6)}</span>
                                 <span className="text-[10px] uppercase font-bold text-gray-600 mt-1 text-center leading-tight">{studentName.slice(0, 25) || "_____________________"}</span>
-                                <div className="mt-8 border-t border-black w-full text-center pt-1 px-2">
-                                    <span className="text-[8px] uppercase font-bold text-gray-600">Assinatura do Aluno</span>
-                                </div>
                             </div>
                         </div>
 
@@ -310,9 +312,20 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
             {/* Footer / Copyright */}
             <div className="mt-12 pt-4 border-t border-gray-300 text-center text-[10px] text-gray-500 font-medium">
                 <p>
-                    Desenvolvido por <a href="https://vilaguaracy.com.br" target="_blank" rel="noopener noreferrer" className="text-vg-dark font-bold hover:underline">Vila Guaracy</a> - Realize sua avaliação também acessando: <span className="font-mono">vilaguaracy.com.br</span>
+                    Desenvolvido por <span className="text-vg-dark font-bold">Weslley Nunes - CorrigeLab</span>
                 </p>
             </div>
+            {/* Print Styles for Page Numbers */}
+            <style dangerouslySetInnerHTML={{__html: `
+                @media print {
+                    @page {
+                        @bottom-right {
+                            content: "Página " counter(page);
+                            font-size: 10pt;
+                        }
+                    }
+                }
+            `}} />
         </div>
     );
 });

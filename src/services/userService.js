@@ -6,8 +6,7 @@ export const UserService = {
     listStaff: async () => {
         try {
             const q = query(
-                collection(db, "users"),
-                where("role", "in", ["professor", "coordenador", "gestao"])
+                collection(db, "users")
             );
             const snapshot = await getDocs(q);
             return snapshot.docs.map(doc => ({

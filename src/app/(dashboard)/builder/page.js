@@ -143,7 +143,7 @@ export default function BuilderPage() {
     // Load Staff Members
     useEffect(() => {
         const loadStaff = async () => {
-            if (user && (user.role === 'gestao' || user.role === 'coordenador')) {
+            if (user) {
                 const staff = await UserService.listStaff();
                 // Remove self from list
                 setStaffMembers(staff.filter(s => s.uid !== user.uid));
