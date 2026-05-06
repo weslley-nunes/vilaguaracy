@@ -71,16 +71,26 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
             </div>
 
             {/* Configurable Instructions Section */}
-            <div className="mb-6 border border-gray-300 p-4 rounded-lg bg-gray-50 print:bg-transparent print:border-black">
-                <h3 className="font-bold text-[12px] uppercase mb-1">📝 Orientações Importantes:</h3>
-                <p className={`whitespace-pre-wrap text-[11px] ${isAdapted ? 'text-lg' : ''} leading-relaxed font-medium text-gray-800`}>
-                    {headerConfig?.instructions || "Caneta: Utilize apenas caneta azul ou preta.\n\nQuestões: A prova possui 20 questões com alternativas de A a D.\n\nResposta: Marque apenas uma alternativa por questão.\n\nGabarito: Pinte a bolinha correspondente à sua resposta com muito cuidado e sem ultrapassar as bordas.\n\nNossa escola preparou você com muito carinho e dedicação. Acreditamos no seu esforço e confiamos plenamente no seu potencial!\n\nBoa avaliação!"}
+            <div className="mb-4 border border-gray-300 p-3 rounded-lg bg-gray-50 print:bg-transparent print:border-black">
+                <h3 className="font-bold text-[11px] uppercase mb-1">📝 Orientações Importantes:</h3>
+                <p className={`whitespace-pre-wrap text-[10px] ${isAdapted ? 'text-lg' : ''} leading-relaxed font-medium text-gray-800`}>
+                    Caneta: Utilize apenas caneta azul ou preta.
+                    {"\n\n"}
+                    Questões: A prova possui {questions.length} questões com alternativas de A a D.
+                    {"\n\n"}
+                    Resposta: Marque apenas uma alternativa por questão.
+                    {"\n\n"}
+                    Gabarito: Pinte a bolinha correspondente à sua resposta com muito cuidado e sem ultrapassar as bordas.
+                    {"\n\n"}
+                    Nossa escola preparou você com muito carinho e dedicação. Acreditamos no seu esforço e confiamos plenamente no seu potencial!
+                    {"\n\n"}
+                    Boa avaliação!
                 </p>
             </div>
 
             {/* INTEGRATED ANSWER SHEET - Standardized Square for Precise Capture */}
             {multipleChoiceQuestions.length > 0 && (
-                <div className="print:break-after-page mb-12 border-2 border-black p-8 rounded-xl bg-gray-50 print:bg-transparent print:border-black relative aspect-square w-full max-w-[650px] mx-auto flex flex-col items-center justify-center">
+                <div className="print:break-after-page mb-6 border-2 border-black p-4 rounded-xl bg-gray-50 print:bg-transparent print:border-black relative aspect-square w-full max-w-[550px] mx-auto flex flex-col items-center justify-center">
                     {/* High-Precision Alignment Markers */}
                     <div className="absolute top-0 left-0 w-4 h-4 bg-black print:block"></div>
                     <div className="absolute top-0 right-0 w-4 h-4 bg-black print:block"></div>
@@ -90,8 +100,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                     <p className="text-center text-sm font-bold uppercase mb-6 tracking-widest border-b border-black pb-2 w-full">Folha de Respostas Oficial</p>
                     
                     <div className="flex flex-col md:flex-row gap-6 items-center md:items-start justify-between w-full px-2 md:px-6">
-                        {/* QR Code Section */}
-                        <div className="flex flex-col items-center justify-center p-4 border-2 border-black rounded-lg bg-white">
+                        <div className="flex flex-col items-center justify-center p-3 border-2 border-black rounded-lg bg-white">
                             <QRCodeSVG
                                 value={JSON.stringify({
                                     id: examId,
@@ -99,7 +108,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                                     ac: headerConfig?.accessCode || "",
                                     ...(headerConfig?.classId && { c: headerConfig.classId })
                                 })}
-                                size={120}
+                                size={100}
                                 level="H"
                             />
                             <div className="mt-2 flex flex-col items-center w-full px-2">
