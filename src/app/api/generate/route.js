@@ -34,8 +34,22 @@ export async function POST(req) {
                     Nível de Ensino: ${level}
                     Ano Escolar/Série: ${year}
                     Dificuldade: ${difficulty}
-                    Gere 3 questões de múltipla escolha com a habilidade da BNCC.
-                    Responda APENAS JSON: {"questions": [{"text": "...", "options": ["A","B","C","D","E"], "correct": "A", "habilidade": "..."}]}`;
+                    Gere 3 questões estritamente OBJETIVAS (múltipla escolha).
+                    CADA questão DEVE ter EXATAMENTE 4 alternativas (A, B, C, D).
+                    Como especialista, identifique e insira o código da habilidade da BNCC correspondente para CADA questão.
+                    
+                    Responda APENAS com um JSON válido neste formato exato:
+                    {
+                        "questions": [
+                            {
+                                "text": "Enunciado da questão...",
+                                "type": "multiple_choice",
+                                "options": ["Alternativa A", "Alternativa B", "Alternativa C", "Alternativa D"],
+                                "correct": "A",
+                                "habilidade": "EF06HI02"
+                            }
+                        ]
+                    }`;
 
                 const result = await model.generateContent(prompt);
                 const response = await result.response;
