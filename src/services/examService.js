@@ -1,5 +1,5 @@
 import { db } from "@/services/firebase";
-import { collection, addDoc, getDocs, query, where, orderBy, doc, deleteDoc, updateDoc, or } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, orderBy, doc, deleteDoc, updateDoc, or, getDoc } from "firebase/firestore";
 
 export const ExamService = {
     // Save Exam (with Fallback)
@@ -24,8 +24,16 @@ export const ExamService = {
         cleanData.updatedAt = new Date();
 
         try {
-            const docRef = await addDoc(collection(db, "exams"), cleanData);
-            return { success: true, id: docRef.id, method: "direct" };
+            if (cleanData.id) {
+                const docId = cleanData.id;
+                delete cleanData.id;
+                delete cleanData.createdAt; // Mantém a data de criação original
+                await updateDoc(doc(db, "exams", docId), cleanData);
+                return { success: true, id: docId, method: "update" };
+            } else {
+                const docRef = await addDoc(collection(db, "exams"), cleanData);
+                return { success: true, id: docRef.id, method: "direct" };
+            }
         } catch (error) {
             console.error("Direct save failed", error);
             throw error;
@@ -76,6 +84,22 @@ export const ExamService = {
         } catch (e) {
             console.error("Error listing exams", e);
             return [];
+        }
+    },
+
+    // Get by ID
+    getById: async (examId) => {
+        if (!examId) return null;
+        try {
+            const docRef = doc(db, "exams", examId);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                return { id: docSnap.id, ...docSnap.data() };
+            }
+            return null;
+        } catch (e) {
+            console.error("Error getting exam by id", e);
+            return null;
         }
     },
 
