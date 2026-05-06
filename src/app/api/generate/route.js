@@ -16,10 +16,8 @@ export async function POST(req) {
 
         // Estes são os modelos que realmente estão liberados na sua conta nova
         const modelsToTry = [
-            "gemini-flash-latest",
-            "gemini-pro-latest",
-            "gemini-2.5-flash",
-            "gemini-3.1-pro-preview"
+            "gemini-1.5-flash-latest",
+            "gemini-1.5-pro-latest"
         ];
 
         let lastError = "";
@@ -38,7 +36,12 @@ export async function POST(req) {
                     CADA questão DEVE ter EXATAMENTE 4 alternativas (A, B, C, D).
                     Como especialista, identifique e insira o código da habilidade da BNCC correspondente para CADA questão.
                     
-                    Responda APENAS com um JSON válido neste formato exato:
+                    REGRAS CRÍTICAS DE SAÍDA:
+                    1. RETORNE EXCLUSIVAMENTE O JSON ABAIXO.
+                    2. NÃO ADICIONE NENHUM TEXTO ANTES, DEPOIS OU FORA DO JSON.
+                    3. NÃO USE MARCADORES DE MARKDOWN (\`\`\`json).
+                    
+                    Formato EXATO:
                     {
                         "questions": [
                             {

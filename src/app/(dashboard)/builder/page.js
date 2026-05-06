@@ -381,6 +381,9 @@ export default function BuilderPage() {
                 return alert(`Você já atingiu sua cota de ${isCollaborator.quota} questões!`);
             }
         }
+        // Remove da lista de sugestões se estiver lá (por texto exato ou texto original antes da edição)
+        setGeneratedQuestions(prev => prev.filter(q => q.text !== question.text && q.text !== question.originalText));
+        
         setExamQuestions([...examQuestions, { ...question, id: Date.now() + Math.random(), points: 1, ownerId: user.uid, subject: subject }]);
     };
 
@@ -395,7 +398,7 @@ export default function BuilderPage() {
     };
     const handleManualSave = () => {
         if (!manualQuestion.text) return alert("Digite o enunciado!");
-        addToExam({ ...manualQuestion, id: Date.now() });
+        addToExam(manualQuestion);
         setIsManualModalOpen(false);
     };
     const updateOption = (index, value) => {
@@ -441,15 +444,6 @@ export default function BuilderPage() {
                                 placeholder="Ex: Revolução Francesa..."
                                 className="w-full p-3 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 focus:border-vg-dark focus:ring-2 focus:ring-vg-light dark:focus:ring-vg-dark/30 outline-none transition-all bg-white dark:bg-white/5 mb-3"
                             />
-                        </div>
-
-                        <div className="grid grid-cols-1 mb-3">
-                            <div>
-                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Disciplina do Bloco</label>
-                                <select value={subject} onChange={(e) => setSubject(e.target.value)} className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-gray-100 bg-white dark:bg-white/5 focus:border-vg-dark outline-none text-sm">
-                                    {["Geral", "Matemática", "História", "Geografia", "Língua Portuguesa", "Língua Inglesa", "Arte", "Ciências", "Biologia", "Física", "Química", "Educação Física", "Filosofia", "Sociologia"].map(s => <option key={s} value={s}>{s}</option>)}
-                                </select>
-                            </div>
                         </div>
 
                         <div className="grid grid-cols-3 gap-3">
@@ -505,10 +499,15 @@ export default function BuilderPage() {
                             </button>
                         </div>
                         {generatedQuestions.map((q, i) => (
-                            <div key={i} className="p-3 rounded-lg border border-gray-200 hover:border-vg-navy hover:bg-vg-light cursor-pointer transition-all group relative bg-white" onClick={() => addToExam(q)}>
-                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"><PlusCircle size={18} className="text-vg-dark" /></div>
-                                <p className="text-sm font-medium text-gray-800 line-clamp-3 mb-1">{q.text}</p>
-                                <span className="text-[10px] uppercase font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{q.type === 'multiple_choice' ? 'Múltipla Escolha' : 'Dissertativa'}</span>
+                            <div key={i} className="p-3 rounded-lg border border-gray-200 bg-white shadow-sm flex flex-col gap-2 transition-all">
+                                <p className="text-sm font-medium text-gray-800 line-clamp-3">{q.text}</p>
+                                <div className="flex justify-between items-center mt-1">
+                                    <span className="text-[10px] uppercase font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{q.type === 'multiple_choice' ? 'Múltipla Escolha' : 'Dissertativa'}</span>
+                                    <div className="flex gap-2">
+                                        <button type="button" onClick={() => { setManualQuestion({...q, originalText: q.text}); setIsManualModalOpen(true); }} className="text-xs font-bold text-gray-500 hover:text-vg-dark transition-colors px-2 py-1 rounded bg-gray-50 hover:bg-gray-100 border border-gray-200 flex items-center gap-1">✎ Editar</button>
+                                        <button type="button" onClick={() => addToExam(q)} className="text-xs font-bold text-white bg-vg-dark hover:bg-vg-navy transition-colors px-2 py-1 rounded flex items-center gap-1"><PlusCircle size={12} /> Adicionar</button>
+                                    </div>
+                                </div>
                             </div>
                         ))}
 
