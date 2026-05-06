@@ -25,7 +25,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
     }
 
     return (
-        <div ref={ref} className={`bg-white p-12 shadow-lg min-h-[1123px] w-[794px] mx-auto text-black print:shadow-none print:w-full relative ${isAdapted ? 'text-lg' : ''}`} style={fontStyle}>
+        <div ref={ref} className={`bg-white p-12 shadow-lg min-h-[1123px] w-[794px] mx-auto text-black print:shadow-none print:w-full print:pt-16 relative ${isAdapted ? 'text-lg' : ''}`} style={fontStyle}>
 
             {/* Header */}
             <div className="border-b-2 border-black pb-4 mb-4">
@@ -70,55 +70,55 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                 )}
             </div>
 
-            {/* Configurable Instructions Section */}
-            <div className="mb-4 border border-gray-300 p-3 rounded-lg bg-gray-50 print:bg-transparent print:border-black">
-                <h3 className="font-bold text-[11px] uppercase mb-1">📝 Orientações Importantes:</h3>
-                <p className={`whitespace-pre-wrap text-[10px] ${isAdapted ? 'text-lg' : ''} leading-relaxed font-medium text-gray-800`}>
-                    Caneta: Utilize apenas caneta azul ou preta.
-                    {"\n\n"}
-                    Questões: A prova possui {questions.length} questões com alternativas de A a D.
-                    {"\n\n"}
-                    Resposta: Marque apenas uma alternativa por questão.
-                    {"\n\n"}
-                    Gabarito: Pinte a bolinha correspondente à sua resposta com muito cuidado e sem ultrapassar as bordas.
-                    {"\n\n"}
-                    Nossa escola preparou você com muito carinho e dedicação. Acreditamos no seu esforço e confiamos plenamente no seu potencial!
-                    {"\n\n"}
-                    Boa avaliação!
-                </p>
+            {/* Split Section: Instructions + QR Code */}
+            <div className="flex flex-col md:flex-row gap-4 mb-4">
+                {/* Instructions */}
+                <div className="flex-1 border border-gray-300 p-3 rounded-lg bg-gray-50 print:bg-transparent print:border-black">
+                    <h3 className="font-bold text-[11px] uppercase mb-1">📝 Orientações Importantes:</h3>
+                    <p className={`text-[10px] ${isAdapted ? 'text-lg' : ''} font-medium text-gray-800`}>
+                        Caneta: Utilize apenas caneta azul ou preta. <br/>
+                        Questões: A prova possui {questions.length} questões com alternativas de A a D. <br/>
+                        Resposta: Marque apenas uma alternativa por questão. <br/>
+                        Gabarito: Pinte a bolinha correspondente à sua resposta com muito cuidado e sem ultrapassar as bordas. <br/><br/>
+                        Nossa escola preparou você com muito carinho e dedicação. Acreditamos no seu esforço e confiamos plenamente no seu potencial! Boa avaliação!
+                    </p>
+                </div>
+
+                {/* QR Code */}
+                {multipleChoiceQuestions.length > 0 && (
+                    <div className="w-[150px] shrink-0 flex flex-col items-center justify-center p-2 border border-gray-300 print:border-black rounded-lg bg-white">
+                        <QRCodeSVG
+                            value={JSON.stringify({
+                                id: examId,
+                                s: studentName,
+                                ac: headerConfig?.accessCode || "",
+                                ...(headerConfig?.classId && { c: headerConfig.classId })
+                            })}
+                            size={90}
+                            level="H"
+                        />
+                        <div className="mt-1 flex flex-col items-center w-full px-1 text-center">
+                            <span className="text-[11px] font-bold font-mono tracking-wider">ID: {examId.slice(-6)}</span>
+                            <span className="text-[8px] uppercase font-bold text-gray-600 mt-1 leading-tight">{studentName.slice(0, 25) || "_____________________"}</span>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* INTEGRATED ANSWER SHEET - Standardized Square for Precise Capture */}
             {multipleChoiceQuestions.length > 0 && (
-                <div className="print:break-after-page mb-6 border-2 border-black p-4 rounded-xl bg-gray-50 print:bg-transparent print:border-black relative aspect-square w-full max-w-[550px] mx-auto flex flex-col items-center justify-center">
+                <div className="print:break-after-page mb-6 border-2 border-black p-4 bg-white print:bg-transparent relative w-full mx-auto flex flex-col items-center justify-center">
                     {/* High-Precision Alignment Markers */}
                     <div className="absolute top-0 left-0 w-4 h-4 bg-black print:block"></div>
                     <div className="absolute top-0 right-0 w-4 h-4 bg-black print:block"></div>
                     <div className="absolute bottom-0 left-0 w-4 h-4 bg-black print:block"></div>
                     <div className="absolute bottom-0 right-0 w-4 h-4 bg-black print:block"></div>
 
-                    <p className="text-center text-sm font-bold uppercase mb-6 tracking-widest border-b border-black pb-2 w-full">Folha de Respostas Oficial</p>
+                    <p className="text-center text-sm font-bold uppercase mb-4 tracking-widest border-b border-black pb-2 w-full">Folha de Respostas Oficial</p>
                     
-                    <div className="flex flex-col md:flex-row gap-6 items-center md:items-start justify-between w-full px-2 md:px-6">
-                        <div className="flex flex-col items-center justify-center p-3 border-2 border-black rounded-lg bg-white">
-                            <QRCodeSVG
-                                value={JSON.stringify({
-                                    id: examId,
-                                    s: studentName,
-                                    ac: headerConfig?.accessCode || "",
-                                    ...(headerConfig?.classId && { c: headerConfig.classId })
-                                })}
-                                size={100}
-                                level="H"
-                            />
-                            <div className="mt-2 flex flex-col items-center w-full px-2">
-                                <span className="text-[12px] font-bold font-mono">ID: {examId.slice(-6)}</span>
-                                <span className="text-[10px] uppercase font-bold text-gray-600 mt-1 text-center leading-tight">{studentName.slice(0, 25) || "_____________________"}</span>
-                            </div>
-                        </div>
-
+                    <div className="w-full px-4 mb-2">
                         {/* Bubbles Grid Section Grouped by Blocks */}
-                        <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 p-4 bg-white border-2 border-black rounded-lg overflow-y-auto max-h-[400px]">
+                        <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-4">
                             {(() => {
                                 let globalIdx = 1;
                                 const subjectsMap = new Map();
