@@ -53,7 +53,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                             )}
                         </div>
                         <div className="grid grid-cols-2 gap-2 text-sm border-t border-gray-300 pt-2">
-                            <p className="col-span-2"><span className="font-bold">Professores:</span> {collaborators.length > 0 ? collaborators.map(c => c.name).join(", ") : headerConfig?.teacherName}</p>
+                            <p className="col-span-2"><span className="font-bold">Professores:</span> {[headerConfig?.teacherName, ...collaborators.map(c => c.name)].filter(Boolean).join(", ")}</p>
                             {headerConfig?.showDate && <p><span className="font-bold">Data:</span> ____/____/______</p>}
                             <p><span className="font-bold">Aluno(a):</span> {studentName || "_________________________________________________"}</p>
                             <p><span className="font-bold">Turma:</span> {headerConfig?.className || "________"}</p>
@@ -66,18 +66,16 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
             </div>
 
             {/* Configurable Instructions Section */}
-            {headerConfig?.instructions && (
-                <div className="mb-6 border border-gray-300 p-4 rounded-lg bg-gray-50 print:bg-transparent print:border-black">
-                    <h3 className="font-bold text-[12px] uppercase mb-1">Orientações:</h3>
-                    <p className={`whitespace-pre-wrap text-[11px] ${isAdapted ? 'text-lg' : ''} leading-relaxed font-medium text-gray-800`}>
-                        {headerConfig.instructions}
-                    </p>
-                </div>
-            )}
+            <div className="mb-6 border border-gray-300 p-4 rounded-lg bg-gray-50 print:bg-transparent print:border-black">
+                <h3 className="font-bold text-[12px] uppercase mb-1">Orientações:</h3>
+                <p className={`whitespace-pre-wrap text-[11px] ${isAdapted ? 'text-lg' : ''} leading-relaxed font-medium text-gray-800`}>
+                    {headerConfig?.instructions || "1. Leia atentamente cada questão antes de responder.\n2. Utilize caneta esferográfica de tinta azul ou preta para preencher o gabarito.\n3. Preencha completamente o alvéolo no gabarito, sem ultrapassar as bordas.\n4. Não haverá substituição da folha de respostas por erro de preenchimento.\n5. Evite rasuras, pois questões rasuradas poderão ser anuladas.\n6. Assine seu nome no local indicado na folha de respostas."}
+                </p>
+            </div>
 
             {/* INTEGRATED ANSWER SHEET - Standardized Square for Precise Capture */}
             {multipleChoiceQuestions.length > 0 && (
-                <div className="mb-12 border-2 border-black p-8 rounded-xl bg-gray-50 print:bg-transparent print:border-black relative aspect-square w-full max-w-[650px] mx-auto flex flex-col items-center justify-center">
+                <div className="print:break-after-page mb-12 border-2 border-black p-8 rounded-xl bg-gray-50 print:bg-transparent print:border-black relative aspect-square w-full max-w-[650px] mx-auto flex flex-col items-center justify-center">
                     {/* High-Precision Alignment Markers */}
                     <div className="absolute top-0 left-0 w-4 h-4 bg-black print:block"></div>
                     <div className="absolute top-0 right-0 w-4 h-4 bg-black print:block"></div>
@@ -99,9 +97,12 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                                 size={120}
                                 level="H"
                             />
-                            <div className="mt-2 flex flex-col items-center">
+                            <div className="mt-2 flex flex-col items-center w-full px-2">
                                 <span className="text-[12px] font-bold font-mono">ID: {examId.slice(-6)}</span>
-                                <span className="text-[10px] uppercase font-bold text-gray-600 mt-1">{studentName.slice(0, 20)}</span>
+                                <span className="text-[10px] uppercase font-bold text-gray-600 mt-1 text-center leading-tight">{studentName.slice(0, 25) || "_____________________"}</span>
+                                <div className="mt-8 border-t border-black w-full text-center pt-1 px-2">
+                                    <span className="text-[8px] uppercase font-bold text-gray-600">Assinatura do Aluno</span>
+                                </div>
                             </div>
                         </div>
 
@@ -109,10 +110,15 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                         <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 p-4 bg-white border-2 border-black rounded-lg overflow-y-auto max-h-[400px]">
                             {(() => {
                                 let globalIdx = 1;
-                                const subjects = collaborators.length > 0 ? collaborators : [{subject: "Geral", quota: multipleChoiceQuestions.length, userId: "owner"}];
+                                const subjectsMap = new Map();
+                                multipleChoiceQuestions.forEach(q => {
+                                    const sub = q.subject || "Geral";
+                                    subjectsMap.set(sub, (subjectsMap.get(sub) || 0) + 1);
+                                });
+                                const subjects = Array.from(subjectsMap, ([subject, quota]) => ({ subject, quota }));
                                 
                                 return subjects.map((sub, sIdx) => {
-                                    const quota = Number(sub.quota) || 0;
+                                    const quota = sub.quota;
                                     if (quota <= 0) return null;
 
                                     return (
