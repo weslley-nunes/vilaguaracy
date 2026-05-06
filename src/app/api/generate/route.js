@@ -16,8 +16,9 @@ export async function POST(req) {
 
         // Estes são os modelos que realmente estão liberados na sua conta nova
         const modelsToTry = [
-            "gemini-1.5-flash-latest",
-            "gemini-1.5-pro-latest"
+            "gemini-1.5-flash",
+            "gemini-1.5-pro",
+            "gemini-flash-latest"
         ];
 
         let lastError = "";
