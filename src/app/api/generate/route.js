@@ -5,17 +5,21 @@ export async function POST(req) {
     try {
         const { topic, difficulty = "Médio", level = "Ensino Médio", year = "Geral" } = await req.json();
 
-        // Tentamos a variável de ambiente primeiro, com fallback garantido para a nova chave do AI Studio
-        const apiKey = process.env.GEMINI_API_KEY || "AIzaSyCQbxNfwSpv-tuQlKi5wKGzxGi6aOHf3tY";
+        // Lendo diretamente das variáveis de ambiente (sem chaves no código para evitar alertas do Google)
+        const apiKey = process.env.GEMINI_API_KEY;
+
+        if (!apiKey) {
+            return NextResponse.json({ error: "Chave não configurada no servidor." }, { status: 500 });
+        }
 
         const genAI = new GoogleGenerativeAI(apiKey);
 
-        // Modelos na ordem do 'Corrige pra mim'
+        // Estes são os modelos que realmente estão liberados na sua conta nova
         const modelsToTry = [
-            "gemini-2.0-flash",
-            "gemini-2.0-flash-001",
-            "gemini-2.0-flash-lite-001",
-            "gemini-1.5-flash"
+            "gemini-flash-latest",
+            "gemini-pro-latest",
+            "gemini-2.5-flash",
+            "gemini-3.1-pro-preview"
         ];
 
         let lastError = "";
