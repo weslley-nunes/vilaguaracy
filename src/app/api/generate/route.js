@@ -5,8 +5,8 @@ export async function POST(req) {
     try {
         const { topic, difficulty = "Médio", level = "Ensino Médio", year = "Geral" } = await req.json();
 
-        // Chave do projeto 'Corrige pra mim'
-        const apiKey = "AIzaSyBzHts2NH4CQlyzaCol3ka0XvpFGxX_gYk";
+        // Tentamos a variável de ambiente primeiro, com fallback garantido para a nova chave do AI Studio
+        const apiKey = process.env.GEMINI_API_KEY || "AIzaSyCQbxNfwSpv-tuQlKi5wKGzxGi6aOHf3tY";
 
         const genAI = new GoogleGenerativeAI(apiKey);
 
