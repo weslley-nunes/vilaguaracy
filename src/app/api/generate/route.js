@@ -14,11 +14,14 @@ export async function POST(req) {
 
         const genAI = new GoogleGenerativeAI(apiKey);
 
-        // Estes são os modelos que realmente estão liberados na sua conta nova
+        // Lista robusta de modelos com fallback (caso a cota de um acabe, ele pula pro próximo)
         const modelsToTry = [
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
             "gemini-1.5-flash",
+            "gemini-2.0-flash-lite",
             "gemini-1.5-pro",
-            "gemini-flash-latest"
+            "gemini-2.5-pro"
         ];
 
         let lastError = "";
