@@ -181,7 +181,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                                                         <div key={i} className="flex items-center gap-2 text-[10px]">
                                                             <span className="font-black w-5 text-right">{qNum}.</span>
                                                             <div className="flex gap-1">
-                                                                {['A', 'B', 'C', 'D', 'E'].map((opt) => (
+                                                                {['A', 'B', 'C', 'D'].map((opt) => (
                                                                     <div key={opt} className="w-3.5 h-3.5 rounded-full border border-black bg-white flex items-center justify-center text-[7px] font-bold">
                                                                         {opt}
                                                                     </div>
