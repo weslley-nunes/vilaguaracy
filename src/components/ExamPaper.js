@@ -28,46 +28,63 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
         <div ref={ref} className={`bg-white p-12 shadow-lg min-h-[1123px] w-[794px] mx-auto text-black print:shadow-none print:w-full print:pt-16 relative ${isAdapted ? 'text-lg' : ''}`} style={fontStyle}>
 
             {/* Header */}
-            <div className="border-b-2 border-black pb-4 mb-4">
-
+            <div className="mb-4">
                 {headerConfig?.useCustomHeader && headerConfig?.customHeaderImageUrl ? (
-                    <div className="w-full flex items-center justify-center">
+                    <div className="w-full flex items-center justify-center mb-4 border-b-2 border-black pb-4">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={headerConfig.customHeaderImageUrl} alt="Cabeçalho Personalizado" className="w-full h-auto object-contain" />
                     </div>
                 ) : (
-                    <>
-                        <div className="flex justify-between items-center mb-4 gap-4">
-                            <div className="flex-1">
-                                <h1 className="text-xl font-bold uppercase">{headerConfig?.schoolName || "Nome da Escola"}</h1>
-                            </div>
+                    <div className="border-2 border-black rounded-[24px] p-4 flex gap-6 items-stretch">
+                        {/* Left: School Logo */}
+                        <div className="w-[120px] shrink-0 flex items-center justify-center">
                             {headerConfig?.logoUrl ? (
-                                <div className="w-24 h-24 flex items-center justify-center">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={headerConfig.logoUrl} alt="Logo" className="max-w-full max-h-full object-contain" />
-                                </div>
+                                <img src={headerConfig.logoUrl} alt="Logo Escola" className="w-full h-auto object-contain" />
                             ) : (
-                                <div className="border border-black p-2 text-sm w-32 h-24 flex items-center justify-center text-center text-gray-400">
+                                <div className="border border-black p-2 text-[10px] w-full h-24 flex items-center justify-center text-center text-gray-400">
                                     Logotipo
                                 </div>
                             )}
                         </div>
-                        <div className="flex flex-col gap-3 text-sm border-t border-gray-300 pt-3">
-                            <p><span className="font-bold">Professores:</span> {[headerConfig?.teacherName, ...collaborators.map(c => c.name)].filter(Boolean).join(", ")}</p>
-                            <div className="flex justify-between items-center">
-                                {headerConfig?.showDate && <p><span className="font-bold">Data:</span> ____/____/______</p>}
-                                <p><span className="font-bold">Turma:</span> {headerConfig?.className || "________"}</p>
+
+                        {/* Right: Info */}
+                        <div className="flex-1 flex flex-col justify-between py-1 text-[13px] leading-relaxed">
+                            {/* Row 1 */}
+                            <div className="flex justify-between items-start mb-2">
+                                <h1 className="text-[17px] font-black tracking-wide">{headerConfig?.schoolName || "ESCOLA ESTADUAL VILA GUARACY"}</h1>
+                                <div className="w-[160px] -mt-1">
+                                    <img src="/seduc-logo.png" alt="SEDUC Tocantins" className="w-full h-auto object-contain" />
+                                </div>
                             </div>
-                            <div className="flex justify-between items-end mt-1">
-                                <p className="flex-1"><span className="font-bold">Aluno(a):</span> {studentName || "________________________________________________________"}</p>
-                                <p className="text-[10px] font-bold uppercase flex-1 text-right">Assinatura: ________________________________________</p>
+                            
+                            {/* Row 2 */}
+                            <div className="flex justify-between w-[95%]">
+                                <p>Gurupi, _____ / _____ / 2026</p>
+                                <p>2º Bimestre</p>
+                                <p>Turma: {headerConfig?.className || "82.____"}</p>
+                            </div>
+
+                            {/* Row 3 */}
+                            <div>
+                                <p>Componente Curricular: <span className="inline-block w-[350px] border-b border-black"></span></p>
+                            </div>
+
+                            {/* Row 4 */}
+                            <div>
+                                <p>Professor: <strong>{[headerConfig?.teacherName, ...collaborators.map(c => c.name)].filter(Boolean).join(", ") || "Weslley Nunes da Silva"}</strong></p>
+                            </div>
+
+                            {/* Row 5 */}
+                            <div className="mt-1">
+                                <p>Estudante: <span className="inline-block w-[500px] border-b border-black">{studentName || ""}</span></p>
                             </div>
                         </div>
-                        <div className="mt-4 text-center">
-                            <h2 className={`${titleSize} font-bold uppercase`}>{title || "Avaliação"} {isAdapted && <span className="text-sm block normal-case mt-1">(Prova Adaptada - Fonte Ampliada)</span>}</h2>
-                        </div>
-                    </>
+                    </div>
                 )}
+                
+                <div className="mt-5 text-center">
+                    <h2 className={`${titleSize} font-bold uppercase`}>{title || "Avaliação"} {isAdapted && <span className="text-[12px] block normal-case mt-1">(Prova Adaptada - Fonte Ampliada)</span>}</h2>
+                </div>
             </div>
 
             {/* Split Section: Instructions + QR Code */}
