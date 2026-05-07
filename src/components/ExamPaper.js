@@ -105,6 +105,28 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                 )}
             </div>
 
+            {/* Tabelinha dos Comandos */}
+            <div className="mb-6 w-full">
+                <table className="w-full border-collapse border border-black text-[9px] text-left print:border-black">
+                    <thead>
+                        <tr>
+                            <th colSpan="2" className="border border-black text-center font-bold uppercase py-0.5 bg-gray-100 print:bg-transparent print:border-black">Tabelinha dos Comandos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td className="border border-black px-1.5 py-0.5 font-bold w-[120px] print:border-black">Citar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Apresente informações sem necessidade de detalhar.</td></tr>
+                        <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Completar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Use palavras ou expressões que preencham lacunas com informações corretas.</td></tr>
+                        <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Conceituar/Definir</td><td className="border border-black px-1.5 py-0.5 print:border-black">Dê a definição. Diga o que é.</td></tr>
+                        <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Diferenciar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Mostre características que façam com que as informações não sejam iguais.</td></tr>
+                        <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Exemplificar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Apresente exemplos que dê forma à ideia ou conceito.</td></tr>
+                        <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Explicar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Dizer o que é + como funciona + por que é assim.</td></tr>
+                        <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Justificar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Apresentar evidências em forma de fatos e não de opiniões.</td></tr>
+                        <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Nomeie</td><td className="border border-black px-1.5 py-0.5 print:border-black">Apresentar o nome, a forma como algo é cientificamente chamado.</td></tr>
+                        <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Relacionar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Apresente informações e conecte com o que é pedido.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
             {/* INTEGRATED ANSWER SHEET - Standardized Square for Precise Capture */}
             {multipleChoiceQuestions.length > 0 && (
                 <div className="print:break-after-page mb-6 border-2 border-black p-4 bg-white print:bg-transparent relative w-full mx-auto flex flex-col items-center justify-center">
