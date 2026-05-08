@@ -29,7 +29,7 @@ export async function POST(req) {
 
         // 2. Call Gemini for OMR (with Fallback for Quota)
         const apiKey = process.env.GEMINI_API_KEY;
-        const models = ["gemini-1.5-flash", "gemini-1.5-flash-8b"];
+        const models = ["gemini-2.5-flash", "gemini-3-flash", "gemini-2-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b"];
         let aiResults = null;
         let lastError = null;
 
