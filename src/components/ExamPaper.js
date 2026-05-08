@@ -375,10 +375,16 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
             <style dangerouslySetInnerHTML={{__html: `
                 @media print {
                     @page {
+                        margin-top: 2cm;
+                        margin-bottom: 2cm;
                         @bottom-right {
                             content: "Página " counter(page);
                             font-size: 10pt;
                         }
+                    }
+                    /* Ensure content doesn't stick to top after page breaks */
+                    .break-inside-avoid {
+                        padding-top: 1rem;
                     }
                 }
             `}} />
