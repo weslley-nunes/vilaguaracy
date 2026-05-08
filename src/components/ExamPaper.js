@@ -115,7 +115,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                             level="H"
                         />
                         <div className="mt-1 flex flex-col items-center w-full px-1 text-center">
-                            <span className="text-[11px] font-bold font-mono tracking-wider">ID: {examId.slice(-6)}</span>
+                            <span className="text-[11px] font-bold font-mono tracking-wider">ID: {examId.slice(-6).toUpperCase()}</span>
                             <span className="text-[8px] uppercase font-bold text-gray-600 mt-1 leading-tight">{studentName.slice(0, 25) || "_____________________"}</span>
                         </div>
                     </div>

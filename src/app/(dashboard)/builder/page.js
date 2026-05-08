@@ -168,6 +168,10 @@ export default function BuilderPage() {
     };
 
     const generateAndPrint = async () => {
+        if (!examId) {
+            alert("Por favor, salve a avaliação antes de imprimir para habilitar a correção via QR Code.");
+            return;
+        }
         setIsPreparingPrint(true);
 
         // Parse Students
@@ -187,7 +191,7 @@ export default function BuilderPage() {
                 currentQuestions = shuffleArray(currentQuestions);
             }
 
-            // 2. Shuffle Options (Deep clone required to not affect other iterations if we mutate)
+            // 2. Shuffle Options
             if (printConfig.shuffleOptions) {
                 currentQuestions = currentQuestions.map(q => {
                     if (q.type !== 'multiple_choice' || !q.options) return q;
@@ -203,12 +207,13 @@ export default function BuilderPage() {
             const studentInfo = selectedClassObj?.students?.find(s => s.name === students[i]);
 
             newVariations.push({
-                id: `${Date.now()}-${i}`, // Unique ID for this specific paper
+                id: examId || `${Date.now()}-${i}`, // Use real examId for correction
+                variationId: `${Date.now()}-${i}`, // Keep unique variation ID for reference
                 student: students[i] || "",
                 accessCode: studentInfo?.accessCode || "",
                 questions: currentQuestions,
                 variationIndex: i,
-                isAdapted: false, // Standard version
+                isAdapted: false, 
                 classId: selectedClass || null
             });
         }
@@ -228,7 +233,8 @@ export default function BuilderPage() {
             }
 
             newVariations.push({
-                id: `ADAPTED-${Date.now()}-${i}`,
+                id: examId || `ADAPTED-${Date.now()}-${i}`,
+                variationId: `ADAPTED-${Date.now()}-${i}`,
                 student: "", // Adapted copies generally don't have names pre-filled, or we could add logic
                 questions: currentQuestions,
                 variationIndex: i,
@@ -336,6 +342,8 @@ export default function BuilderPage() {
             const result = await ExamService.save(examData, user);
 
             if (result.success) {
+                setExamId(result.id);
+                setIsEditMode(true);
                 alert(`Avaliação salva com sucesso! (${result.method === 'fallback' ? 'Via Backup' : 'Conexão Direta'})`);
                 // Optional: Redirect to "My Exams" or clear
             }
