@@ -9,6 +9,7 @@ import { ShieldAlert, LogOut } from "lucide-react";
 export default function DashboardLayout({ children }) {
     const { user, logout, loading } = useAuth();
     const router = useRouter();
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
     useEffect(() => {
         if (!loading && !user) {
@@ -42,8 +43,8 @@ export default function DashboardLayout({ children }) {
 
     return (
         <div className="min-h-screen bg-[var(--background)] flex transition-colors duration-500">
-            <Sidebar />
-            <main className="flex-1 ml-64 p-8 relative">
+            <Sidebar isCollapsed={isSidebarCollapsed} setIsCollapsed={setIsSidebarCollapsed} />
+            <main className={`flex-1 transition-all duration-300 ${isSidebarCollapsed ? 'ml-20' : 'ml-72'} p-8 relative`}>
                 <div className="absolute top-6 right-8 z-50">
                     <ThemeToggle />
                 </div>
