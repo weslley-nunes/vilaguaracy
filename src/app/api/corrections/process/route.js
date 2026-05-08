@@ -27,33 +27,64 @@ export async function POST(req) {
 
         const questionsKey = examData.questions || [];
 
-        // 2. Call Gemini for OMR
+        // 2. Call Gemini for OMR (with Fallback for Quota)
         const apiKey = process.env.GEMINI_API_KEY;
-        const prompt = `
-            Você é um corretor de provas automático. 
-            Analise esta imagem de um cartão resposta.
-            Existem marcadores pretos nos 4 cantos da área de interesse.
-            Identifique quais alternativas (A, B, C, D, E) foram preenchidas para cada questão.
-            Apenas considere as questões de múltipla escolha.
-            Retorne APENAS um JSON no formato: {"answers": [{"q": 1, "r": "A"}, {"q": 2, "r": "C"}, ...]}.
-        `;
+        const models = ["gemini-1.5-flash", "gemini-1.5-flash-8b"];
+        let aiResults = null;
+        let lastError = null;
 
-        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [
-                        { text: prompt },
-                        { inline_data: { mime_type: "image/jpeg", data: image.split(",")[1] || image } }
-                    ]
-                }]
-            })
-        });
+        for (const model of models) {
+            try {
+                const prompt = `
+                    Você é um corretor de provas automático. 
+                    Analise esta imagem de um cartão resposta.
+                    Existem marcadores pretos nos 4 cantos da área de interesse.
+                    Identifique quais alternativas (A, B, C, D, E) foram preenchidas para cada questão.
+                    Apenas considere as questões de múltipla escolha.
+                    Retorne APENAS um JSON no formato: {"answers": [{"q": 1, "r": "A"}, {"q": 2, "r": "C"}, ...]}.
+                `;
 
-        const geminiData = await geminiRes.json();
-        const aiText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-        const aiResults = JSON.parse(aiText.replace(/```json|```/g, "").trim());
+                const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [
+                                { text: prompt },
+                                { inline_data: { mime_type: "image/jpeg", data: image.split(",")[1] || image } }
+                            ]
+                        }]
+                    })
+                });
+
+                if (geminiRes.status === 429 || geminiRes.status === 503) {
+                    console.warn(`Model ${model} limited or busy. Trying next...`);
+                    continue;
+                }
+
+                const geminiData = await geminiRes.json();
+                if (geminiData.error) {
+                    console.error(`Error with model ${model}:`, geminiData.error);
+                    lastError = geminiData.error.message;
+                    continue;
+                }
+
+                const aiText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+                aiResults = JSON.parse(aiText.replace(/```json|```/g, "").trim());
+                
+                if (aiResults && aiResults.answers) {
+                    console.log(`Success using model: ${model}`);
+                    break; // Success!
+                }
+            } catch (e) {
+                console.error(`Failed with model ${model}:`, e);
+                lastError = e.message;
+            }
+        }
+
+        if (!aiResults) {
+            throw new Error(`Todos os modelos de IA falharam ou atingiram a cota. Erro: ${lastError}`);
+        }
 
         // 3. Calculate Score and Skills
         let score = 0;
