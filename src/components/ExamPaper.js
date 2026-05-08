@@ -321,7 +321,15 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                                                         </div>
                                                     </div>
                                                     
-                                                    {q.imageUrl && <div className="my-2"><img src={q.imageUrl} alt="Questão" className="max-h-40 object-contain border rounded-lg" /></div>}
+                                                    {q.imageUrl && (
+                                                        <div className="my-2">
+                                                            <img 
+                                                                src={q.imageUrl} 
+                                                                alt="Questão" 
+                                                                className={`object-contain border border-gray-300 rounded-lg bg-gray-50/30 ${q.imageSize === 'small' ? 'max-h-32 w-1/3 mx-auto' : q.imageSize === 'large' ? 'max-h-80 w-full' : 'max-h-56 w-3/4 mx-auto'}`} 
+                                                            />
+                                                        </div>
+                                                    )}
 
                                                     {q.type === 'multiple_choice' && Array.isArray(q.options) && (
                                                         <div className={`pl-4 ${isAdapted ? 'space-y-3' : 'space-y-1'}`}>

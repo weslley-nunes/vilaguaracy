@@ -392,8 +392,47 @@ export default function BuilderPage() {
     };
 
     // Manual Question Helpers
+    const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 800;
+                const MAX_HEIGHT = 800;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                setManualQuestion({ ...manualQuestion, imageUrl: dataUrl, imageSize: 'medium' });
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    };
+
     const openManualModal = () => {
-        setManualQuestion({ text: "", imageUrl: "", type: "multiple_choice", options: ["", "", "", ""], correct: "" });
+        setManualQuestion({ text: "", imageUrl: "", imageSize: "medium", type: "multiple_choice", options: ["", "", "", ""], correct: "" });
         setIsManualModalOpen(true);
     };
     const handleManualSave = () => {
@@ -901,7 +940,26 @@ export default function BuilderPage() {
                         </div>
                         <div className="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar space-y-4">
                             <div><label className="block text-sm font-bold text-gray-700 mb-1">Enunciado</label><textarea value={manualQuestion.text} onChange={(e) => setManualQuestion({ ...manualQuestion, text: e.target.value })} className="w-full p-3 rounded-lg border border-gray-300 focus:border-vg-dark outline-none min-h-[100px]" placeholder="Digite a pergunta aqui..." /></div>
-                            <div><label className="block text-sm font-bold text-gray-700 mb-1">Link de Imagem (Opcional)</label><input type="text" value={manualQuestion.imageUrl || ""} onChange={(e) => setManualQuestion({ ...manualQuestion, imageUrl: e.target.value })} className="w-full p-3 rounded-lg border border-gray-300 focus:border-vg-dark outline-none text-sm" placeholder="https://exemplo.com/imagem.jpg" /></div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Imagem da Questão (Opcional)</label>
+                                <div className="flex items-center gap-4">
+                                    <input type="file" accept="image/*" onChange={handleImageUpload} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-vg-light file:text-vg-dark hover:file:bg-gray-100 cursor-pointer" />
+                                    {manualQuestion.imageUrl && (
+                                        <select value={manualQuestion.imageSize || 'medium'} onChange={(e) => setManualQuestion({...manualQuestion, imageSize: e.target.value})} className="p-2 border border-gray-300 rounded-lg text-sm bg-white focus:border-vg-dark outline-none">
+                                            <option value="small">Pequena</option>
+                                            <option value="medium">Média</option>
+                                            <option value="large">Grande</option>
+                                        </select>
+                                    )}
+                                </div>
+                                {manualQuestion.imageUrl && (
+                                    <div className="mt-3 relative inline-block">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={manualQuestion.imageUrl} alt="Preview" className="h-24 rounded border border-gray-200 object-contain bg-gray-50" />
+                                        <button onClick={() => setManualQuestion({...manualQuestion, imageUrl: "", imageSize: 'medium'})} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 shadow-md hover:bg-red-600 transition-colors"><Trash size={12} /></button>
+                                    </div>
+                                )}
+                            </div>
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-1">Habilidade / BNCC (Opcional)</label>
                                 <input type="text" value={manualQuestion.habilidade || ""} onChange={(e) => setManualQuestion({ ...manualQuestion, habilidade: e.target.value })} className="w-full p-3 rounded-lg border border-gray-300 focus:border-vg-dark outline-none" placeholder="Ex: EF06HI02..." />
