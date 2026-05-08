@@ -15,11 +15,11 @@ import {
     TrendingUp, 
     FileSearch, 
     PlusSquare, 
-    ClipboardList,
-    PanelLeftClose,
-    PanelLeftOpen
+    ClipboardList 
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
 export default function Sidebar({ isCollapsed, setIsCollapsed }) {
     const pathname = usePathname();
