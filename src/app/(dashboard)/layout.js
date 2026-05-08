@@ -3,7 +3,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ShieldAlert, LogOut } from "lucide-react";
 
 export default function DashboardLayout({ children }) {
