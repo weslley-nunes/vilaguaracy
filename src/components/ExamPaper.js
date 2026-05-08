@@ -25,7 +25,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
     }
 
     return (
-        <div ref={ref} className={`bg-white p-12 shadow-lg min-h-[1123px] w-[794px] mx-auto text-black print:shadow-none print:w-full print:pt-16 relative ${isAdapted ? 'text-lg' : ''}`} style={fontStyle}>
+        <div ref={ref} className={`bg-white p-12 shadow-lg min-h-[1123px] w-[794px] mx-auto text-black print:shadow-none print:w-full relative ${isAdapted ? 'text-lg' : ''}`} style={fontStyle}>
 
             {/* Header */}
             <div className="mb-4">
@@ -377,6 +377,11 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                     @page {
                         margin-top: 2cm;
                         margin-bottom: 2cm;
+                    }
+                    @page :first {
+                        margin-top: 1.2cm;
+                    }
+                    @page {
                         @bottom-right {
                             content: "Página " counter(page);
                             font-size: 10pt;
