@@ -156,14 +156,14 @@ export default function ClassDetailsPage() {
                 </Link>
                 <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">{classData.name}</h1>
-                        <p className="text-gray-500 mt-1">{classData.school}</p>
+                        <h1 className="text-3xl font-bold text-[var(--text-main)]">{classData.name}</h1>
+                        <p className="text-[var(--text-muted)] mt-1">{classData.school}</p>
                     </div>
-                    <div className="bg-white px-4 py-2 rounded-lg border border-gray-200 flex items-center gap-3 shadow-sm">
+                    <div className="glass-card px-4 py-2 rounded-lg border border-gray-200 dark:border-white/10 flex items-center gap-3 shadow-sm">
                         <Users size={20} className="text-vg-dark" />
                         <div>
-                            <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Total de Alunos</p>
-                            <p className="text-xl font-bold text-gray-900 leading-none">{students.length}</p>
+                            <p className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wider">Total de Alunos</p>
+                            <p className="text-xl font-bold text-[var(--text-main)] leading-none">{students.length}</p>
                         </div>
                     </div>
                 </div>
@@ -171,7 +171,7 @@ export default function ClassDetailsPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Form to add student */}
-                <div className="card h-fit lg:col-span-1 shadow-sm border border-gray-100 flex flex-col">
+                <div className="glass-card p-6 h-fit lg:col-span-1 shadow-sm border border-gray-100 dark:border-white/10 flex flex-col">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="font-bold text-lg flex items-center gap-2">
                             <UserPlus size={20} className="text-vg-dark" />
@@ -201,35 +201,35 @@ export default function ClassDetailsPage() {
                         {addMode === "single" ? (
                             <>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo *</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome Completo *</label>
                                     <input
                                         type="text"
                                         value={newStudentName}
                                         onChange={(e) => setNewStudentName(e.target.value)}
                                         placeholder="Ex: Maria Luiza Silva"
-                                        className="w-full border-gray-300 rounded-md focus:ring-vg-dark focus:border-vg-dark"
+                                        className="input-field py-2"
                                         required={addMode === "single"}
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Matrícula (Opcional)</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Matrícula (Opcional)</label>
                                     <input
                                         type="text"
                                         value={newStudentEnrollment}
                                         onChange={(e) => setNewStudentEnrollment(e.target.value)}
                                         placeholder="Ex: 2024001"
-                                        className="w-full border-gray-300 rounded-md focus:ring-vg-dark focus:border-vg-dark"
+                                        className="input-field py-2"
                                     />
                                 </div>
                             </>
                         ) : (
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Lista de Nomes (1 por linha) *</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Lista de Nomes (1 por linha) *</label>
                                 <textarea
                                     value={bulkStudents}
                                     onChange={(e) => setBulkStudents(e.target.value)}
                                     placeholder="João da Silva&#10;Maria Santos&#10;Pedro Alves"
-                                    className="w-full h-32 border-gray-300 rounded-md focus:ring-vg-dark focus:border-vg-dark resize-none text-sm"
+                                    className="input-field h-32 resize-none text-sm"
                                     required={addMode === "bulk"}
                                 ></textarea>
                                 <p className="text-[10px] text-gray-500 mt-1">
@@ -261,9 +261,9 @@ export default function ClassDetailsPage() {
                             <p className="text-sm text-gray-400 mt-1">Adicione o primeiro aluno usando o formulário ao lado.</p>
                         </div>
                     ) : (
-                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="glass-card overflow-hidden">
                             {/* Desktop Table Header */}
-                            <div className="hidden sm:grid grid-cols-12 gap-4 p-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            <div className="hidden sm:grid grid-cols-12 gap-4 p-4 bg-black/5 dark:bg-white/5 border-b border-gray-200 dark:border-white/10 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
                                 <div className="col-span-2 sm:col-span-1 text-center">QR</div>
                                 <div className="col-span-10 sm:col-span-5">Aluno & Código</div>
                                 <div className="col-span-4 sm:col-span-3">Matrícula</div>
@@ -289,7 +289,7 @@ export default function ClassDetailsPage() {
 
                                         {/* Name & Mobile ID info */}
                                         <div className="sm:col-span-5">
-                                            <h3 className="font-bold text-gray-900 truncate" title={student.name}>{student.name}</h3>
+                                            <h3 className="font-bold text-[var(--text-main)] truncate" title={student.name}>{student.name}</h3>
                                             <div className="flex items-center gap-2 mt-0.5">
                                                 <span className="text-xs text-vg-hover font-bold tracking-widest bg-vg-light px-2 py-0.5 rounded border border-vg-light" title="Código de Acesso">
                                                     {student.accessCode || String(student.id).substring(0, 6).toUpperCase()}

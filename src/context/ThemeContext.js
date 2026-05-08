@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
-    const [theme, setTheme] = useState("dark"); // Default to dark as per current design
+    const [theme, setTheme] = useState("light"); // Default to light
 
     useEffect(() => {
         // Check local storage or system preference
@@ -13,9 +13,9 @@ export function ThemeProvider({ children }) {
             setTheme(savedTheme);
             document.documentElement.classList.toggle("dark", savedTheme === "dark");
         } else {
-            // Default to dark for this specific app style if no preference
-            setTheme("dark");
-            document.documentElement.classList.add("dark");
+            // Default to light for this specific app style if no preference
+            setTheme("light");
+            document.documentElement.classList.remove("dark");
         }
     }, []);
 

@@ -92,14 +92,14 @@ export default function ClassesPage() {
         <div className="max-w-5xl mx-auto">
             <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Turmas da Unidade</h1>
-                    <p className="text-gray-500">Base de dados compartilhada de alunos e turmas.</p>
+                    <h1 className="text-2xl font-bold text-[var(--text-main)]">Turmas da Unidade</h1>
+                    <p className="text-[var(--text-muted)]">Base de dados compartilhada de alunos e turmas.</p>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Form to create/edit class */}
-                <div className="card h-fit lg:col-span-1 border-2 border-transparent transition-colors duration-300">
+                <div className="glass-card p-6 h-fit lg:col-span-1 border-2 border-transparent transition-colors duration-300">
                     <h2 className="font-bold text-lg mb-4 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             {editingClassId ? <Edit2 size={20} className="text-vg-dark" /> : <Plus size={20} className="text-vg-dark" />}
@@ -113,24 +113,24 @@ export default function ClassesPage() {
                     </h2>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Nome da Turma *</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome da Turma *</label>
                             <input
                                 type="text"
                                 value={newClassName}
                                 onChange={(e) => setNewClassName(e.target.value)}
                                 placeholder="Ex: 3º Ano B"
-                                className={`w-full border-gray-300 rounded-md focus:ring-vg-dark focus:border-vg-dark ${editingClassId ? 'bg-vg-light/30' : ''}`}
+                                className={`input-field ${editingClassId ? 'bg-vg-light/30' : ''}`}
                                 required
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Escola / Instituição</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Escola / Instituição</label>
                             <input
                                 type="text"
                                 value={newClassSchool}
                                 onChange={(e) => setNewClassSchool(e.target.value)}
                                 placeholder="Ex: Colégio Estadual"
-                                className={`w-full border-gray-300 rounded-md focus:ring-vg-dark focus:border-vg-dark ${editingClassId ? 'bg-vg-light/30' : ''}`}
+                                className={`input-field ${editingClassId ? 'bg-vg-light/30' : ''}`}
                             />
                         </div>
                         <button
@@ -153,15 +153,15 @@ export default function ClassesPage() {
                         </div>
                     ) : (
                         localClasses.map((classItem) => (
-                            <div key={classItem.id} className={`card p-0 overflow-hidden transition-all duration-300 ${editingClassId === classItem.id ? 'ring-2 ring-vg-dark shadow-md' : 'hover:border-vg-light'}`}>
+                            <div key={classItem.id} className={`glass-card p-0 overflow-hidden transition-all duration-300 ${editingClassId === classItem.id ? 'ring-2 ring-vg-dark shadow-md' : 'hover:border-vg-light'}`}>
                                 <div className="p-5 flex items-center justify-between">
                                     <div className="flex items-center gap-4">
                                         <div className={`p-3 rounded-lg ${editingClassId === classItem.id ? 'bg-vg-dark text-white' : 'bg-vg-light text-vg-dark'} transition-colors`}>
                                             <Users size={24} />
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-lg text-gray-900">{classItem.name}</h3>
-                                            <p className="text-sm text-gray-500">{classItem.school}</p>
+                                            <h3 className="font-bold text-lg text-[var(--text-main)]">{classItem.name}</h3>
+                                            <p className="text-sm text-[var(--text-muted)]">{classItem.school}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
@@ -170,7 +170,7 @@ export default function ClassesPage() {
                                         </span>
                                     </div>
                                 </div>
-                                <div className="bg-gray-50 px-5 py-3 border-t border-gray-100 flex justify-between items-center">
+                                <div className="bg-black/5 dark:bg-white/5 px-5 py-3 border-t border-gray-100 dark:border-white/10 flex justify-between items-center">
                                     <Link
                                         href={`/classes/${classItem.id}`}
                                         className="text-sm font-medium text-vg-dark hover:text-vg-hover"
