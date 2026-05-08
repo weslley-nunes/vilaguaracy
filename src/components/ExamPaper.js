@@ -105,12 +105,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                 {multipleChoiceQuestions.length > 0 && (
                     <div className="w-[150px] shrink-0 flex flex-col items-center justify-center p-2 border border-gray-300 print:border-black rounded-lg bg-white">
                         <QRCodeSVG
-                            value={JSON.stringify({
-                                id: examId,
-                                s: studentName,
-                                ac: headerConfig?.accessCode || "",
-                                ...(headerConfig?.classId && { c: headerConfig.classId })
-                            })}
+                            value={`${typeof window !== 'undefined' ? window.location.origin : 'https://vilaguaracy.com.br'}/scanner?id=${examId}&s=${encodeURIComponent(studentName)}&ac=${encodeURIComponent(headerConfig?.accessCode || "")}${headerConfig?.classId ? `&c=${encodeURIComponent(headerConfig.classId)}` : ''}`}
                             size={90}
                             level="H"
                         />

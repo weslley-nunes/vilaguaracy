@@ -18,6 +18,20 @@ export default function ScannerPage() {
 
     // Initialize Scanner on load
     useEffect(() => {
+        // 1. Check for URL Parameters (for direct links from QR codes)
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlId = urlParams.get('id');
+        const urlS = urlParams.get('s');
+        const urlC = urlParams.get('c');
+        const urlAc = urlParams.get('ac');
+
+        if (urlId && urlS) {
+            const data = { id: urlId, s: urlS, c: urlC, ac: urlAc };
+            setScanResult(data);
+            fetchExam(urlId);
+            return; // Don't start scanner if we already have data
+        }
+
         if (scanResult) return; // Stop scanning if we have a result
 
         const scanner = new Html5QrcodeScanner(
@@ -29,16 +43,30 @@ export default function ScannerPage() {
         scanner.render(
             (decodedText) => {
                 try {
-                    const data = JSON.parse(decodedText);
+                    let data;
+                    if (decodedText.startsWith('http')) {
+                        // Handle URL format
+                        const url = new URL(decodedText);
+                        data = {
+                            id: url.searchParams.get('id'),
+                            s: url.searchParams.get('s'),
+                            c: url.searchParams.get('c'),
+                            ac: url.searchParams.get('ac')
+                        };
+                    } else {
+                        // Handle Legacy JSON format
+                        data = JSON.parse(decodedText);
+                    }
+
                     if (data.id && data.s) {
                         scanner.clear();
                         setScanResult(data);
                         fetchExam(data.id);
                     } else {
-                        setError("QR Code inválido. Não contém ID da prova ou aluno.");
+                        setError("QR Code inválido. Não contém dados suficientes.");
                     }
                 } catch (e) {
-                    setError("QR Code no formato incorreto.");
+                    setError("QR Code no formato incorreto ou link inválido.");
                 }
             },
             (errorMessage) => {
