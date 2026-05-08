@@ -14,6 +14,8 @@ export default function ScannerPage() {
     
     const [correctionResult, setCorrectionResult] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [isAIProcessing, setIsAIProcessing] = useState(false);
+    const [correctionMode, setCorrectionMode] = useState(null); // 'manual' | 'ai'
     const [error, setError] = useState(null);
 
     // Initialize Scanner on load
@@ -178,6 +180,7 @@ export default function ScannerPage() {
         setExamData(null);
         setCorrectionResult(null);
         setStudentAnswers({});
+        setCorrectionMode(null);
         setError(null);
     };
 
@@ -237,12 +240,107 @@ export default function ScannerPage() {
                     </div>
 
                     <div className="p-6">
-                        <div className="mb-6 flex justify-between items-center bg-yellow-50 border border-yellow-100 p-4 rounded-xl">
-                            <div>
-                                <h3 className="font-bold text-yellow-800">Lançamento de Respostas</h3>
-                                <p className="text-xs text-yellow-700">Toque nas bolinhas correspondentes ao que o aluno marcou no papel.</p>
+                        {!correctionMode ? (
+                            <div className="space-y-4 text-center py-8">
+                                <h3 className="font-bold text-gray-700 mb-4">Como deseja realizar a correção?</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <button 
+                                        onClick={() => setCorrectionMode('ai')}
+                                        className="p-6 border-2 border-vg-dark rounded-2xl hover:bg-vg-light transition-all flex flex-col items-center gap-3 group"
+                                    >
+                                        <div className="w-12 h-12 bg-vg-dark text-white rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                                            <Camera size={24} />
+                                        </div>
+                                        <span className="font-bold text-vg-dark">Foto do Gabarito (IA)</span>
+                                        <p className="text-[10px] text-gray-500 uppercase font-bold">Correção Automática</p>
+                                    </button>
+                                    
+                                    <button 
+                                        onClick={() => setCorrectionMode('manual')}
+                                        className="p-6 border-2 border-gray-200 rounded-2xl hover:bg-gray-50 transition-all flex flex-col items-center gap-3 group"
+                                    >
+                                        <div className="w-12 h-12 bg-gray-200 text-gray-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                                            <Save size={24} />
+                                        </div>
+                                        <span className="font-bold text-gray-700">Lançamento Manual</span>
+                                        <p className="text-[10px] text-gray-500 uppercase font-bold">Toque para Marcar</p>
+                                    </button>
+                                </div>
+                                <button onClick={resetScanner} className="text-sm text-gray-400 hover:underline mt-4 block mx-auto">Escanear outro aluno</button>
                             </div>
-                        </div>
+                        ) : correctionMode === 'ai' ? (
+                            <div className="space-y-6 text-center py-4">
+                                <div className="bg-vg-light/30 p-6 rounded-2xl border-2 border-dashed border-vg-dark">
+                                    <Camera size={48} className="text-vg-dark mx-auto mb-4" />
+                                    <h3 className="font-bold text-lg text-vg-dark mb-2">Capturar Gabarito</h3>
+                                    <p className="text-xs text-gray-600 mb-6">Enquadre os 4 marcadores quadrados nos cantos da folha de respostas.</p>
+                                    
+                                    <label className="btn btn-primary py-4 px-8 cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-vg-dark/30">
+                                        <Camera size={20} />
+                                        <span>Tirar Foto / Enviar</span>
+                                        <input 
+                                            type="file" 
+                                            accept="image/*" 
+                                            capture="environment" 
+                                            className="hidden" 
+                                            onChange={async (e) => {
+                                                const file = e.target.files[0];
+                                                if (!file) return;
+                                                
+                                                setIsAIProcessing(true);
+                                                setError(null);
+                                                
+                                                try {
+                                                    const reader = new FileReader();
+                                                    reader.readAsDataURL(file);
+                                                    reader.onload = async () => {
+                                                        const base64 = reader.result;
+                                                        const res = await fetch("/api/corrections/process", {
+                                                            method: "POST",
+                                                            headers: { "Content-Type": "application/json" },
+                                                            body: JSON.stringify({
+                                                                examId: examData.id,
+                                                                studentName: scanResult.s,
+                                                                image: base64
+                                                            })
+                                                        });
+                                                        
+                                                        const result = await res.json();
+                                                        if (result.error) throw new Error(result.error);
+                                                        
+                                                        setCorrectionResult({
+                                                            score: Number(result.score),
+                                                            correctCount: result.results.filter(r => r.isCorrect).length,
+                                                            totalCount: examData.questions.length
+                                                        });
+                                                    };
+                                                } catch (err) {
+                                                    setError("Erro na IA: " + err.message);
+                                                } finally {
+                                                    setIsAIProcessing(false);
+                                                }
+                                            }}
+                                        />
+                                    </label>
+                                    
+                                    {isAIProcessing && (
+                                        <div className="mt-6 flex flex-col items-center gap-2">
+                                            <Loader2 size={24} className="animate-spin text-vg-dark" />
+                                            <p className="text-xs font-bold text-vg-dark animate-pulse">A IA está corrigindo a prova...</p>
+                                        </div>
+                                    )}
+                                </div>
+                                <button onClick={() => setCorrectionMode(null)} className="text-sm text-gray-400 hover:underline">Voltar</button>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="mb-6 flex justify-between items-center bg-yellow-50 border border-yellow-100 p-4 rounded-xl">
+                                    <div>
+                                        <h3 className="font-bold text-yellow-800">Lançamento de Respostas</h3>
+                                        <p className="text-xs text-yellow-700">Toque nas bolinhas correspondentes ao que o aluno marcou no papel.</p>
+                                    </div>
+                                    <button onClick={() => setCorrectionMode(null)} className="text-xs font-bold text-yellow-600 underline">Mudar Modo</button>
+                                </div>
 
                         {/* Interactive Answer Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 mb-8">
@@ -278,7 +376,7 @@ export default function ScannerPage() {
                         </div>
 
                         <div className="flex gap-4">
-                            <button onClick={resetScanner} className="btn btn-outline py-3 flex-1 text-gray-600 border-gray-300">Cancelar</button>
+                            <button onClick={() => setCorrectionMode(null)} className="btn btn-outline py-3 flex-1 text-gray-600 border-gray-300">Cancelar</button>
                             <button onClick={submitCorrection} disabled={isSaving} className="btn btn-primary py-3 flex-1 flex items-center justify-center gap-2 shadow-lg shadow-vg-dark/30">
                                 {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
                                 Salvar Correção

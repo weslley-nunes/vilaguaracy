@@ -11,7 +11,15 @@ export async function GET(req) {
         }
 
         const db = getDb();
-        const doc = await db.collection("exams").doc(id).get();
+        let doc = await db.collection("exams").doc(id).get();
+
+        // Fallback: search by 'id' field if not found by document ID
+        if (!doc.exists) {
+            const snapshot = await db.collection("exams").where("id", "==", id).limit(1).get();
+            if (!snapshot.empty) {
+                doc = snapshot.docs[0];
+            }
+        }
 
         if (!doc.exists) {
             return NextResponse.json({ error: "Exam not found" }, { status: 404 });
