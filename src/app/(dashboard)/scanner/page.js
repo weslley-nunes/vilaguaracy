@@ -382,9 +382,11 @@ export default function ScannerPage() {
                                 Salvar Correção
                             </button>
                         </div>
-                    </div>
-                </div>
-            )}
+                    </>
+                )}
+            </div>
+        </div>
+    )}
 
             {correctionResult && (
                 <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden text-center">
