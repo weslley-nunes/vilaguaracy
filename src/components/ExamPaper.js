@@ -157,43 +157,59 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                     
                     <div className="w-full px-4 mb-2">
                         {/* Bubbles Grid Section Grouped by Blocks */}
-                        <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-4">
+                        <div className="w-full flex flex-wrap gap-4 justify-center">
                             {(() => {
+                                const columnBlocks = [];
                                 let globalIdx = 1;
+                                
                                 const subjectsMap = new Map();
                                 multipleChoiceQuestions.forEach(q => {
                                     const sub = q.subject || "Geral";
                                     subjectsMap.set(sub, (subjectsMap.get(sub) || 0) + 1);
                                 });
-                                const subjects = Array.from(subjectsMap, ([subject, quota]) => ({ subject, quota }));
                                 
-                                return subjects.map((sub, sIdx) => {
-                                    const quota = sub.quota;
-                                    if (quota <= 0) return null;
-
-                                    return (
-                                        <div key={sIdx} className="border border-gray-100 p-2 rounded bg-gray-50/50 print:bg-transparent print:border-black">
-                                            <p className="text-[9px] font-black uppercase mb-2 border-b border-gray-200 pb-1 print:border-black">{sub.subject}</p>
-                                            <div className="space-y-1.5">
-                                                {Array.from({ length: quota }).map((_, i) => {
-                                                    const qNum = globalIdx++;
-                                                    return (
-                                                        <div key={i} className="flex items-center gap-2 text-[10px]">
-                                                            <span className="font-black w-5 text-right">{qNum}.</span>
-                                                            <div className="flex gap-1">
-                                                                {['A', 'B', 'C', 'D'].map((opt) => (
-                                                                    <div key={opt} className="w-3.5 h-3.5 rounded-full border border-black bg-white flex items-center justify-center text-[7px] font-bold">
-                                                                        {opt}
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    )
-                                                })}
-                                            </div>
-                                        </div>
-                                    );
+                                subjectsMap.forEach((quota, subject) => {
+                                    let remaining = quota;
+                                    let subBlockIdx = 0;
+                                    
+                                    while (remaining > 0) {
+                                        const currentBatch = Math.min(remaining, 5);
+                                        const startIdx = globalIdx;
+                                        globalIdx += currentBatch;
+                                        
+                                        columnBlocks.push({
+                                            subject: subBlockIdx === 0 ? subject : `${subject} (cont.)`,
+                                            count: currentBatch,
+                                            startNumber: startIdx
+                                        });
+                                        
+                                        remaining -= currentBatch;
+                                        subBlockIdx++;
+                                    }
                                 });
+                                
+                                return columnBlocks.map((block, bIdx) => (
+                                    <div key={bIdx} className="border border-gray-100 p-2 rounded bg-gray-50/50 print:bg-transparent print:border-black min-w-[120px]">
+                                        <p className="text-[9px] font-black uppercase mb-2 border-b border-gray-200 pb-1 print:border-black truncate">{block.subject}</p>
+                                        <div className="space-y-1.5">
+                                            {Array.from({ length: block.count }).map((_, i) => {
+                                                const qNum = block.startNumber + i;
+                                                return (
+                                                    <div key={i} className="flex items-center gap-2 text-[10px]">
+                                                        <span className="font-black w-5 text-right">{qNum}.</span>
+                                                        <div className="flex gap-1">
+                                                            {['A', 'B', 'C', 'D'].map((opt) => (
+                                                                <div key={opt} className="w-3.5 h-3.5 rounded-full border border-black bg-white flex items-center justify-center text-[7px] font-bold">
+                                                                    {opt}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ));
                             })()}
                         </div>
                     </div>
