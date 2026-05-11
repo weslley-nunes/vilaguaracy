@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
-import { FileText, Users, Plus, Loader2, AlertCircle } from "lucide-react";
+import { FileText, Users, Plus, Loader2, AlertCircle, Search, CheckCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { getClassesByUser } from "@/services/classesService";
 import { ExamService } from "@/services/examService";
 
@@ -11,6 +12,15 @@ export default function Dashboard() {
 
     const [stats, setStats] = useState({ examsCount: 0, studentsCount: 0 });
     const [isLoading, setIsLoading] = useState(true);
+    const [searchId, setSearchId] = useState("");
+    const router = useRouter();
+
+    const handleSearchGabarito = (e) => {
+        e.preventDefault();
+        if (searchId.trim()) {
+            router.push(`/gabarito/${searchId.trim()}`);
+        }
+    };
 
     useEffect(() => {
         if (!user) return;
@@ -154,6 +164,26 @@ export default function Dashboard() {
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Gerenciar Turmas</h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Cadastre alunos e gere QR Codes</p>
                 </Link>
+
+                <div className="p-6 bg-vg-dark text-white border border-vg-dark rounded-xl shadow-lg flex flex-col items-center text-center">
+                    <div className="w-12 h-12 bg-white/20 text-white rounded-full flex items-center justify-center mb-4">
+                        <Search size={24} />
+                    </div>
+                    <h3 className="font-semibold text-white mb-1">Consultar Gabarito</h3>
+                    <p className="text-sm text-white/60 mb-4">Digite o código da prova para ver as respostas</p>
+                    <form onSubmit={handleSearchGabarito} className="flex w-full gap-2">
+                        <input 
+                            type="text" 
+                            placeholder="Cód: ABC123" 
+                            value={searchId}
+                            onChange={(e) => setSearchId(e.target.value)}
+                            className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/50"
+                        />
+                        <button type="submit" className="bg-white text-vg-dark p-2 rounded-lg hover:bg-vg-light transition-colors">
+                            <CheckCircle size={20} />
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     );

@@ -110,8 +110,9 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                             level="H"
                         />
                         <div className="mt-1 flex flex-col items-center w-full px-1 text-center">
-                            <span className="text-[11px] font-bold font-mono tracking-wider">ID: {examId.slice(-6).toUpperCase()}</span>
-                            <span className="text-[8px] uppercase font-bold text-gray-600 mt-1 leading-tight">{studentName.slice(0, 25) || "_____________________"}</span>
+                            <div className="bg-black text-white px-2 py-0.5 rounded text-[10px] font-black tracking-widest mb-1">CÓDIGO: {examId.slice(-6).toUpperCase()}</div>
+                            <span className="text-[8px] uppercase font-bold text-gray-600 leading-tight">{studentName.slice(0, 25) || "_____________________"}</span>
+                            <span className="text-[7px] text-gray-400 mt-1">Consulte o gabarito em vilaguaracy.com.br</span>
                         </div>
                     </div>
                 )}

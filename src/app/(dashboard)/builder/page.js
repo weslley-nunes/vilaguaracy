@@ -320,16 +320,23 @@ export default function BuilderPage() {
 
         setIsSaving(true);
         try {
+            const answerKey = {};
+            examQuestions.forEach((q, idx) => {
+                if (q.correct) {
+                    answerKey[idx] = q.correct;
+                }
+            });
+
             const examData = {
                 ...(isEditMode && examId ? { id: examId } : {}),
                 title: examTitle || "Sem título",
                 headerConfig,
                 questions: examQuestions,
+                answerKey, // Direct mapping for easy correction
                 scoringMode,
                 totalScore: scoringMode === 'auto' ? (Number(totalScore) || 10) : examQuestions.reduce((sum, q) => sum + (Number(q.points) || 0), 0),
                 collaborators: collaborators,
                 bimester: selectedBimester
-                // Status, dates, and teacherId are handled by the service
             };
 
             if (isEditMode && examId) {

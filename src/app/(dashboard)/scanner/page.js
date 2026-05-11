@@ -119,8 +119,10 @@ export default function ScannerPage() {
 
         examData.questions.forEach((q, idx) => {
             const studentAns = studentAnswers[idx];
-            // Format correct answer for robust comparison
-            const correctStr = String(q.correct || "").trim();
+            // Format correct answer for robust comparison (Fallback to answerKey if q.correct is missing)
+            const baseCorrect = q.correct || (examData.answerKey && examData.answerKey[idx]);
+            const correctStr = String(baseCorrect || "").trim();
+            
             const cleanCorrect = correctStr.length === 1 
                 ? correctStr.toUpperCase() 
                 : correctStr.replace(/^[a-zA-Z\d]+[).:-]\s*/, "").toUpperCase();
