@@ -28,10 +28,17 @@ export const ExamService = {
                 const docId = cleanData.id;
                 delete cleanData.id;
                 delete cleanData.createdAt; // Mantém a data de criação original
+                // Ensure shortId is present even on updates
+                cleanData.shortId = docId.slice(-6).toUpperCase();
                 await updateDoc(doc(db, "exams", docId), cleanData);
                 return { success: true, id: docId, method: "update" };
             } else {
                 const docRef = await addDoc(collection(db, "exams"), cleanData);
+                // Update with its own ID and shortId for easier lookup
+                await updateDoc(docRef, { 
+                    id: docRef.id, 
+                    shortId: docRef.id.slice(-6).toUpperCase() 
+                });
                 return { success: true, id: docRef.id, method: "direct" };
             }
         } catch (error) {
