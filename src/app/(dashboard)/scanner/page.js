@@ -3,6 +3,9 @@ import { useState, useEffect, useRef } from "react";
 import { Camera, ChevronLeft, Loader2, CheckCircle, Save, XCircle, FileText, PenTool } from "lucide-react";
 import Link from "next/link";
 import { Html5QrcodeScanner } from "html5-qrcode";
+import { ExamService } from "@/services/examService";
+import { db } from "@/services/firebase";
+import { collection, addDoc } from "firebase/firestore";
 
 export default function ScannerPage() {
     const [scanResult, setScanResult] = useState(null); // The raw data from QR code
