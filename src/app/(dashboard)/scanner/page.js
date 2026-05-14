@@ -89,7 +89,14 @@ export default function ScannerPage() {
         setError(null);
         try {
             const res = await fetch(`/api/exams/get?id=${examId}`);
-            if (!res.ok) throw new Error("Prova não encontrada no banco de dados.");
+            
+            if (!res.ok) {
+                if (examId === "PREVIEW") {
+                    throw new Error("Esta prova foi impressa no modo rascunho (não salva). Salve a prova no portal antes de imprimir para os alunos.");
+                }
+                throw new Error(`Prova não encontrada no banco de dados. (CÓDIGO: ${examId})`);
+            }
+            
             const data = await res.json();
             setExamData(data.exam);
             

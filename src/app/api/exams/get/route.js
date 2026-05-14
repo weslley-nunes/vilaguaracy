@@ -24,11 +24,10 @@ export async function GET(req) {
             if (!snapshot.empty) {
                 doc = snapshot.docs[0];
             } else {
-                // Broad Fallback: Fetch last 50 exams and check suffixes manually
+                // Broad Fallback: Fetch all exams and check suffixes manually
                 // This helps find older exams that haven't been resaved with shortId yet.
                 const recentSnapshot = await db.collection("exams")
                     .orderBy("updatedAt", "desc")
-                    .limit(50)
                     .get();
                 
                 const found = recentSnapshot.docs.find(d => 
