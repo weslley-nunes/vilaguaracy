@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { UploadCloud, Loader2, CheckCircle2, AlertCircle, ChevronLeft, FileText } from "lucide-react";
 import Link from "next/link";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LotePage() {
     const { user } = useAuth();
