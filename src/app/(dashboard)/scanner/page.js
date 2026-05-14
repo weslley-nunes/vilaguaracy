@@ -88,22 +88,21 @@ export default function ScannerPage() {
         setIsLoadingExam(true);
         setError(null);
         try {
-            const res = await fetch(`/api/exams/get?id=${examId}`);
+            if (examId === "PREVIEW") {
+                throw new Error("Esta prova foi impressa no modo rascunho (não salva). Salve a prova no portal antes de imprimir para os alunos.");
+            }
+
+            const exam = await ExamService.getById(examId);
             
-            if (!res.ok) {
-                const data = await res.json().catch(() => ({}));
-                if (examId === "PREVIEW") {
-                    throw new Error("Esta prova foi impressa no modo rascunho (não salva). Salve a prova no portal antes de imprimir para os alunos.");
-                }
-                throw new Error(`Erro: ${data.error || res.statusText} (CÓDIGO: ${examId})`);
+            if (!exam) {
+                throw new Error(`Prova não encontrada no banco de dados. (CÓDIGO: ${examId})`);
             }
             
-            const data = await res.json();
-            setExamData(data.exam);
+            setExamData(exam);
             
             // Auto-fill answers with empty state
             const initialAnswers = {};
-            data.exam.questions.forEach((_, idx) => {
+            exam.questions.forEach((_, idx) => {
                 initialAnswers[idx] = null;
             });
             setStudentAnswers(initialAnswers);
@@ -168,13 +167,10 @@ export default function ScannerPage() {
         };
 
         try {
-            const res = await fetch("/api/corrections/save", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
+            await addDoc(collection(db, "corrections"), {
+                ...payload,
+                createdAt: new Date()
             });
-
-            if (!res.ok) throw new Error("Falha ao salvar correção");
             
             setCorrectionResult({
                 score,
@@ -361,11 +357,23 @@ export default function ScannerPage() {
                                                         const result = await res.json();
                                                         if (result.error) throw new Error(result.error);
                                                         
-                                                        setCorrectionResult({
-                                                            score: Number(result.score),
-                                                            correctCount: result.results.filter(r => r.isCorrect).length,
-                                                            totalCount: examData.questions.length
+                                                        const aiAnswers = result.aiResults.answers || [];
+                                                        const newStudentAnswers = { ...studentAnswers };
+                                                        
+                                                        aiAnswers.forEach(ans => {
+                                                            // Map answer 'A' to the specific bubble.
+                                                            // ans.q is 1-indexed (1, 2, 3...)
+                                                            const qIndex = ans.q - 1;
+                                                            if (qIndex >= 0 && qIndex < examData.questions.length) {
+                                                                newStudentAnswers[qIndex] = ans.r;
+                                                            }
                                                         });
+                                                        
+                                                        setStudentAnswers(newStudentAnswers);
+                                                        setCorrectionMode('manual'); // Switch to manual mode so they can review and submit
+                                                        
+                                                        // Optional: show a small success toast if we had one
+                                                        // alert("IA preencheu as respostas. Revise e clique em Salvar.");
                                                     };
                                                 } catch (err) {
                                                     setError("Erro na IA: " + err.message);

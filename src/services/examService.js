@@ -94,15 +94,45 @@ export const ExamService = {
         }
     },
 
-    // Get by ID
+    // Get by ID (with robust fallbacks)
     getById: async (examId) => {
         if (!examId) return null;
         try {
-            const docRef = doc(db, "exams", examId);
+            const cleanId = String(examId).trim();
+            const docRef = doc(db, "exams", cleanId);
             const docSnap = await getDoc(docRef);
+            
             if (docSnap.exists()) {
                 return { id: docSnap.id, ...docSnap.data() };
             }
+
+            // Fallback 1: Search by shortId
+            const shortCode = cleanId.toUpperCase();
+            const qShort = query(collection(db, "exams"), where("shortId", "==", shortCode));
+            const shortSnap = await getDocs(qShort);
+            if (!shortSnap.empty) {
+                return { id: shortSnap.docs[0].id, ...shortSnap.docs[0].data() };
+            }
+
+            // Fallback 2: Search older exams by partial match
+            const qRecent = query(collection(db, "exams"), orderBy("updatedAt", "desc"));
+            const recentSnap = await getDocs(qRecent);
+            const found = recentSnap.docs.find(d => 
+                d.id.toUpperCase().endsWith(shortCode) || 
+                (d.data().id && d.data().id.toUpperCase().endsWith(shortCode))
+            );
+
+            if (found) {
+                return { id: found.id, ...found.data() };
+            }
+
+            // Fallback 3: Strict 'id' field search
+            const qId = query(collection(db, "exams"), where("id", "==", cleanId));
+            const idSnap = await getDocs(qId);
+            if (!idSnap.empty) {
+                return { id: idSnap.docs[0].id, ...idSnap.docs[0].data() };
+            }
+
             return null;
         } catch (e) {
             console.error("Error getting exam by id", e);
