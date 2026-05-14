@@ -343,41 +343,62 @@ export default function ScannerPage() {
                                                 setError(null);
                                                 
                                                 try {
-                                                    const reader = new FileReader();
-                                                    reader.readAsDataURL(file);
-                                                    reader.onload = async () => {
-                                                        const base64 = reader.result;
-                                                        const res = await fetch("/api/corrections/process", {
-                                                            method: "POST",
-                                                            headers: { "Content-Type": "application/json" },
-                                                            body: JSON.stringify({
-                                                                examId: examData.id,
-                                                                studentName: scanResult.s,
-                                                                image: base64
-                                                            })
-                                                        });
-                                                        
-                                                        const result = await res.json();
-                                                        if (result.error) throw new Error(result.error);
-                                                        
-                                                        const aiAnswers = result.aiResults.answers || [];
-                                                        const newStudentAnswers = { ...studentAnswers };
-                                                        
-                                                        aiAnswers.forEach(ans => {
-                                                            // Map answer 'A' to the specific bubble.
-                                                            // ans.q is 1-indexed (1, 2, 3...)
-                                                            const qIndex = ans.q - 1;
-                                                            if (qIndex >= 0 && qIndex < examData.questions.length) {
-                                                                newStudentAnswers[qIndex] = ans.r;
+                                                    // Helper to read and compress image
+                                                    const processFile = (file) => new Promise((resolve, reject) => {
+                                                        const reader = new FileReader();
+                                                        reader.readAsDataURL(file);
+                                                        reader.onload = (event) => {
+                                                            if (file.type === "application/pdf") {
+                                                                resolve(event.target.result);
+                                                                return;
                                                             }
-                                                        });
-                                                        
-                                                        setStudentAnswers(newStudentAnswers);
-                                                        setCorrectionMode('manual'); // Switch to manual mode so they can review and submit
-                                                        
-                                                        // Optional: show a small success toast if we had one
-                                                        // alert("IA preencheu as respostas. Revise e clique em Salvar.");
-                                                    };
+                                                            
+                                                            // Compress Image
+                                                            const img = new Image();
+                                                            img.src = event.target.result;
+                                                            img.onload = () => {
+                                                                const canvas = document.createElement("canvas");
+                                                                const MAX_WIDTH = 1200;
+                                                                const scaleSize = MAX_WIDTH / img.width;
+                                                                canvas.width = MAX_WIDTH;
+                                                                canvas.height = img.height * scaleSize;
+                                                                const ctx = canvas.getContext("2d");
+                                                                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                                                                // Export with 0.7 quality to save data and speed up AI
+                                                                resolve(canvas.toDataURL("image/jpeg", 0.7));
+                                                            };
+                                                            img.onerror = (err) => reject(new Error("Erro ao carregar a imagem."));
+                                                        };
+                                                        reader.onerror = (err) => reject(new Error("Erro ao ler o arquivo."));
+                                                    });
+
+                                                    const base64Data = await processFile(file);
+
+                                                    const res = await fetch("/api/corrections/process", {
+                                                        method: "POST",
+                                                        headers: { "Content-Type": "application/json" },
+                                                        body: JSON.stringify({
+                                                            examId: examData.id,
+                                                            image: base64Data
+                                                        })
+                                                    });
+                                                    
+                                                    const result = await res.json();
+                                                    if (result.error) throw new Error(result.error);
+                                                    
+                                                    const aiAnswers = result.aiResults.answers || [];
+                                                    const newStudentAnswers = { ...studentAnswers };
+                                                    
+                                                    aiAnswers.forEach(ans => {
+                                                        const qIndex = ans.q - 1;
+                                                        if (qIndex >= 0 && qIndex < examData.questions.length) {
+                                                            newStudentAnswers[qIndex] = ans.r;
+                                                        }
+                                                    });
+                                                    
+                                                    setStudentAnswers(newStudentAnswers);
+                                                    setCorrectionMode('manual');
+                                                    
                                                 } catch (err) {
                                                     setError("Erro na IA: " + err.message);
                                                 } finally {
