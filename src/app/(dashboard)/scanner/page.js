@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { Camera, ChevronLeft, Loader2, CheckCircle, Save, XCircle } from "lucide-react";
+import { Camera, ChevronLeft, Loader2, CheckCircle, Save, XCircle, FileText, PenTool } from "lucide-react";
 import Link from "next/link";
 import { Html5QrcodeScanner } from "html5-qrcode";
 
@@ -11,11 +11,11 @@ export default function ScannerPage() {
     
     // Interactive Grid State: questionIndex -> string (selected option A, B, C, D, E)
     const [studentAnswers, setStudentAnswers] = useState({});
-    
-    const [correctionResult, setCorrectionResult] = useState(null);
+    const [correctionMode, setCorrectionMode] = useState(null); // 'ai' | 'manual'
+    const [isProcessingAi, setIsProcessingAi] = useState(false);
+    const [manualEntry, setManualEntry] = useState({ id: '', s: '' });
     const [isSaving, setIsSaving] = useState(false);
     const [isAIProcessing, setIsAIProcessing] = useState(false);
-    const [correctionMode, setCorrectionMode] = useState(null); // 'manual' | 'ai'
     const [error, setError] = useState(null);
 
     // Initialize Scanner on load
@@ -28,9 +28,11 @@ export default function ScannerPage() {
         const urlAc = urlParams.get('ac');
 
         if (urlId && urlS) {
-            const data = { id: urlId, s: urlS, c: urlC, ac: urlAc };
-            setScanResult(data);
-            fetchExam(urlId);
+            if (!scanResult) {
+                const data = { id: urlId, s: urlS, c: urlC, ac: urlAc };
+                setScanResult(data);
+                fetchExam(urlId);
+            }
             return; // Don't start scanner if we already have data
         }
 
@@ -207,13 +209,53 @@ export default function ScannerPage() {
 
             {!scanResult && !isLoadingExam && (
                 <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden relative">
-                    <div className="p-6 text-center">
+                    <div className="p-6 text-center border-b border-gray-100">
                         <Camera size={40} className="text-vg-navy mx-auto mb-4" />
                         <h3 className="font-bold text-lg mb-2">Aponte a Câmera</h3>
                         <p className="text-sm text-gray-500 mb-6">Enquadre o QR Code impresso no cabeçalho da prova do aluno.</p>
                         
                         {/* Scanner Div */}
                         <div id="reader" className="w-full max-w-sm mx-auto overflow-hidden rounded-xl border-2 border-dashed border-gray-300"></div>
+                    </div>
+                    
+                    {/* Manual Entry Fallback */}
+                    <div className="p-6 bg-gray-50">
+                        <h4 className="font-bold text-sm text-gray-700 mb-4 text-center">QR Code Ilegível? Digite Manualmente:</h4>
+                        <div className="max-w-sm mx-auto space-y-3">
+                            <input 
+                                type="text" 
+                                placeholder="CÓDIGO da Prova (ex: A3B9F2)" 
+                                className="w-full p-3 rounded-lg border border-gray-300 outline-none focus:border-vg-dark uppercase text-center font-mono"
+                                value={manualEntry.id}
+                                onChange={(e) => setManualEntry({...manualEntry, id: e.target.value.toUpperCase()})}
+                            />
+                            <input 
+                                type="text" 
+                                placeholder="Nome do Aluno" 
+                                className="w-full p-3 rounded-lg border border-gray-300 outline-none focus:border-vg-dark text-center"
+                                value={manualEntry.s}
+                                onChange={(e) => setManualEntry({...manualEntry, s: e.target.value})}
+                            />
+                            <button 
+                                disabled={!manualEntry.id || !manualEntry.s}
+                                onClick={() => {
+                                    setScanResult(manualEntry);
+                                    fetchExam(manualEntry.id);
+                                }}
+                                className="w-full btn btn-primary py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Iniciar Correção
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {/* Batch Mode Link */}
+                    <div className="p-6 bg-vg-light/10 border-t border-gray-100 text-center">
+                        <h4 className="font-bold text-sm text-gray-700 mb-3">Tem várias provas em um único PDF?</h4>
+                        <Link href="/lote" className="btn btn-outline border-vg-dark text-vg-dark hover:bg-vg-dark hover:text-white py-2 px-6 inline-flex items-center gap-2">
+                            <FileText size={18} />
+                            Acessar Correção em Lote
+                        </Link>
                     </div>
                 </div>
             )}
@@ -274,15 +316,15 @@ export default function ScannerPage() {
                             <div className="space-y-6 text-center py-4">
                                 <div className="bg-vg-light/30 p-6 rounded-2xl border-2 border-dashed border-vg-dark">
                                     <Camera size={48} className="text-vg-dark mx-auto mb-4" />
-                                    <h3 className="font-bold text-lg text-vg-dark mb-2">Capturar Gabarito</h3>
-                                    <p className="text-xs text-gray-600 mb-6">Enquadre os 4 marcadores quadrados nos cantos da folha de respostas.</p>
+                                    <h3 className="font-bold text-lg text-vg-dark mb-2">Correção Automática</h3>
+                                    <p className="text-xs text-gray-600 mb-6">Tire uma foto ou envie um PDF da página inteira da prova.</p>
                                     
                                     <label className="btn btn-primary py-4 px-8 cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-vg-dark/30">
                                         <Camera size={20} />
-                                        <span>Tirar Foto / Enviar</span>
+                                        <span>Tirar Foto / Enviar PDF</span>
                                         <input 
                                             type="file" 
-                                            accept="image/*" 
+                                            accept="image/*,application/pdf" 
                                             capture="environment" 
                                             className="hidden" 
                                             onChange={async (e) => {

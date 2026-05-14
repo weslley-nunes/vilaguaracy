@@ -36,13 +36,24 @@ export async function POST(req) {
         for (const model of models) {
             try {
                 const prompt = `
-                    Você é um corretor de provas automático. 
-                    Analise esta imagem de um cartão resposta.
-                    Existem marcadores pretos nos 4 cantos da área de interesse.
-                    Identifique quais alternativas (A, B, C, D, E) foram preenchidas para cada questão.
-                    Apenas considere as questões de múltipla escolha.
-                    Retorne APENAS um JSON no formato: {"answers": [{"q": 1, "r": "A"}, {"q": 2, "r": "C"}, ...]}.
+                    Você é um corretor de provas automático altamente avançado. 
+                    Analise a imagem ou PDF completo fornecido, que corresponde a uma prova ou cartão resposta de um aluno.
+                    O objetivo principal é extrair QUAIS alternativas (A, B, C, D, E) o aluno assinalou para cada questão de múltipla escolha.
+                    Retorne APENAS um JSON no formato EXATO: {"answers": [{"q": 1, "r": "A"}, {"q": 2, "r": "C"}]}.
+                    Não adicione blocos de markdown e nenhum outro texto além do JSON.
                 `;
+
+                let mimeType = "image/jpeg";
+                let base64Data = image;
+                if (image.includes(",")) {
+                    const matches = image.match(/^data:(.+);base64,(.*)$/);
+                    if (matches) {
+                        mimeType = matches[1];
+                        base64Data = matches[2];
+                    } else {
+                        base64Data = image.split(",")[1];
+                    }
+                }
 
                 const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
                     method: "POST",
@@ -51,7 +62,7 @@ export async function POST(req) {
                         contents: [{
                             parts: [
                                 { text: prompt },
-                                { inline_data: { mime_type: "image/jpeg", data: image.split(",")[1] || image } }
+                                { inline_data: { mime_type: mimeType, data: base64Data } }
                             ]
                         }]
                     })
