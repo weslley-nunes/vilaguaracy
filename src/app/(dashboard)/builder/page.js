@@ -981,14 +981,24 @@ export default function BuilderPage() {
                             </div>
                             {manualQuestion.type === 'multiple_choice' && (
                                 <div className="space-y-3">
-                                    <label className="block text-sm font-bold text-gray-700">Alternativas</label>
-                                    {manualQuestion.options.map((opt, idx) => (
-                                        <div key={idx} className="flex gap-2 items-center">
-                                            <span className="font-mono font-bold text-gray-400 w-6">{String.fromCharCode(65 + idx)})</span>
-                                            <input type="text" value={opt} onChange={(e) => updateOption(idx, e.target.value)} className="flex-1 p-2 rounded border border-gray-300 focus:border-vg-dark outline-none text-sm" placeholder={`Opção ${idx + 1}`} />
+                                    <label className="block text-sm font-bold text-gray-700">Alternativas (Marque a Correta)</label>
+                                    {manualQuestion.options.map((opt, idx) => {
+                                        const optionLetter = String.fromCharCode(65 + idx);
+                                        return (
+                                        <div key={idx} className={`flex gap-2 items-center p-1.5 rounded-lg border ${manualQuestion.correct === optionLetter ? 'border-green-500 bg-green-50' : 'border-transparent'}`}>
+                                            <input 
+                                                type="radio" 
+                                                name="correctAlternative" 
+                                                checked={manualQuestion.correct === optionLetter} 
+                                                onChange={() => setManualQuestion({ ...manualQuestion, correct: optionLetter })}
+                                                className="w-4 h-4 text-green-600 focus:ring-green-500 cursor-pointer"
+                                                title="Marcar como correta"
+                                            />
+                                            <span className={`font-mono font-bold w-6 text-center ${manualQuestion.correct === optionLetter ? 'text-green-700' : 'text-gray-400'}`}>{optionLetter})</span>
+                                            <input type="text" value={opt} onChange={(e) => updateOption(idx, e.target.value)} className={`flex-1 p-2 rounded border focus:border-vg-dark outline-none text-sm ${manualQuestion.correct === optionLetter ? 'border-green-300 bg-white' : 'border-gray-300'}`} placeholder={`Opção ${idx + 1}`} />
                                             <button onClick={() => removeOption(idx)} className="text-red-400 hover:text-red-600 p-1"><Trash size={16} /></button>
                                         </div>
-                                    ))}
+                                    )})}
                                     <button onClick={() => setManualQuestion({ ...manualQuestion, options: [...manualQuestion.options, ""] })} className="text-sm font-bold text-vg-dark hover:underline flex items-center gap-1 mt-2"><PlusCircle size={16} /> Adicionar Alternativa</button>
                                 </div>
                             )}

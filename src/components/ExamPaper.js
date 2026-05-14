@@ -349,11 +349,27 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                                                                 const optStr = typeof opt === 'string' ? opt : String(opt || "");
                                                                 const cleanOpt = optStr.replace(/^[a-zA-Z\d]+[).:-]\s*/, "");
                                                                 const correctStr = String(q.correct || "");
-                                                                const isCorrect = showAnswers && (correctStr === optStr || correctStr === cleanOpt || correctStr.toLowerCase() === String.fromCharCode(97 + i));
+                                                                const optionLetter = String.fromCharCode(65 + i); // A, B, C...
+                                                                
+                                                                // In builder mode (onQuestionChange exists), we always highlight the correct one if showAnswers is true, 
+                                                                // but we also show the UI to select it.
+                                                                const isCorrectOption = correctStr === optStr || correctStr === cleanOpt || correctStr.toUpperCase() === optionLetter;
+                                                                const displayAsCorrect = showAnswers && isCorrectOption;
+
                                                                 return (
-                                                                    <div key={i} className={`flex items-start gap-2 p-1 rounded ${isCorrect ? 'bg-green-100 dark:bg-green-900/30 -ml-1 pl-1' : ''}`}>
-                                                                        <span className={`font-medium ${isAdapted ? 'text-lg font-bold' : 'text-sm'} ${isCorrect ? 'text-green-700 font-bold' : ''}`}>({String.fromCharCode(97 + i)})</span>
-                                                                        <span className={`${isAdapted ? 'text-lg' : ''} ${isCorrect ? 'text-green-700 font-bold' : ''}`}>{cleanOpt}</span>
+                                                                    <div 
+                                                                        key={i} 
+                                                                        onClick={() => onQuestionChange && onQuestionChange(q.id, { correct: optionLetter })}
+                                                                        className={`flex items-start gap-2 p-1.5 rounded transition-colors ${displayAsCorrect ? 'bg-green-100 dark:bg-green-900/30 -ml-1 pl-1.5' : ''} ${onQuestionChange ? 'cursor-pointer hover:bg-gray-100 group' : ''}`}
+                                                                    >
+                                                                        <span className={`font-medium ${isAdapted ? 'text-lg font-bold' : 'text-sm'} ${displayAsCorrect ? 'text-green-700 font-bold' : ''}`}>({optionLetter.toLowerCase()})</span>
+                                                                        <span className={`flex-1 ${isAdapted ? 'text-lg' : ''} ${displayAsCorrect ? 'text-green-700 font-bold' : ''}`}>{cleanOpt}</span>
+                                                                        
+                                                                        {onQuestionChange && (
+                                                                            <span className={`print:hidden text-[10px] uppercase font-bold px-2 py-0.5 rounded transition-opacity ${isCorrectOption ? 'bg-green-600 text-white opacity-100' : 'bg-gray-200 text-gray-500 opacity-0 group-hover:opacity-100'}`}>
+                                                                                {isCorrectOption ? 'Correta' : 'Marcar'}
+                                                                            </span>
+                                                                        )}
                                                                     </div>
                                                                 );
                                                             })}
