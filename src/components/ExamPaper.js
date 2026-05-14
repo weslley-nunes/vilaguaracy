@@ -88,7 +88,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
             </div>
 
             {/* Split Section: Instructions + QR Code */}
-            <div className="flex flex-row items-stretch gap-4 mb-4 w-full">
+            <div className="flex flex-row items-stretch gap-4 mb-2 w-full">
                 {/* Instructions */}
                 <div className="flex-1 border border-gray-300 p-3 rounded-lg bg-gray-50 print:bg-transparent print:border-black">
                     <h3 className="font-bold text-[11px] uppercase mb-1">📝 Orientações Importantes:</h3>
@@ -119,7 +119,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
             </div>
 
             {/* Tabelinha dos Comandos */}
-            <div className="mb-6 w-full">
+            <div className="mb-3 w-full">
                 <table className="w-full border-collapse border border-black text-[9px] text-left print:border-black">
                     <thead>
                         <tr>
@@ -142,7 +142,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
 
             {/* INTEGRATED ANSWER SHEET - Standardized Square for Precise Capture */}
             {multipleChoiceQuestions.length > 0 && (
-                <div className="print:break-after-page mb-6 border-2 border-black p-4 bg-white print:bg-transparent relative w-full mx-auto flex flex-col items-center justify-center">
+                <div className="print:break-after-page print:break-inside-avoid mb-4 border-2 border-black p-2 bg-white print:bg-transparent relative w-full mx-auto flex flex-col items-center justify-center">
                     {/* High-Precision Alignment Markers */}
                     <div className="absolute top-0 left-0 w-4 h-4 bg-black print:block"></div>
                     <div className="absolute top-0 right-0 w-4 h-4 bg-black print:block"></div>
@@ -403,11 +403,11 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
             <style dangerouslySetInnerHTML={{__html: `
                 @media print {
                     @page {
-                        margin-top: 2cm;
-                        margin-bottom: 2cm;
+                        margin-top: 1cm;
+                        margin-bottom: 1cm;
                     }
                     @page :first {
-                        margin-top: 1.2cm;
+                        margin-top: 1cm;
                     }
                     @page {
                         @bottom-right {
