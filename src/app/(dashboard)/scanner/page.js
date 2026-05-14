@@ -91,10 +91,11 @@ export default function ScannerPage() {
             const res = await fetch(`/api/exams/get?id=${examId}`);
             
             if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
                 if (examId === "PREVIEW") {
                     throw new Error("Esta prova foi impressa no modo rascunho (não salva). Salve a prova no portal antes de imprimir para os alunos.");
                 }
-                throw new Error(`Prova não encontrada no banco de dados. (CÓDIGO: ${examId})`);
+                throw new Error(`Erro: ${data.error || res.statusText} (CÓDIGO: ${examId})`);
             }
             
             const data = await res.json();
@@ -239,10 +240,10 @@ export default function ScannerPage() {
                             />
                             <input 
                                 type="text" 
-                                placeholder="Nome do Aluno" 
-                                className="w-full p-3 rounded-lg border border-gray-300 outline-none focus:border-vg-dark text-center"
+                                placeholder="Código do Aluno" 
+                                className="w-full p-3 rounded-lg border border-gray-300 outline-none focus:border-vg-dark text-center uppercase"
                                 value={manualEntry.s}
-                                onChange={(e) => setManualEntry({...manualEntry, s: e.target.value})}
+                                onChange={(e) => setManualEntry({...manualEntry, s: e.target.value.toUpperCase()})}
                             />
                             <button 
                                 disabled={!manualEntry.id || !manualEntry.s}

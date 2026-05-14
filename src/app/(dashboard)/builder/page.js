@@ -214,7 +214,8 @@ export default function BuilderPage() {
                 questions: currentQuestions,
                 variationIndex: i,
                 isAdapted: false, 
-                classId: selectedClass || null
+                classId: selectedClass || null,
+                className: selectedClassObj?.name || ""
             });
         }
 
@@ -238,7 +239,8 @@ export default function BuilderPage() {
                 student: "", // Adapted copies generally don't have names pre-filled, or we could add logic
                 questions: currentQuestions,
                 variationIndex: i,
-                isAdapted: true // Flag for large font/accessibility
+                isAdapted: true, // Flag for large font/accessibility
+                className: selectedClassObj?.name || ""
             });
         }
 
@@ -668,7 +670,11 @@ export default function BuilderPage() {
                             questions={examQuestions}
                             title={examTitle}
                             collaborators={collaborators}
-                            headerConfig={headerConfig}
+                            headerConfig={{
+                                ...headerConfig, 
+                                bimester: selectedBimester, 
+                                className: selectedClass ? classes.find(c => c.id === selectedClass)?.name : ""
+                            }}
                             showAnswers={showAnswers}
                             scoringMode={scoringMode}
                             totalScore={Number(totalScore) || 10}
@@ -697,6 +703,8 @@ export default function BuilderPage() {
                                     accessCode: v.accessCode || "",
                                     examId: v.id,
                                     classId: v.classId,
+                                    className: v.className,
+                                    bimester: selectedBimester
                                 }}
                                 showAnswers={false}
                                 isAdapted={v.isAdapted}

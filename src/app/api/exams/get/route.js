@@ -1,34 +1,38 @@
-import { getDb } from "@/services/firebase-admin";
+import { db } from "@/services/firebase";
+import { collection, doc, getDoc, getDocs, query, where, orderBy } from "firebase/firestore";
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
     try {
         const { searchParams } = new URL(req.url);
-        const id = searchParams.get('id');
+        const rawId = searchParams.get('id');
 
-        if (!id) {
+        if (!rawId) {
             return NextResponse.json({ error: "ID is required" }, { status: 400 });
         }
 
-        const db = getDb();
-        let doc = await db.collection("exams").doc(id).get();
+        const id = rawId.trim();
 
-        // Fallback: search by 'shortId' or 'id' field if not found by document ID
-        if (!doc.exists) {
+        let docSnapshot = await getDoc(doc(db, "exams", id));
+        let examData = null;
+        let examId = id;
+
+        if (docSnapshot.exists()) {
+            examData = docSnapshot.data();
+        } else {
+            // Fallback: search by 'shortId' or 'id' field if not found by document ID
             const shortCode = id.toUpperCase();
-            const snapshot = await db.collection("exams")
-                .where("shortId", "==", shortCode)
-                .limit(1)
-                .get();
+            const qShort = query(collection(db, "exams"), where("shortId", "==", shortCode));
+            const snapshot = await getDocs(qShort);
                 
             if (!snapshot.empty) {
-                doc = snapshot.docs[0];
+                docSnapshot = snapshot.docs[0];
+                examData = docSnapshot.data();
+                examId = docSnapshot.id;
             } else {
                 // Broad Fallback: Fetch all exams and check suffixes manually
-                // This helps find older exams that haven't been resaved with shortId yet.
-                const recentSnapshot = await db.collection("exams")
-                    .orderBy("updatedAt", "desc")
-                    .get();
+                const qRecent = query(collection(db, "exams"), orderBy("updatedAt", "desc"));
+                const recentSnapshot = await getDocs(qRecent);
                 
                 const found = recentSnapshot.docs.find(d => 
                     d.id.toUpperCase().endsWith(shortCode) || 
@@ -36,22 +40,27 @@ export async function GET(req) {
                 );
 
                 if (found) {
-                    doc = found;
+                    docSnapshot = found;
+                    examData = docSnapshot.data();
+                    examId = docSnapshot.id;
                 } else {
                     // Last attempt: search by full 'id' field
-                    const idSnapshot = await db.collection("exams").where("id", "==", id).limit(1).get();
+                    const qId = query(collection(db, "exams"), where("id", "==", id));
+                    const idSnapshot = await getDocs(qId);
                     if (!idSnapshot.empty) {
-                        doc = idSnapshot.docs[0];
+                        docSnapshot = idSnapshot.docs[0];
+                        examData = docSnapshot.data();
+                        examId = docSnapshot.id;
                     }
                 }
             }
         }
 
-        if (!doc.exists) {
+        if (!examData) {
             return NextResponse.json({ error: "Exam not found" }, { status: 404 });
         }
 
-        return NextResponse.json({ exam: { id: doc.id, ...doc.data() } });
+        return NextResponse.json({ exam: { id: examId, ...examData } });
     } catch (error) {
         console.error("Error fetching exam:", error);
         return NextResponse.json({ error: "Failed to fetch exam" }, { status: 500 });

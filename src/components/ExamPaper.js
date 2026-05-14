@@ -60,7 +60,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                             {/* Row 2 */}
                             <div className="flex justify-between w-[95%]">
                                 <p>Gurupi, _____ / _____ / 2026</p>
-                                <p>2º Bimestre</p>
+                                <p>{headerConfig?.bimester || "2º Bimestre"}</p>
                                 <p>Turma: {headerConfig?.className || "82.____"}</p>
                             </div>
 
@@ -111,8 +111,10 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                         />
                         <div className="mt-1 flex flex-col items-center w-full px-1 text-center">
                             <div className="bg-black text-white px-2 py-0.5 rounded text-[10px] font-black tracking-widest mb-1">CÓDIGO: {examId.slice(-6).toUpperCase()}</div>
-                            <span className="text-[8px] uppercase font-bold text-gray-600 leading-tight">{studentName.slice(0, 25) || "_____________________"}</span>
-                            <span className="text-[7px] text-gray-400 mt-1">Consulte o gabarito em vilaguaracy.com.br</span>
+                            <span className="text-[8px] uppercase font-bold text-gray-600 leading-tight">
+                                {headerConfig?.accessCode ? `ALUNO: ${headerConfig.accessCode}` : (studentName.slice(0, 25) || "_____________________")}
+                            </span>
+                            <span className="text-[7px] text-gray-400 mt-1">Consulte o gabarito no portal</span>
                         </div>
                     </div>
                 )}
