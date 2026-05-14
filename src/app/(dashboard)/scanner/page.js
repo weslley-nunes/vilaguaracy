@@ -11,6 +11,7 @@ export default function ScannerPage() {
     
     // Interactive Grid State: questionIndex -> string (selected option A, B, C, D, E)
     const [studentAnswers, setStudentAnswers] = useState({});
+    const [correctionResult, setCorrectionResult] = useState(null);
     const [correctionMode, setCorrectionMode] = useState(null); // 'ai' | 'manual'
     const [isProcessingAi, setIsProcessingAi] = useState(false);
     const [manualEntry, setManualEntry] = useState({ id: '', s: '' });
