@@ -4,13 +4,16 @@ import { ChevronLeft, Loader2, Search, Target, Users, BookOpen, CheckCircle, XCi
 import Link from "next/link";
 import { ExamService } from "@/services/examService";
 import { useAuth } from "@/context/AuthContext";
+import { getClassesByUser } from "@/services/classesService";
 
 export default function ResultadosPage() {
     const { user } = useAuth();
     const [exams, setExams] = useState([]);
+    const [classes, setClasses] = useState([]);
     const [corrections, setCorrections] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     
+    const [selectedClassId, setSelectedClassId] = useState("");
     const [selectedExamId, setSelectedExamId] = useState("");
     const [selectedStudent, setSelectedStudent] = useState(null); // Modal state
 
@@ -21,12 +24,16 @@ export default function ResultadosPage() {
     const loadData = async () => {
         setIsLoading(true);
         try {
-            // Load exams
-            const examList = await ExamService.listExams(user?.uid, user?.role);
+            // Load exams and classes
+            const [examList, classList] = await Promise.all([
+                ExamService.listByTeacher(user?.uid),
+                getClassesByUser()
+            ]);
             setExams(examList);
+            setClasses(classList);
             
-            if (examList.length > 0) {
-                setSelectedExamId(examList[0].id);
+            if (classList.length > 0) {
+                setSelectedClassId(classList[0].id);
             }
         } catch (error) {
             console.error("Error loading exams:", error);
@@ -35,22 +42,33 @@ export default function ResultadosPage() {
         }
     };
 
-    // Load corrections when selected exam changes
+    // Load corrections when selected exam or class changes
     useEffect(() => {
-        if (!selectedExamId) return;
+        if (!selectedExamId || !selectedClassId) return;
         
         const fetchCorrections = async () => {
             try {
                 const results = await ExamService.listCorrectionsByExam(selectedExamId);
-                setCorrections(results);
+                const selectedClass = classes.find(c => c.id === selectedClassId);
+                
+                // Filtra as correções da turma selecionada (comparando o nome ou ID)
+                if (selectedClass) {
+                    const filtered = results.filter(c => 
+                        c.classId === selectedClass.name || c.classId === selectedClass.id
+                    );
+                    setCorrections(filtered);
+                } else {
+                    setCorrections([]);
+                }
             } catch (e) {
                 console.error("Failed to load corrections", e);
             }
         };
         fetchCorrections();
-    }, [selectedExamId]);
+    }, [selectedExamId, selectedClassId, classes]);
 
     const selectedExam = exams.find(e => e.id === selectedExamId);
+    const selectedClassObj = classes.find(c => c.id === selectedClassId);
 
     return (
         <div className="max-w-6xl mx-auto h-full flex flex-col">
@@ -71,46 +89,80 @@ export default function ResultadosPage() {
                 </div>
             ) : (
                 <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
-                    {/* Sidebar: Filters */}
-                    <div className="w-full md:w-80 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 shrink-0 overflow-y-auto">
-                        <h3 className="font-bold text-sm uppercase text-gray-400 mb-4 tracking-wider">Selecione a Avaliação</h3>
+                    {/* Sidebar 1: Classes */}
+                    <div className="w-full md:w-64 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 shrink-0 overflow-y-auto custom-scrollbar">
+                        <h3 className="font-bold text-sm uppercase text-gray-400 mb-4 tracking-wider">1. Selecione a Turma</h3>
                         <div className="space-y-2">
-                            {exams.map(exam => (
-                                <button
-                                    key={exam.id}
-                                    onClick={() => setSelectedExamId(exam.id)}
-                                    className={`w-full text-left p-4 rounded-xl border transition-all ${
-                                        selectedExamId === exam.id 
-                                            ? 'bg-vg-light border-vg-navy shadow-sm' 
-                                            : 'bg-white border-gray-100 hover:border-gray-300'
-                                    }`}
-                                >
-                                    <p className={`font-bold text-sm line-clamp-2 ${selectedExamId === exam.id ? 'text-vg-hover' : 'text-gray-700'}`}>
-                                        {exam.title || "Avaliação sem título"}
-                                    </p>
-                                    <div className="flex items-center gap-4 mt-3">
-                                        <div className="flex items-center gap-1 text-xs text-gray-500">
-                                            <BookOpen size={12}/> {exam.questions?.length || 0}
+                            {classes.length === 0 ? (
+                                <p className="text-sm text-gray-400">Nenhuma turma encontrada.</p>
+                            ) : (
+                                classes.map(cls => (
+                                    <button
+                                        key={cls.id}
+                                        onClick={() => setSelectedClassId(cls.id)}
+                                        className={`w-full text-left p-4 rounded-xl border transition-all ${
+                                            selectedClassId === cls.id 
+                                                ? 'bg-vg-light border-vg-navy shadow-sm' 
+                                                : 'bg-white border-gray-100 hover:border-gray-300'
+                                        }`}
+                                    >
+                                        <p className={`font-bold text-sm line-clamp-2 ${selectedClassId === cls.id ? 'text-vg-hover' : 'text-gray-700'}`}>
+                                            {cls.name}
+                                        </p>
+                                        <div className="flex items-center gap-1 mt-2 text-[10px] uppercase font-bold text-gray-400">
+                                            <Users size={12}/> {cls.students?.length || 0} alunos
                                         </div>
-                                        <div className="flex items-center gap-1 text-xs text-gray-500">
-                                            <Users size={12}/> {exam.bimester || "Geral"}
-                                        </div>
-                                    </div>
-                                </button>
-                            ))}
+                                    </button>
+                                ))
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Sidebar 2: Exams */}
+                    <div className={`w-full md:w-72 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 shrink-0 overflow-y-auto custom-scrollbar transition-opacity ${!selectedClassId ? 'opacity-50 pointer-events-none' : ''}`}>
+                        <h3 className="font-bold text-sm uppercase text-gray-400 mb-4 tracking-wider">2. Avaliação</h3>
+                        <div className="space-y-2">
+                            {exams.length === 0 ? (
+                                <p className="text-sm text-gray-400">Nenhuma avaliação encontrada.</p>
+                            ) : (
+                                exams.map(exam => (
+                                    <button
+                                        key={exam.id}
+                                        onClick={() => setSelectedExamId(exam.id)}
+                                        className={`w-full text-left p-4 rounded-xl border transition-all ${
+                                            selectedExamId === exam.id 
+                                                ? 'bg-vg-light border-vg-navy shadow-sm' 
+                                                : 'bg-white border-gray-100 hover:border-gray-300'
+                                        }`}
+                                    >
+                                        <p className={`font-bold text-sm line-clamp-2 ${selectedExamId === exam.id ? 'text-vg-hover' : 'text-gray-700'}`}>
+                                            {exam.title || "Sem título"}
+                                        </p>
+                                        <p className="text-[10px] text-gray-400 font-bold uppercase mt-2">
+                                            {exam.bimester || "Geral"}
+                                        </p>
+                                    </button>
+                                ))
+                            )}
                         </div>
                     </div>
 
                     {/* Main View: Class Results */}
                     <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
-                        {selectedExam ? (
+                        {selectedExam && selectedClassObj ? (
                             <>
-                                <div className="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center shrink-0">
+                                <div className="p-6 border-b border-gray-100 bg-gray-50 flex flex-col sm:flex-row justify-between sm:items-center gap-4 shrink-0">
                                     <div>
-                                        <h2 className="text-xl font-bold text-gray-800">{selectedExam.title}</h2>
-                                        <p className="text-sm text-gray-500 font-medium mt-1">
-                                            Total de Correções Lançadas: <span className="font-bold text-vg-dark">{corrections.length}</span>
-                                        </p>
+                                        <h2 className="text-xl font-bold text-gray-800 line-clamp-1">{selectedExam.title}</h2>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className="bg-vg-navy text-white text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider">
+                                                {selectedClassObj.name}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[10px] uppercase font-bold text-gray-400">Provas Corrigidas</p>
+                                        <p className="text-2xl font-black text-vg-dark">{corrections.length} <span className="text-sm text-gray-400 font-medium">/ {selectedClassObj.students?.length || 0}</span></p>
                                     </div>
                                 </div>
 
@@ -118,9 +170,9 @@ export default function ResultadosPage() {
                                     {corrections.length === 0 ? (
                                         <div className="h-full flex flex-col items-center justify-center text-center">
                                             <Target size={48} className="text-gray-300 mb-4" />
-                                            <h3 className="text-lg font-bold text-gray-600 mb-2">Nenhuma correção lançada</h3>
+                                            <h3 className="text-lg font-bold text-gray-600 mb-2">Nenhuma correção nesta turma</h3>
                                             <p className="text-sm text-gray-400 max-w-sm">
-                                                Vá até o <Link href="/scanner" className="text-vg-navy font-bold hover:underline">Scanner</Link> e leia os cartões-resposta para popular este painel.
+                                                Nenhum aluno da turma <b>{selectedClassObj.name}</b> teve seu cartão-resposta lido no <Link href="/scanner" className="text-vg-navy font-bold hover:underline">Scanner</Link> para esta avaliação.
                                             </p>
                                         </div>
                                     ) : (
@@ -140,7 +192,6 @@ export default function ResultadosPage() {
                                                         <div className="flex justify-between items-start mb-4">
                                                             <div className="flex-1">
                                                                 <h3 className="font-bold text-gray-800 line-clamp-1 group-hover:text-vg-navy">{corr.studentName}</h3>
-                                                                <p className="text-[10px] uppercase font-bold text-gray-400 mt-1">Turma: {corr.classId}</p>
                                                             </div>
                                                             <div className={`text-2xl font-black ${gradeColor}`}>
                                                                 {corr.score.toFixed(1)}
@@ -162,8 +213,9 @@ export default function ResultadosPage() {
                                 </div>
                             </>
                         ) : (
-                            <div className="flex-1 flex items-center justify-center text-gray-400 font-medium">
-                                Selecione uma avaliação na lista lateral
+                            <div className="flex-1 flex flex-col items-center justify-center text-gray-400 font-medium">
+                                <Search size={40} className="text-gray-200 mb-4" />
+                                <p>Selecione uma turma e uma avaliação para ver os resultados.</p>
                             </div>
                         )}
                     </div>
