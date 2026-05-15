@@ -454,6 +454,27 @@ export default function ScannerPage() {
                                                 </button>
                                             )
                                         })}
+                                        {/* Botões para Branco e Nula */}
+                                        <div className="flex gap-1 ml-2 border-l border-gray-200 pl-2">
+                                            {['BRANCO', 'NULA'].map(opt => {
+                                                const isSelected = studentAnswers[idx] === opt;
+                                                const label = opt === 'BRANCO' ? 'BR' : 'NL';
+                                                return (
+                                                    <button
+                                                        key={opt}
+                                                        onClick={() => handleBubbleClick(idx, opt)}
+                                                        className={`w-8 h-8 rounded border-2 font-bold text-[10px] flex items-center justify-center transition-all ${
+                                                            isSelected 
+                                                                ? 'bg-red-100 border-red-500 text-red-700 shadow-sm' 
+                                                                : 'bg-white border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500'
+                                                        }`}
+                                                        title={opt}
+                                                    >
+                                                        {label}
+                                                    </button>
+                                                )
+                                            })}
+                                        </div>
                                     </div>
                                     <span className="text-[10px] uppercase font-bold text-gray-300 ml-auto">{q.subject || "Geral"}</span>
                                 </div>

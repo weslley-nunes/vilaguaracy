@@ -21,7 +21,13 @@ export async function POST(req) {
             Você é um corretor de provas automático altamente avançado. 
             Analise a imagem fornecida, que corresponde a uma prova ou cartão resposta de um aluno.
             O objetivo principal é extrair QUAIS alternativas (A, B, C, D, E) o aluno assinalou para cada questão.
-            Retorne APENAS um JSON no formato EXATO: {"answers": [{"q": 1, "r": "A"}, {"q": 2, "r": "C"}], "s": "Nome do Aluno", "ac": "codigo_acesso"}.
+            
+            REGRAS CRÍTICAS PARA IDENTIFICAÇÃO:
+            1. Se a questão estiver TOTALMENTE EM BRANCO (nenhuma bolinha pintada), retorne o valor "BRANCO". NÃO invente ou chute uma marcação.
+            2. Se a questão tiver DUAS OU MAIS bolinhas pintadas (rasurada, duplicada), retorne o valor "NULA".
+            3. Apenas retorne uma letra (A, B, C, D ou E) se a bolinha correspondente estiver claramente marcada pelo aluno.
+            
+            Retorne APENAS um JSON no formato EXATO: {"answers": [{"q": 1, "r": "A"}, {"q": 2, "r": "BRANCO"}, {"q": 3, "r": "NULA"}], "s": "Nome do Aluno", "ac": "codigo_acesso"}.
             Não adicione blocos de markdown e nenhum outro texto além do JSON.
         `;
 

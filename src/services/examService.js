@@ -149,6 +149,29 @@ export const ExamService = {
         });
     },
 
+    // List Corrections for an Exam
+    listCorrectionsByExam: async (examId) => {
+        if (!examId) return [];
+        try {
+            const q = query(
+                collection(db, "corrections"),
+                where("examId", "==", examId)
+            );
+            const snapshot = await getDocs(q);
+            const corrections = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            // Ordenação manual por data decrescente
+            return corrections.sort((a, b) => {
+                const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+                const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                return dateB - dateA;
+            });
+        } catch (e) {
+            console.error("Error listing corrections", e);
+            return [];
+        }
+    },
+
     // Delete Exam
     delete: async (examId) => {
         await deleteDoc(doc(db, "exams", examId));

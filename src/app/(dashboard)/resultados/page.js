@@ -41,13 +41,10 @@ export default function ResultadosPage() {
         
         const fetchCorrections = async () => {
             try {
-                const res = await fetch(`/api/corrections/list?examId=${selectedExamId}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    setCorrections(data.corrections);
-                }
+                const results = await ExamService.listCorrectionsByExam(selectedExamId);
+                setCorrections(results);
             } catch (e) {
-                console.error("Failed to load corrections");
+                console.error("Failed to load corrections", e);
             }
         };
         fetchCorrections();
