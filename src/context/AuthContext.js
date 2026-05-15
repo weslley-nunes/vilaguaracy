@@ -101,6 +101,8 @@ export const AuthContextProvider = ({ children }) => {
 
             if (loginEmail === 'admin') {
                 loginEmail = 'admin@vilaguaracy.com.br';
+            } else if (loginEmail === 'diretora') {
+                loginEmail = 'diretora@vilaguaracy.com.br';
             } else {
                 // Remove qualquer caractere que não seja número (pontos, traços)
                 const cpfOnlyNumbers = loginEmail.replace(/\D/g, '');
@@ -124,6 +126,8 @@ export const AuthContextProvider = ({ children }) => {
             
             if (loginEmail === 'admin') {
                 loginEmail = 'admin@vilaguaracy.com.br';
+            } else if (loginEmail === 'diretora') {
+                loginEmail = 'diretora@vilaguaracy.com.br';
             } else {
                 const cpfOnlyNumbers = loginEmail.replace(/\D/g, '');
                 if (cpfOnlyNumbers.length === 11) {
