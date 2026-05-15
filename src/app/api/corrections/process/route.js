@@ -11,10 +11,10 @@ export async function POST(req) {
         // Call Gemini for OMR with Fallback
         const apiKey = process.env.GEMINI_API_KEY;
         const models = [
+            "gemini-3.1-flash-lite", // 500 RPD limit, excellent for fast OMR
             "gemini-1.5-flash", 
             "gemini-1.5-flash-8b", 
-            "gemini-2.0-flash", 
-            "gemini-1.5-pro"
+            "gemini-3-flash"
         ];
         
         const prompt = `
