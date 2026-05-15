@@ -8,9 +8,14 @@ export async function POST(req) {
             return NextResponse.json({ error: "Missing examId or image" }, { status: 400 });
         }
 
-        // Call Gemini for OMR
+        // Call Gemini for OMR with Fallback
         const apiKey = process.env.GEMINI_API_KEY;
-        const model = "gemini-2.0-flash";
+        const models = [
+            "gemini-1.5-flash", 
+            "gemini-1.5-flash-8b", 
+            "gemini-2.0-flash", 
+            "gemini-1.5-pro"
+        ];
         
         const prompt = `
             Você é um corretor de provas automático altamente avançado. 
@@ -32,35 +37,59 @@ export async function POST(req) {
             }
         }
 
-        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [
-                        { text: prompt },
-                        { inline_data: { mime_type: mimeType, data: base64Data } }
-                    ]
-                }]
-            })
-        });
-
-        const geminiData = await geminiRes.json();
-        
-        if (geminiData.error) {
-            throw new Error(geminiData.error.message);
-        }
-
-        const aiText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
         let aiResults = null;
-        try {
-            aiResults = JSON.parse(aiText.replace(/```json|```/g, "").trim());
-        } catch (e) {
-            throw new Error("Invalid JSON format from AI");
+        let lastError = "Nenhum modelo respondeu corretamente.";
+
+        for (const model of models) {
+            try {
+                const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [
+                                { text: prompt },
+                                { inline_data: { mime_type: mimeType, data: base64Data } }
+                            ]
+                        }]
+                    })
+                });
+
+                const geminiData = await geminiRes.json();
+                
+                if (geminiData.error) {
+                    console.warn(`[GEMINI] Model ${model} failed: ${geminiData.error.message}`);
+                    lastError = geminiData.error.message;
+                    continue; // Tenta o próximo modelo
+                }
+
+                const aiText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+                
+                try {
+                    aiResults = JSON.parse(aiText.replace(/```json|```/g, "").trim());
+                } catch (e) {
+                    console.warn(`[GEMINI] Model ${model} returned invalid JSON: ${aiText}`);
+                    lastError = "Formato de JSON inválido retornado pela IA.";
+                    continue; // Tenta o próximo modelo
+                }
+
+                if (!aiResults || !aiResults.answers) {
+                    lastError = "Formato de resposta da IA inválido (sem answers).";
+                    continue; // Tenta o próximo modelo
+                }
+                
+                // Se chegou aqui, deu tudo certo!
+                console.log(`[GEMINI] Success with model: ${model}`);
+                break;
+
+            } catch (err) {
+                console.warn(`[GEMINI] Model ${model} crashed: ${err.message}`);
+                lastError = err.message;
+            }
         }
 
         if (!aiResults || !aiResults.answers) {
-            throw new Error("Formato de resposta da IA inválido.");
+            throw new Error(`Falha em todos os modelos de IA. Último erro: ${lastError}`);
         }
 
         return NextResponse.json({
