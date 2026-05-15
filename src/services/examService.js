@@ -172,6 +172,18 @@ export const ExamService = {
         }
     },
 
+    // List All Corrections (Global for management)
+    listAllCorrections: async () => {
+        try {
+            const q = query(collection(db, "corrections"));
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (e) {
+            console.error("Error listing all corrections", e);
+            return [];
+        }
+    },
+
     // Delete Exam
     delete: async (examId) => {
         await deleteDoc(doc(db, "exams", examId));

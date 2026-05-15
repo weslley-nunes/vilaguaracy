@@ -1,28 +1,142 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { Shield, Target, Users, BookOpen } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
-
-// Dados mockados para visualização do painel
-const mockSkillsData = [
-    { subject: 'EF06HI02', A: 85, B: 100, fullMark: 100, name: "Identificar Gênese" },
-    { subject: 'EF06HI03', A: 45, B: 100, fullMark: 100, name: "Conceito Antiguidade" },
-    { subject: 'EF07HI01', A: 90, B: 100, fullMark: 100, name: "Mundo Moderno" },
-    { subject: 'EM13CHS101', A: 30, B: 100, fullMark: 100, name: "Identidade Cultural" },
-    { subject: 'EM13CHS102', A: 70, B: 100, fullMark: 100, name: "Dinâmica Populacional" },
-];
-
-const mockClassData = [
-    { name: '1ª Série A', EF06HI02: 80, EF06HI03: 40, EM13CHS101: 25 },
-    { name: '1ª Série B', EF06HI02: 90, EF06HI03: 50, EM13CHS101: 35 },
-    { name: '2ª Série A', EF06HI02: 85, EF06HI03: 45, EM13CHS101: 30 },
-];
+import { ExamService } from "@/services/examService";
+import { getClassesByUser } from "@/services/classesService";
+import { Shield, Target, Users, BookOpen, Filter, Search, Loader2 } from "lucide-react";
+import { 
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
+    RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar 
+} from 'recharts';
 
 export default function HabilidadesPage() {
     const { user } = useAuth();
+    const [allCorrections, setAllCorrections] = useState([]);
+    const [exams, setExams] = useState([]);
+    const [classes, setClasses] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const [filters, setFilters] = useState({
+        classId: "",
+        subject: "",
+        bimester: "",
+        examId: ""
+    });
+
+    useEffect(() => {
+        async function loadData() {
+            setIsLoading(true);
+            try {
+                const [corrs, exms, clss] = await Promise.all([
+                    ExamService.listAllCorrections(),
+                    ExamService.listAll(),
+                    getClassesByUser()
+                ]);
+                setAllCorrections(corrs);
+                setExams(exms);
+                setClasses(clss);
+            } catch (e) {
+                console.error("Error loading dashboard data", e);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        loadData();
+    }, []);
+
+    // Derived Data: List of unique subjects and bimesters for filters
+    const subjects = useMemo(() => [...new Set(exams.map(e => e.subject).filter(Boolean))], [exams]);
+    const bimesters = useMemo(() => [...new Set(exams.map(e => e.bimester).filter(Boolean))], [exams]);
+
+    // Apply Filters
+    const filteredCorrections = useMemo(() => {
+        return allCorrections.filter(corr => {
+            const exam = exams.find(e => e.id === corr.examId);
+            
+            // Filter by Class (matching ID or Name for robustness)
+            if (filters.classId) {
+                const selectedClass = classes.find(cl => cl.id === filters.classId);
+                if (corr.classId !== filters.classId && corr.classId !== selectedClass?.name) return false;
+            }
+            
+            // Filter by Subject
+            if (filters.subject && exam?.subject !== filters.subject) return false;
+            
+            // Filter by Bimester
+            if (filters.bimester && exam?.bimester !== filters.bimester) return false;
+
+            // Filter by Exam ID
+            if (filters.examId && corr.examId !== filters.examId) return false;
+
+            return true;
+        });
+    }, [allCorrections, filters, exams, classes]);
+
+    // Process Skills Stats (for Radar Chart and Critical Table)
+    const processedSkills = useMemo(() => {
+        const stats = {};
+        filteredCorrections.forEach(corr => {
+            corr.details?.forEach(detail => {
+                const skillId = detail.habilidade || "N/A";
+                if (skillId === "N/A") return;
+                
+                if (!stats[skillId]) {
+                    stats[skillId] = { subject: skillId, name: skillId, hits: 0, total: 0 };
+                }
+                stats[skillId].total++;
+                if (detail.isCorrect) stats[skillId].hits++;
+            });
+        });
+
+        return Object.values(stats)
+            .map(s => ({
+                ...s,
+                A: Math.round((s.hits / s.total) * 100),
+                fullMark: 100
+            }))
+            .sort((a, b) => b.total - a.total); // Sort by volume
+    }, [filteredCorrections]);
+
+    // Process Class Data (for Bar Chart)
+    const processedClasses = useMemo(() => {
+        const classMap = {};
+        filteredCorrections.forEach(corr => {
+            // Find class name for the chart labels
+            const classObj = classes.find(cl => cl.id === corr.classId || cl.name === corr.classId);
+            const className = classObj?.name || corr.classId || "Outros";
+            
+            if (!classMap[className]) {
+                classMap[className] = { name: className, hits: 0, total: 0 };
+            }
+            
+            // Aggregate all questions for this class
+            corr.details?.forEach(d => {
+                classMap[className].total++;
+                if (d.isCorrect) classMap[className].hits++;
+                
+                // Also track top 3 skills for bar breakdown if needed
+                const skillId = d.habilidade;
+                if (skillId) {
+                    if (!classMap[className][skillId]) classMap[className][skillId] = { hits: 0, total: 0 };
+                    classMap[className][skillId].total++;
+                    if (d.isCorrect) classMap[className][skillId].hits++;
+                }
+            });
+        });
+
+        return Object.values(classMap).map(c => {
+            const result = { name: c.name, score: Math.round((c.hits / c.total) * 100) };
+            // Flatten skill percentages for the bars
+            Object.keys(c).forEach(key => {
+                if (c[key]?.total) {
+                    result[key] = Math.round((c[key].hits / c[key].total) * 100);
+                }
+            });
+            return result;
+        });
+    }, [filteredCorrections, classes]);
+
     const role = user?.role || "professor";
-    
     const isGestao = role === "gestao" || role === "coordenador";
 
     if (!isGestao) {
@@ -37,9 +151,19 @@ export default function HabilidadesPage() {
         );
     }
 
+    if (isLoading) {
+        return (
+            <div className="flex-1 flex flex-col items-center justify-center h-[60vh]">
+                <Loader2 size={40} className="animate-spin text-vg-navy mb-4" />
+                <p className="text-gray-500 font-medium">Processando inteligência pedagógica...</p>
+            </div>
+        );
+    }
+
     return (
-        <div className="max-w-6xl mx-auto space-y-8 pb-10">
-            <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div className="max-w-6xl mx-auto space-y-6 pb-10">
+            {/* Header with Stats */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                         <Target className="text-vg-dark" />
@@ -49,134 +173,178 @@ export default function HabilidadesPage() {
                 </div>
                 <div className="flex gap-4">
                     <div className="bg-vg-light px-4 py-2 rounded-xl border border-vg-light">
-                        <span className="block text-[10px] uppercase font-bold text-vg-dark">Total Provas</span>
-                        <span className="text-xl font-black text-vg-hover">1,245</span>
+                        <span className="block text-[10px] uppercase font-bold text-vg-dark">Provas Corrigidas</span>
+                        <span className="text-xl font-black text-vg-hover">{filteredCorrections.length}</span>
                     </div>
                     <div className="bg-green-50 px-4 py-2 rounded-xl border border-green-100">
-                        <span className="block text-[10px] uppercase font-bold text-green-600">Habilidades Mapeadas</span>
-                        <span className="text-xl font-black text-green-700">42</span>
+                        <span className="block text-[10px] uppercase font-bold text-green-600">Habilidades Ativas</span>
+                        <span className="text-xl font-black text-green-700">{processedSkills.length}</span>
                     </div>
                 </div>
+            </div>
+
+            {/* Filters Bar */}
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 flex items-center gap-1">
+                        <Users size={10} /> Turma
+                    </label>
+                    <select 
+                        value={filters.classId} 
+                        onChange={e => setFilters({...filters, classId: e.target.value})}
+                        className="w-full text-xs p-2 rounded-lg border border-gray-200 focus:border-vg-navy outline-none"
+                    >
+                        <option value="">Todas as Turmas</option>
+                        {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                </div>
+                <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 flex items-center gap-1">
+                        <BookOpen size={10} /> Disciplina
+                    </label>
+                    <select 
+                        value={filters.subject} 
+                        onChange={e => setFilters({...filters, subject: e.target.value})}
+                        className="w-full text-xs p-2 rounded-lg border border-gray-200 focus:border-vg-navy outline-none"
+                    >
+                        <option value="">Geral (Todas)</option>
+                        {subjects.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                </div>
+                <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 flex items-center gap-1">
+                        <Target size={10} /> Bimestre
+                    </label>
+                    <select 
+                        value={filters.bimester} 
+                        onChange={e => setFilters({...filters, bimester: e.target.value})}
+                        className="w-full text-xs p-2 rounded-lg border border-gray-200 focus:border-vg-navy outline-none"
+                    >
+                        <option value="">Anual / Todos</option>
+                        {bimesters.map(b => <option key={b} value={b}>{b}</option>)}
+                    </select>
+                </div>
+                <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 flex items-center gap-1">
+                        <Filter size={10} /> Avaliação
+                    </label>
+                    <select 
+                        value={filters.examId} 
+                        onChange={e => setFilters({...filters, examId: e.target.value})}
+                        className="w-full text-xs p-2 rounded-lg border border-gray-200 focus:border-vg-navy outline-none"
+                    >
+                        <option value="">Todas as Provas</option>
+                        {exams.map(ex => <option key={ex.id} value={ex.id}>{ex.title}</option>)}
+                    </select>
+                </div>
+                <button 
+                    onClick={() => setFilters({ classId: "", subject: "", bimester: "", examId: "" })}
+                    className="md:col-span-1 text-[10px] font-bold uppercase text-red-400 hover:text-red-600 transition-colors self-end pb-2"
+                >
+                    Limpar Filtros
+                </button>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Gráfico Radar de Proficiência */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                {/* Radar Chart */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 min-h-[400px]">
                     <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
                         <Target size={18} className="text-vg-dark" />
-                        Radar de Proficiência Geral
+                        Radar de Proficiência por Habilidade
                     </h3>
                     <div className="h-80 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={mockSkillsData}>
-                                <PolarGrid />
-                                <PolarAngleAxis dataKey="subject" tick={{ fill: '#666', fontSize: 12 }} />
-                                <PolarRadiusAxis angle={30} domain={[0, 100]} />
-                                <Radar name="Acertos (%)" dataKey="A" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
-                                <Tooltip />
-                                <Legend />
-                            </RadarChart>
-                        </ResponsiveContainer>
+                        {processedSkills.length === 0 ? (
+                            <div className="h-full flex items-center justify-center text-gray-400 italic text-sm">Sem dados suficientes para o radar</div>
+                        ) : (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={processedSkills.slice(0, 8)}>
+                                    <PolarGrid />
+                                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#666', fontSize: 10 }} />
+                                    <PolarRadiusAxis angle={30} domain={[0, 100]} />
+                                    <Radar name="Acertos (%)" dataKey="A" stroke="#2D4A3E" fill="#2D4A3E" fillOpacity={0.6} />
+                                    <Tooltip />
+                                    <Legend />
+                                </RadarChart>
+                            </ResponsiveContainer>
+                        )}
                     </div>
                 </div>
 
-                {/* Gráfico de Barras por Turma */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                {/* Bar Chart */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 min-h-[400px]">
                     <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
                         <Users size={18} className="text-vg-dark" />
-                        Desempenho por Turma
+                        Desempenho Geral das Turmas
                     </h3>
                     <div className="h-80 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={mockClassData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <Tooltip />
-                                <Legend />
-                                <Bar dataKey="EF06HI02" fill="#8884d8" name="EF06HI02 (%)" />
-                                <Bar dataKey="EF06HI03" fill="#82ca9d" name="EF06HI03 (%)" />
-                                <Bar dataKey="EM13CHS101" fill="#ffc658" name="EM13CHS101 (%)" />
-                            </BarChart>
-                        </ResponsiveContainer>
+                        {processedClasses.length === 0 ? (
+                            <div className="h-full flex items-center justify-center text-gray-400 italic text-sm">Sem dados para as turmas selecionadas</div>
+                        ) : (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={processedClasses} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                    <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                                    <YAxis />
+                                    <Tooltip />
+                                    <Legend />
+                                    <Bar dataKey="score" fill="#2D4A3E" name="Média Geral (%)" radius={[4, 4, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        )}
                     </div>
                 </div>
             </div>
 
-            {/* Alertas de Habilidades Críticas */}
+            {/* Critical Skills Table */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="p-6 border-b border-gray-100 bg-orange-50/50">
                     <h3 className="font-bold text-orange-800 flex items-center gap-2">
                         <BookOpen size={18} className="text-orange-500" />
                         Atenção: Habilidades com Baixo Desempenho
                     </h3>
-                    <p className="text-sm text-orange-600 mt-1">Habilidades com índice de acerto abaixo de 50% nas avaliações recentes.</p>
+                    <p className="text-sm text-orange-600 mt-1">Habilidades com índice de acerto abaixo de 50% nos filtros aplicados.</p>
                 </div>
-                <div className="p-0">
-                    <table className="w-full text-left">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left min-w-[600px]">
                         <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>
-                                <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Código / Habilidade</th>
-                                <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Turma Crítica</th>
-                                <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Acertos</th>
+                                <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Código Habilidade</th>
+                                <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Volume (Qtd)</th>
+                                <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Proficiência</th>
                                 <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Ação Recomendada</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {mockSkillsData.filter(s => s.A < 50).map((skill, i) => (
-                                <tr key={i} className="hover:bg-gray-50">
-                                    <td className="p-4">
-                                        <div className="font-bold text-gray-800">{skill.subject}</div>
-                                        <div className="text-xs text-gray-500">{skill.name}</div>
-                                    </td>
-                                    <td className="p-4 text-sm font-bold text-gray-600">1ª Série A</td>
-                                    <td className="p-4">
-                                        <span className="inline-flex px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-md">
-                                            {skill.A}%
-                                        </span>
-                                    </td>
-                                    <td className="p-4">
-                                        <button className="text-sm text-vg-dark font-bold hover:underline">Solicitar Revisão</button>
-                                    </td>
+                            {processedSkills.filter(s => s.A < 50).length === 0 ? (
+                                <tr>
+                                    <td colSpan="4" className="p-10 text-center text-gray-400 italic">Ótimo trabalho! Nenhuma habilidade crítica identificada com estes filtros.</td>
                                 </tr>
-                            ))}
+                            ) : (
+                                processedSkills.filter(s => s.A < 50).map((skill, i) => (
+                                    <tr key={i} className="hover:bg-gray-50">
+                                        <td className="p-4">
+                                            <div className="font-bold text-gray-800">{skill.subject}</div>
+                                            <div className="text-[10px] text-gray-400 uppercase font-bold">BNCC / Referencial</div>
+                                        </td>
+                                        <td className="p-4 text-sm font-bold text-gray-600">{skill.total} questões</td>
+                                        <td className="p-4">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-16 bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                                                    <div className="bg-red-500 h-full" style={{ width: `${skill.A}%` }}></div>
+                                                </div>
+                                                <span className="text-xs font-black text-red-600">{skill.A}%</span>
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <button className="text-xs text-vg-dark font-bold hover:underline px-3 py-1.5 bg-vg-light rounded-lg">Sugestão: Reforço Pedagógico</button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
             </div>
-
-            {/* Controle de Professores Pendentes */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-6 border-b border-gray-100">
-                    <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                        <Users size={18} className="text-gray-500" />
-                        Status de Envio de Provas
-                    </h3>
-                </div>
-                <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 border border-green-100 bg-green-50 rounded-xl">
-                        <h4 className="font-bold text-green-800 text-sm mb-2 uppercase tracking-wide">Enviaram Avaliações</h4>
-                        <ul className="space-y-2 text-sm text-green-700">
-                            <li className="flex items-center justify-between"><span>Carlos (Matemática)</span><CheckCircle className="w-4 h-4" /></li>
-                            <li className="flex items-center justify-between"><span>Ana (Biologia)</span><CheckCircle className="w-4 h-4" /></li>
-                        </ul>
-                    </div>
-                    <div className="p-4 border border-orange-100 bg-orange-50 rounded-xl">
-                        <h4 className="font-bold text-orange-800 text-sm mb-2 uppercase tracking-wide">Pendentes</h4>
-                        <ul className="space-y-2 text-sm text-orange-700">
-                            <li className="flex items-center justify-between"><span>Roberto (Física)</span><span className="text-xs font-bold">Falta Enviar</span></li>
-                            <li className="flex items-center justify-between"><span>Maria (História)</span><span className="text-xs font-bold">Falta Enviar</span></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
         </div>
     );
-}
-
-// Aux icon
-function CheckCircle({ className }) {
-    return (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-    )
 }
