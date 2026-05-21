@@ -39,6 +39,13 @@ export default function BuilderPage() {
         }
     }, []);
 
+    // Set default subject to collaborator's subject when loaded
+    useEffect(() => {
+        if (isCollaboratorUser && isCollaboratorUser.subject) {
+            setSubject(isCollaboratorUser.subject);
+        }
+    }, [isCollaboratorUser]);
+
     const loadExistingExam = async (id) => {
         const data = await ExamService.getById(id);
         if (data) {
@@ -57,6 +64,7 @@ export default function BuilderPage() {
     const [selectedClass, setSelectedClass] = useState("");
 
     const [collaborators, setCollaborators] = useState([]);
+    const isCollaboratorUser = user ? collaborators.find(c => c.userId === user.uid) : null;
     const [staffMembers, setStaffMembers] = useState([]);
     const [isCollaboratorModalOpen, setIsCollaboratorModalOpen] = useState(false);
     const [editingCollaborator, setEditingCollaborator] = useState(null); // { userId, name, subject, quota }
@@ -315,8 +323,8 @@ export default function BuilderPage() {
         // Validação de Cotas
         for (const collab of collaborators) {
             const count = examQuestions.filter(q => q.ownerId === collab.userId).length;
-            if (count !== Number(collab.quota)) {
-                return alert(`O bloco de ${collab.subject} (${collab.name}) está incompleto! Esperado: ${collab.quota}, Atual: ${count}`);
+            if (count > Number(collab.quota)) {
+                return alert(`O bloco de ${collab.subject} (${collab.name}) excedeu o limite máximo de ${collab.quota} questões! Atual: ${count}`);
             }
         }
 
@@ -401,7 +409,8 @@ export default function BuilderPage() {
         // Remove da lista de sugestões se estiver lá (por texto exato ou texto original antes da edição)
         setGeneratedQuestions(prev => prev.filter(q => q.text !== question.text && q.text !== question.originalText));
         
-        setExamQuestions([...examQuestions, { ...question, id: Date.now() + Math.random(), points: 1, ownerId: user.uid, subject: subject }]);
+        const qSubject = isCollaborator ? isCollaborator.subject : subject;
+        setExamQuestions([...examQuestions, { ...question, id: Date.now() + Math.random(), points: 1, ownerId: user.uid, subject: qSubject }]);
     };
 
     const updateQuestion = (id, updates) => {
@@ -485,7 +494,7 @@ export default function BuilderPage() {
                         <div className="grid grid-cols-1 mb-3">
                             <div>
                                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 block">Disciplina do Bloco</label>
-                                <select value={subject} onChange={(e) => setSubject(e.target.value)} className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-gray-100 bg-white dark:bg-white/5 focus:border-vg-dark outline-none text-sm font-bold">
+                                <select value={subject} onChange={(e) => setSubject(e.target.value)} disabled={!!isCollaboratorUser} className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-white/10 text-gray-900 dark:text-gray-100 bg-white dark:bg-white/5 focus:border-vg-dark outline-none text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed">
                                     {["Geral", "Matemática", "História", "Geografia", "Língua Portuguesa", "Língua Inglesa", "Arte", "Ciências", "Biologia", "Física", "Química", "Educação Física", "Filosofia", "Sociologia"].map(s => <option key={s} value={s}>{s}</option>)}
                                 </select>
                             </div>

@@ -11,7 +11,10 @@ export const ExamService = {
             ...examData,
             teacherId: user.uid,
             teacherName: user.displayName || "Professor",
-            collaborators: examData.collaborators || [], // Objetos {userId, subject, quota}
+            collaborators: (examData.collaborators || []).map(c => ({
+                ...c,
+                current: (examData.questions || []).filter(q => q.ownerId === c.userId).length
+            })), // Objetos {userId, subject, quota, current}
             collaboratorIds: (examData.collaborators || []).map(c => c.userId), // IDs para busca
             createdAt: new Date(),
             updatedAt: new Date(),

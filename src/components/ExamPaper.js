@@ -14,8 +14,90 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
     const lineHeight = isAdapted ? 'leading-relaxed' : '';
 
 
+    // 1. Group existing questions by block
+    const blocks = [];
+    questions.forEach(q => {
+        const subject = q.subject || (collaborators.find(c => c.userId === q.ownerId)?.subject) || (headerConfig?.subject || "Geral");
+        const blockKey = `${q.ownerId}-${subject}`;
+        
+        let block = blocks.find(b => b.key === blockKey);
+        if (!block) {
+            block = { key: blockKey, ownerId: q.ownerId, subject: subject, questions: [], quota: 0 };
+            blocks.push(block);
+        }
+        block.questions.push(q);
+    });
+
+    // 2. Add empty blocks for collaborators who haven't added questions yet, or for missing quota
+    collaborators.forEach(collab => {
+        const blockKey = `${collab.userId}-${collab.subject}`;
+        let block = blocks.find(b => b.key === blockKey);
+        if (!block) {
+            block = { key: blockKey, ownerId: collab.userId, subject: collab.subject, questions: [], quota: collab.quota };
+            blocks.push(block);
+        } else {
+            block.quota = collab.quota;
+        }
+    });
+
+    // 3. Sort blocks by subject order
+    const subjectOrder = [
+        "Arte",
+        "Educação Física",
+        "Língua Inglesa",
+        "Inglês",
+        "Língua Portuguesa",
+        "História",
+        "Geografia",
+        "Ciências",
+        "Matemática"
+    ];
+    
+    const getSubjectIndex = (subjectName) => {
+        if (!subjectName) return 999;
+        const lowerName = subjectName.toLowerCase().trim();
+        for (let i = 0; i < subjectOrder.length; i++) {
+            const ord = subjectOrder[i].toLowerCase();
+            if (lowerName === ord || lowerName.includes(ord) || ord.includes(lowerName)) {
+                return i;
+            }
+        }
+        return 999;
+    };
+    
+    blocks.sort((a, b) => getSubjectIndex(a.subject) - getSubjectIndex(b.subject));
+
+    // 4. Flatten blocks into a single list of questions (including placeholders)
+    const flatQuestions = [];
+    blocks.forEach(block => {
+        const questionsInBlock = [...block.questions];
+        const missingCount = Math.max(0, (block.quota || 0) - questionsInBlock.length);
+        
+        // Add actual questions
+        questionsInBlock.forEach(q => {
+            flatQuestions.push({
+                ...q,
+                subject: q.subject || block.subject,
+                blockSubject: block.subject,
+                blockOwnerId: block.ownerId
+            });
+        });
+        
+        // Add placeholders
+        for (let i = 0; i < missingCount; i++) {
+            flatQuestions.push({
+                isPlaceholder: true,
+                id: `placeholder-${block.key}-${i}`,
+                subject: block.subject,
+                blockSubject: block.subject,
+                blockOwnerId: block.ownerId,
+                type: 'multiple_choice' // Default to MC for bubble count
+            });
+        }
+    });
+
     // Group questions for Answer Grid (2 cols max in grid to avoid overflow)
-    const multipleChoiceQuestions = questions.filter(q => q.type === 'multiple_choice');
+    const multipleChoiceQuestions = flatQuestions.filter(q => q.type === 'multiple_choice' || q.isPlaceholder);
     const questionsPerCol = Math.ceil(multipleChoiceQuestions.length / 2) || 5;
     const gridColumns = [];
     if (multipleChoiceQuestions.length > 0) {
@@ -94,7 +176,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                     <h3 className="font-bold text-[11px] uppercase mb-1">📝 Orientações Importantes:</h3>
                     <p className={`text-[10px] ${isAdapted ? 'text-lg' : ''} font-medium text-gray-800`}>
                         Caneta: Utilize apenas caneta azul ou preta. <br/>
-                        Questões: A prova possui {questions.length} questões com alternativas de A a D. <br/>
+                        Questões: A prova possui {flatQuestions.length} questões com alternativas de A a D. <br/>
                         Resposta: Marque apenas uma alternativa por questão. <br/>
                         Gabarito: Pinte a bolinha correspondente à sua resposta com muito cuidado e sem ultrapassar as bordas. <br/><br/>
                         Nossa escola preparou você com muito carinho e dedicação. Acreditamos no seu esforço e confiamos plenamente no seu potencial! Boa avaliação!
@@ -221,33 +303,6 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
             {/* Questions List Grouped by Blocks */}
             <div className={spacing}>
                 {(() => {
-                    // 1. Group existing questions by block
-                    const blocks = [];
-                    questions.forEach(q => {
-                        const subject = q.subject || (collaborators.find(c => c.userId === q.ownerId)?.subject) || (headerConfig?.subject || "Geral");
-                        const blockKey = `${q.ownerId}-${subject}`;
-                        
-                        let block = blocks.find(b => b.key === blockKey);
-                        if (!block) {
-                            block = { key: blockKey, ownerId: q.ownerId, subject: subject, questions: [], quota: 0 };
-                            blocks.push(block);
-                        }
-                        block.questions.push(q);
-                    });
-
-                    // 2. Add empty blocks for collaborators who haven't added questions yet, or for missing quota
-                    collaborators.forEach(collab => {
-                        const blockKey = `${collab.userId}-${collab.subject}`;
-                        let block = blocks.find(b => b.key === blockKey);
-                        if (!block) {
-                            block = { key: blockKey, ownerId: collab.userId, subject: collab.subject, questions: [], quota: collab.quota };
-                            blocks.push(block);
-                        } else {
-                            block.quota = collab.quota;
-                        }
-                    });
-                    
-                    // 3. Render blocks
                     let globalQuestionIndex = 0;
                     return blocks.map((block, blockIdx) => {
                         const blockTitle = block.subject;
@@ -256,7 +311,14 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                         
                         // Add placeholders for missing questions
                         for (let i = 0; i < missingCount; i++) {
-                            questionsToRender.push({ isPlaceholder: true, id: `placeholder-${block.key}-${i}` });
+                            questionsToRender.push({
+                                isPlaceholder: true,
+                                id: `placeholder-${block.key}-${i}`,
+                                subject: block.subject,
+                                blockSubject: block.subject,
+                                blockOwnerId: block.ownerId,
+                                type: 'multiple_choice'
+                            });
                         }
 
                         if (questionsToRender.length === 0) return null;
@@ -272,7 +334,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                                 
                                 {questionsToRender.map((q, qIdx) => {
                                     const index = globalQuestionIndex++;
-                                    const totalExpected = questions.length + (blocks.reduce((acc, b) => acc + Math.max(0, (b.quota || 0) - b.questions.length), 0));
+                                    const totalExpected = flatQuestions.length;
                                     const autoPoints = totalExpected > 0 ? (totalScore / totalExpected) : 0;
                                     const questionPoints = scoringMode === 'auto' ? autoPoints : (Number(q.points) || 0);
 
