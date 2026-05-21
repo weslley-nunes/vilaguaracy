@@ -62,7 +62,7 @@ export default function BuilderPage() {
     const [editingCollaborator, setEditingCollaborator] = useState(null); // { userId, name, subject, quota }
 
     // Bimester
-    const [selectedBimester, setSelectedBimester] = useState("1º Bimestre");
+    const [selectedBimester, setSelectedBimester] = useState("2º Bimestre");
 
     const [scoringMode, setScoringMode] = useState("auto"); // "auto" | "manual"
     const [totalScore, setTotalScore] = useState(3);

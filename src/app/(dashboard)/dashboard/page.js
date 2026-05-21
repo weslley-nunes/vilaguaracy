@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
-import { FileText, Users, Plus, Loader2, AlertCircle, Search, CheckCircle } from "lucide-react";
+import { FileText, Users, Plus, Loader2, AlertCircle, Search, CheckCircle, Calendar, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getClassesByUser } from "@/services/classesService";
 import { ExamService } from "@/services/examService";
@@ -11,6 +11,7 @@ export default function Dashboard() {
     const { user, activeRole } = useAuth();
 
     const [stats, setStats] = useState({ examsCount: 0, studentsCount: 0 });
+    const [exams, setExams] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchId, setSearchId] = useState("");
     const router = useRouter();
@@ -33,12 +34,12 @@ export default function Dashboard() {
                 console.log("Dashboard: Loading stats for role:", activeRole, "isManagement:", isManagement);
                 
                 // Fetch exams and classes concurrently
-                const [exams, classes] = await Promise.all([
+                const [fetchedExams, classes] = await Promise.all([
                     isManagement ? ExamService.listAll() : ExamService.listByTeacher(user.uid),
                     getClassesByUser(user.uid)
                 ]);
 
-                console.log("Dashboard: Exams fetched:", exams.length);
+                console.log("Dashboard: Exams fetched:", fetchedExams.length);
 
                 // Calculate total students
                 let totalStudents = 0;
@@ -51,15 +52,16 @@ export default function Dashboard() {
                 // Find pending exams for teacher role
                 let pendingExams = [];
                 if (!isManagement) {
-                    pendingExams = exams.filter(exam => {
+                    pendingExams = fetchedExams.filter(exam => {
                         if (!exam.collaborators) return false;
                         const myBlock = exam.collaborators.find(c => c.userId === user.uid);
                         return myBlock && (myBlock.current < myBlock.quota);
                     });
                 }
 
+                setExams(fetchedExams);
                 setStats({
-                    examsCount: exams.length,
+                    examsCount: fetchedExams.length,
                     studentsCount: totalStudents,
                     pendingExams: pendingExams
                 });
@@ -144,6 +146,56 @@ export default function Dashboard() {
                             );
                         })}
                     </div>
+                </div>
+            )}
+            {/* Minhas Avaliações (2º Bimestre) */}
+            {!isLoading && (
+                <div className="mb-10 animate-fade-in">
+                    <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
+                        {activeRole === 'gestao' || activeRole === 'coordenador' ? 'Avaliações do 2º Bimestre' : 'Minhas Avaliações (2º Bimestre)'}
+                    </h2>
+                    {exams.length === 0 ? (
+                        <div className="text-center py-10 bg-white dark:bg-white/5 rounded-xl border border-dashed border-gray-200 dark:border-white/10">
+                            <FileText className="mx-auto text-gray-300 mb-2" size={40} />
+                            <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Nenhuma avaliação do 2º Bimestre encontrada</h3>
+                            <p className="text-xs text-gray-500 mb-4 font-medium">Crie sua primeira prova do 2º Bimestre.</p>
+                            <Link href="/builder" className="btn btn-primary py-1.5 px-4 text-xs">Criar Agora</Link>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {exams.slice(0, 6).map((exam) => (
+                                    <div key={exam.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-white/10 overflow-hidden hover:shadow-md transition-shadow group flex flex-col justify-between">
+                                        <div className="p-5 flex-1 flex flex-col justify-between">
+                                            <div>
+                                                <h3 className="font-bold text-base text-gray-800 dark:text-white mb-2 line-clamp-2">{exam.title}</h3>
+                                                <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mb-4">
+                                                    <span className="flex items-center gap-1"><FileText size={14} /> {exam.questions?.length || 0} Questões</span>
+                                                    <span className="flex items-center gap-1"><Calendar size={14} /> {new Date(exam.createdAt?.seconds * 1000).toLocaleDateString()}</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center justify-between border-t border-gray-100 dark:border-white/10 pt-4 mt-2">
+                                                <span className="text-[10px] font-bold text-gray-400 truncate max-w-[120px]">{exam.teacherName || "Professor"}</span>
+                                                <Link 
+                                                    href={`/builder?id=${exam.id}`}
+                                                    className="text-vg-dark dark:text-vg-navy hover:bg-vg-light dark:hover:bg-vg-navy/20 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors"
+                                                >
+                                                    Ver / Imprimir
+                                                </Link>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            {exams.length > 6 && (
+                                <div className="mt-4 text-right">
+                                    <Link href="/exams" className="text-sm font-bold text-vg-dark hover:underline inline-flex items-center gap-1">
+                                        Ver todas as {exams.length} avaliações <ArrowRight size={14} />
+                                    </Link>
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
             )}
 

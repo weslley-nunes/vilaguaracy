@@ -52,7 +52,7 @@ export const ExamService = {
         try {
             const q = query(collection(db, "exams"));
             const snapshot = await getDocs(q);
-            const exams = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const exams = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(e => e.bimester === "2º Bimestre");
             
             // Ordenação manual (createdAt) para as mais novas aparecerem primeiro
             return exams.sort((a, b) => {
@@ -80,7 +80,7 @@ export const ExamService = {
             );
             
             const snapshot = await getDocs(q);
-            const exams = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const exams = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(e => e.bimester === "2º Bimestre");
             
             // Ordenação manual (createdAt)
             return exams.sort((a, b) => {
