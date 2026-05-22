@@ -25,6 +25,16 @@ export default function BuilderPage() {
     const [examTitle, setExamTitle] = useState("Avaliação de História");
     const [isEditMode, setIsEditMode] = useState(false);
     const [examId, setExamId] = useState(null);
+    const [classes, setClasses] = useState([]);
+    const [selectedClass, setSelectedClass] = useState("");
+    const [collaborators, setCollaborators] = useState([]);
+    const [staffMembers, setStaffMembers] = useState([]);
+    const [isCollaboratorModalOpen, setIsCollaboratorModalOpen] = useState(false);
+    const [editingCollaborator, setEditingCollaborator] = useState(null); // { userId, name, subject, quota }
+    const [selectedBimester, setSelectedBimester] = useState("2º Bimestre");
+    const [selectedTemplate, setSelectedTemplate] = useState("");
+
+    const isCollaboratorUser = user ? collaborators.find(c => c.userId === user.uid) : null;
 
     // Load existing exam if ID in URL
     useEffect(() => {
@@ -59,18 +69,6 @@ export default function BuilderPage() {
             if (data.templateType) setSelectedTemplate(data.templateType);
         }
     };
-
-    const [classes, setClasses] = useState([]);
-    const [selectedClass, setSelectedClass] = useState("");
-
-    const [collaborators, setCollaborators] = useState([]);
-    const isCollaboratorUser = user ? collaborators.find(c => c.userId === user.uid) : null;
-    const [staffMembers, setStaffMembers] = useState([]);
-    const [isCollaboratorModalOpen, setIsCollaboratorModalOpen] = useState(false);
-    const [editingCollaborator, setEditingCollaborator] = useState(null); // { userId, name, subject, quota }
-
-    // Bimester
-    const [selectedBimester, setSelectedBimester] = useState("2º Bimestre");
 
     const [scoringMode, setScoringMode] = useState("auto"); // "auto" | "manual"
     const [totalScore, setTotalScore] = useState(3);
@@ -346,7 +344,8 @@ export default function BuilderPage() {
                 scoringMode,
                 totalScore: scoringMode === 'auto' ? (Number(totalScore) || 10) : examQuestions.reduce((sum, q) => sum + (Number(q.points) || 0), 0),
                 collaborators: collaborators,
-                bimester: selectedBimester
+                bimester: selectedBimester,
+                ...(selectedTemplate ? { templateType: selectedTemplate } : {})
             };
 
             if (isEditMode && examId) {
