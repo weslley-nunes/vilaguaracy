@@ -14,13 +14,12 @@ export async function POST(req) {
 
         const genAI = new GoogleGenerativeAI(apiKey);
 
-        // Lista robusta de modelos com fallback (caso a cota de um acabe, ele pula pro próximo)
+        // Lista robusta de modelos com fallback atualizada com os modelos mais recentes do Gemini 3.x e 2.x
         const modelsToTry = [
+            "gemini-3.5-flash",
+            "gemini-3.1-flash-lite",
             "gemini-2.5-flash",
-            "gemini-2.0-flash",
-            "gemini-1.5-flash",
             "gemini-2.0-flash-lite",
-            "gemini-1.5-pro",
             "gemini-2.5-pro"
         ];
 
@@ -28,7 +27,10 @@ export async function POST(req) {
 
         for (const modelName of modelsToTry) {
             try {
-                const model = genAI.getGenerativeModel({ model: modelName });
+                const model = genAI.getGenerativeModel({ 
+                    model: modelName,
+                    generationConfig: { responseMimeType: "application/json" }
+                });
 
                 const prompt = `
                     Você é um professor especialista criando uma prova.
@@ -75,6 +77,10 @@ export async function POST(req) {
         throw new Error(lastError || "Nenhum modelo funcionou.");
 
     } catch (error) {
-        return NextResponse.json({ error: `[ERRO CRÍTICO 2.0] ${error.message}` }, { status: 500 });
+        let msg = error.message;
+        if (msg.includes("429") || msg.includes("Quota exceeded") || msg.includes("quota") || msg.includes("Too Many Requests")) {
+            msg = "Limite de requisições excedido na IA (Quota Exceeded). Por favor, aguarde cerca de 1 minuto antes de tentar gerar novamente.";
+        }
+        return NextResponse.json({ error: `[ERRO CRÍTICO 2.0] ${msg}` }, { status: 500 });
     }
 }
