@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { ExamService } from "@/services/examService";
 import { getClassesByUser } from "@/services/classesService";
-import { Shield, Target, Users, BookOpen, Filter, Search, Loader2 } from "lucide-react";
+import { Shield, Target, Users, BookOpen, Filter, Search, Loader2, Trash2, RotateCcw, Edit3, X, AlertCircle } from "lucide-react";
 import { 
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
     RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar 
@@ -22,6 +22,11 @@ export default function HabilidadesPage() {
         bimester: "",
         examId: ""
     });
+
+    const [searchStudent, setSearchStudent] = useState("");
+    const [editingCorrection, setEditingCorrection] = useState(null);
+    const [editingAnswers, setEditingAnswers] = useState({});
+    const [isSavingAction, setIsSavingAction] = useState(false);
 
     useEffect(() => {
         async function loadData() {
@@ -135,6 +140,172 @@ export default function HabilidadesPage() {
             return result;
         });
     }, [filteredCorrections, classes]);
+
+    // Filter corrections for administration table
+    const paginatedCorrections = useMemo(() => {
+        return filteredCorrections.filter(corr => {
+            if (!searchStudent) return true;
+            return corr.studentName?.toLowerCase().includes(searchStudent.toLowerCase());
+        });
+    }, [filteredCorrections, searchStudent]);
+
+    // Administrative Handlers
+    const handleDeleteCorrection = async (corrId) => {
+        if (!window.confirm("Deseja realmente excluir permanentemente esta correção? Esta ação não pode ser desfeita.")) return;
+        setIsSavingAction(true);
+        try {
+            await ExamService.deleteCorrection(corrId);
+            setAllCorrections(prev => prev.filter(c => c.id !== corrId));
+        } catch (error) {
+            console.error("Erro ao excluir correção:", error);
+            alert("Erro ao excluir correção: " + error.message);
+        } finally {
+            setIsSavingAction(false);
+        }
+    };
+
+    const handleResetCorrection = async (corr) => {
+        if (!window.confirm("Deseja realmente zerar todas as respostas desta correção? Esta ação não pode ser desfeita e definirá a nota do aluno como zero.")) return;
+        setIsSavingAction(true);
+        try {
+            const exam = exams.find(e => e.id === corr.examId);
+            if (!exam) throw new Error("Avaliação correspondente não encontrada.");
+            
+            const totalCount = exam.questions?.length || corr.totalCount || 0;
+            const details = [];
+            const skillsStats = {};
+            const resetAnswers = {};
+
+            if (exam.questions) {
+                exam.questions.forEach((q, idx) => {
+                    resetAnswers[idx] = "BRANCO";
+                    
+                    const baseCorrect = q.correct || (exam.answerKey && exam.answerKey[idx]);
+                    const correctStr = String(baseCorrect || "").trim();
+                    const cleanCorrect = correctStr.length === 1 
+                        ? correctStr.toUpperCase() 
+                        : correctStr.replace(/^[a-zA-Z\d]+[).:-]\s*/, "").toUpperCase();
+
+                    details.push({
+                        questionIndex: idx,
+                        habilidade: q.habilidade || "N/A",
+                        subject: q.subject || "Geral",
+                        isCorrect: false,
+                        studentAnswer: "BRANCO",
+                        correctAnswer: cleanCorrect || correctStr
+                    });
+
+                    const skill = q.habilidade;
+                    if (skill && skill !== "N/A") {
+                        if (!skillsStats[skill]) {
+                            skillsStats[skill] = { correct: 0, total: 0 };
+                        }
+                        skillsStats[skill].total++;
+                    }
+                });
+            }
+
+            const updatedData = {
+                score: 0,
+                correctCount: 0,
+                totalCount,
+                details,
+                answers: resetAnswers,
+                skills: skillsStats
+            };
+
+            await ExamService.updateCorrection(corr.id, updatedData);
+            
+            setAllCorrections(prev => prev.map(c => c.id === corr.id ? { ...c, ...updatedData } : c));
+        } catch (error) {
+            console.error("Erro ao zerar correção:", error);
+            alert("Erro ao zerar correção: " + error.message);
+        } finally {
+            setIsSavingAction(false);
+        }
+    };
+
+    const handleEditCorrection = (corr) => {
+        setEditingCorrection(corr);
+        setEditingAnswers(corr.answers || {});
+    };
+
+    const handleEditBubbleClick = (qIndex, option) => {
+        setEditingAnswers(prev => ({
+            ...prev,
+            [qIndex]: prev[qIndex] === option ? null : option
+        }));
+    };
+
+    const handleSaveEdit = async () => {
+        if (!editingCorrection) return;
+        setIsSavingAction(true);
+        try {
+            const exam = exams.find(e => e.id === editingCorrection.examId);
+            if (!exam) throw new Error("Avaliação correspondente não encontrada.");
+
+            let correctCount = 0;
+            const details = [];
+            const skillsStats = {};
+            const totalCount = exam.questions?.length || editingCorrection.totalCount || 0;
+
+            if (exam.questions) {
+                exam.questions.forEach((q, idx) => {
+                    const studentAns = editingAnswers[idx];
+                    const baseCorrect = q.correct || (exam.answerKey && exam.answerKey[idx]);
+                    const correctStr = String(baseCorrect || "").trim();
+                    const cleanCorrect = correctStr.length === 1 
+                        ? correctStr.toUpperCase() 
+                        : correctStr.replace(/^[a-zA-Z\d]+[).:-]\s*/, "").toUpperCase();
+
+                    const isCorrect = studentAns === cleanCorrect || studentAns === correctStr.toUpperCase();
+                    if (isCorrect) correctCount++;
+
+                    details.push({
+                        questionIndex: idx,
+                        habilidade: q.habilidade || "N/A",
+                        subject: q.subject || "Geral",
+                        isCorrect,
+                        studentAnswer: studentAns || null,
+                        correctAnswer: cleanCorrect || correctStr
+                    });
+
+                    const skill = q.habilidade;
+                    if (skill && skill !== "N/A") {
+                        if (!skillsStats[skill]) {
+                            skillsStats[skill] = { correct: 0, total: 0 };
+                        }
+                        skillsStats[skill].total++;
+                        if (isCorrect) {
+                            skillsStats[skill].correct++;
+                        }
+                    }
+                });
+            }
+
+            const rawScore = exam.totalScore || 10;
+            const score = (correctCount / totalCount) * rawScore;
+
+            const updatedData = {
+                score,
+                correctCount,
+                totalCount,
+                details,
+                answers: editingAnswers,
+                skills: skillsStats
+            };
+
+            await ExamService.updateCorrection(editingCorrection.id, updatedData);
+
+            setAllCorrections(prev => prev.map(c => c.id === editingCorrection.id ? { ...c, ...updatedData } : c));
+            setEditingCorrection(null);
+        } catch (error) {
+            console.error("Erro ao atualizar correção:", error);
+            alert("Erro ao atualizar correção: " + error.message);
+        } finally {
+            setIsSavingAction(false);
+        }
+    };
 
     const role = user?.role || "professor";
     const isGestao = role === "gestao" || role === "coordenador";
@@ -345,6 +516,256 @@ export default function HabilidadesPage() {
                     </table>
                 </div>
             </div>
+
+            {/* Administrative Correction Management Table */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6 border-b border-gray-100 bg-vg-light/20 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                    <div>
+                        <h3 className="font-bold text-vg-dark flex items-center gap-2">
+                            <Shield size={18} className="text-vg-dark" />
+                            Painel Administrativo: Gerenciar Correções
+                        </h3>
+                        <p className="text-xs text-gray-500 mt-1">Exclua, zere ou edite os cartões de respostas dos alunos caso existam divergências.</p>
+                    </div>
+                    <div className="relative max-w-xs w-full">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                        <input 
+                            type="text" 
+                            placeholder="Buscar aluno..." 
+                            value={searchStudent}
+                            onChange={e => setSearchStudent(e.target.value)}
+                            className="w-full text-xs pl-9 pr-4 py-2 rounded-lg border border-gray-200 focus:border-vg-navy outline-none"
+                        />
+                    </div>
+                </div>
+                
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left min-w-[700px]">
+                        <thead className="bg-gray-50 border-b border-gray-100">
+                            <tr>
+                                <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Aluno</th>
+                                <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Turma</th>
+                                <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Avaliação</th>
+                                <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Acertos</th>
+                                <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Nota</th>
+                                <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {paginatedCorrections.length === 0 ? (
+                                <tr>
+                                    <td colSpan="6" className="p-10 text-center text-gray-400 italic">Nenhuma correção encontrada.</td>
+                                </tr>
+                            ) : (
+                                paginatedCorrections.map((corr) => {
+                                    const exam = exams.find(e => e.id === corr.examId);
+                                    
+                                    // Class Name mapping
+                                    const classObj = classes.find(cl => cl.id === corr.classId || cl.name === corr.classId);
+                                    const className = classObj?.name || corr.classId || "Geral";
+                                    
+                                    const hitRate = corr.totalCount > 0 ? (corr.correctCount / corr.totalCount) * 100 : 0;
+                                    let gradeColor = "text-red-600";
+                                    if (hitRate >= 70) gradeColor = "text-green-600";
+                                    else if (hitRate >= 50) gradeColor = "text-yellow-600";
+
+                                    return (
+                                        <tr key={corr.id} className="hover:bg-gray-50/50">
+                                            <td className="p-4 font-bold text-gray-800 text-sm">{corr.studentName}</td>
+                                            <td className="p-4">
+                                                <span className="bg-vg-light text-vg-hover text-[10px] font-bold px-2 py-1 rounded-full uppercase">
+                                                    {className}
+                                                </span>
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="text-xs font-bold text-gray-700 max-w-[200px] truncate" title={exam?.title || "Sem título"}>
+                                                    {exam?.title || "Sem título"}
+                                                </div>
+                                                <div className="text-[10px] text-gray-400 font-mono mt-0.5">ID: {corr.examId?.slice(-6)}</div>
+                                            </td>
+                                            <td className="p-4 text-xs font-bold text-gray-600">
+                                                {corr.correctCount} / {corr.totalCount}
+                                            </td>
+                                            <td className="p-4 text-sm font-black">
+                                                <span className={gradeColor}>{corr.score?.toFixed(1) || "0.0"}</span>
+                                            </td>
+                                            <td className="p-4 text-right">
+                                                <div className="flex justify-end gap-1.5">
+                                                    <button 
+                                                        onClick={() => handleEditCorrection(corr)}
+                                                        disabled={isSavingAction}
+                                                        className="text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition-colors disabled:opacity-50"
+                                                        title="Editar Resultados"
+                                                    >
+                                                        <Edit3 size={16} />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleResetCorrection(corr)}
+                                                        disabled={isSavingAction}
+                                                        className="text-orange-600 hover:bg-orange-50 p-2 rounded-lg transition-colors disabled:opacity-50"
+                                                        title="Zerar Correção"
+                                                    >
+                                                        <RotateCcw size={16} />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleDeleteCorrection(corr.id)}
+                                                        disabled={isSavingAction}
+                                                        className="text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors disabled:opacity-50"
+                                                        title="Excluir Correção"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Edit Modal Overlay */}
+            {editingCorrection && (
+                <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                        {/* Modal Header */}
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
+                            <div>
+                                <span className="text-[10px] font-black uppercase tracking-widest bg-vg-light text-vg-hover px-2 py-1 rounded-full mb-1 inline-block">
+                                    Editar Resultados
+                                </span>
+                                <h2 className="text-xl font-bold text-gray-800">{editingCorrection.studentName}</h2>
+                                <p className="text-xs text-gray-500 mt-0.5">
+                                    Prova: {exams.find(e => e.id === editingCorrection.examId)?.title || "Sem título"}
+                                </p>
+                            </div>
+                            <button 
+                                onClick={() => setEditingCorrection(null)}
+                                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar space-y-4">
+                            <div className="bg-yellow-50 border border-yellow-100 p-4 rounded-2xl flex gap-3 text-yellow-800">
+                                <AlertCircle size={20} className="shrink-0 text-yellow-600" />
+                                <div>
+                                    <h4 className="font-bold text-sm">Lançamento de Respostas</h4>
+                                    <p className="text-xs mt-0.5">
+                                        Modifique as alternativas assinaladas pelo aluno. A nota final e as proficiências por habilidade serão recalculadas automaticamente.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2.5">
+                                {(() => {
+                                    const exam = exams.find(e => e.id === editingCorrection.examId);
+                                    if (!exam?.questions) return <p className="text-center text-xs text-gray-400">Questões não carregadas.</p>;
+
+                                    return exam.questions.map((q, idx) => {
+                                        const baseCorrect = q.correct || (exam.answerKey && exam.answerKey[idx]);
+                                        const correctStr = String(baseCorrect || "").trim();
+                                        const cleanCorrect = correctStr.length === 1 
+                                            ? correctStr.toUpperCase() 
+                                            : correctStr.replace(/^[a-zA-Z\d]+[).:-]\s*/, "").toUpperCase();
+
+                                        return (
+                                            <div 
+                                                key={idx} 
+                                                className="p-3.5 rounded-xl border border-gray-100 hover:border-gray-200 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-vg-light text-vg-dark font-black flex items-center justify-center shrink-0 text-xs">
+                                                        {idx + 1}
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="text-[9px] font-bold uppercase tracking-wider bg-gray-800 text-white px-1.5 py-0.5 rounded">
+                                                                {q.habilidade || "N/A"}
+                                                            </span>
+                                                            <span className="text-[9px] uppercase font-bold text-gray-400">
+                                                                {q.subject || "Geral"}
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-xs font-bold text-green-600 mt-0.5">
+                                                            Gabarito: {cleanCorrect}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex flex-wrap items-center gap-1">
+                                                    {['A', 'B', 'C', 'D', 'E'].map(opt => {
+                                                        const hasOption = q.options && q.options.length >= (opt.charCodeAt(0) - 64);
+                                                        if (!hasOption && opt === 'E') return null;
+
+                                                        const isSelected = editingAnswers[idx] === opt;
+                                                        return (
+                                                            <button
+                                                                key={opt}
+                                                                onClick={() => handleEditBubbleClick(idx, opt)}
+                                                                className={`w-7 h-7 rounded-full border-2 font-bold text-xs flex items-center justify-center transition-all ${
+                                                                    isSelected 
+                                                                        ? 'bg-vg-navy border-vg-navy text-white shadow-sm' 
+                                                                        : 'bg-white border-gray-300 text-gray-500 hover:border-vg-navy hover:text-vg-navy'
+                                                                }`}
+                                                            >
+                                                                {opt}
+                                                            </button>
+                                                        )
+                                                    })}
+                                                    <div className="flex gap-1 border-l border-gray-200 pl-1.5 ml-1">
+                                                        {['BRANCO', 'NULA'].map(opt => {
+                                                            const isSelected = editingAnswers[idx] === opt;
+                                                            const label = opt === 'BRANCO' ? 'BR' : 'NL';
+                                                            return (
+                                                                <button
+                                                                    key={opt}
+                                                                    onClick={() => handleEditBubbleClick(idx, opt)}
+                                                                    className={`w-7 h-7 rounded border font-bold text-[9px] flex items-center justify-center transition-all ${
+                                                                        isSelected 
+                                                                            ? 'bg-red-50 border-red-400 text-red-700 shadow-sm' 
+                                                                            : 'bg-white border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500'
+                                                                    }`}
+                                                                    title={opt}
+                                                                >
+                                                                    {label}
+                                                                </button>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    });
+                                })()}
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-4 border-t border-gray-100 shrink-0 bg-gray-50 flex gap-3">
+                            <button 
+                                onClick={() => setEditingCorrection(null)}
+                                disabled={isSavingAction}
+                                className="flex-1 text-xs py-3 border border-gray-300 hover:bg-gray-100 rounded-xl transition-all font-bold text-gray-600 disabled:opacity-50"
+                            >
+                                Cancelar
+                            </button>
+                            <button 
+                                onClick={handleSaveEdit}
+                                disabled={isSavingAction}
+                                className="flex-1 text-xs py-3 bg-vg-dark hover:bg-vg-hover text-white rounded-xl transition-all font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                                {isSavingAction ? <Loader2 size={14} className="animate-spin" /> : null}
+                                Salvar Alterações
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

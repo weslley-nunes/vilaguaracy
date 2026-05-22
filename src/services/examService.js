@@ -190,5 +190,21 @@ export const ExamService = {
     // Delete Exam
     delete: async (examId) => {
         await deleteDoc(doc(db, "exams", examId));
+    },
+
+    // Delete Correction
+    deleteCorrection: async (correctionId) => {
+        if (!correctionId) throw new Error("ID da correção não fornecido.");
+        await deleteDoc(doc(db, "corrections", correctionId));
+    },
+
+    // Update Correction
+    updateCorrection: async (correctionId, updatedData) => {
+        if (!correctionId) throw new Error("ID da correção não fornecido.");
+        const docRef = doc(db, "corrections", correctionId);
+        await updateDoc(docRef, {
+            ...updatedData,
+            updatedAt: new Date()
+        });
     }
 };
