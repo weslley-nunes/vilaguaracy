@@ -1,10 +1,14 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const apiKey = "AIzaSyCQbxNfwSpv-tuQlKi5wKGzxGi6aOHf3tY";
+require("dotenv").config({ path: ".env.local" });
+const apiKey = process.env.GEMINI_API_KEY;
 
 async function testPrompt() {
     try {
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+        const model = genAI.getGenerativeModel({ 
+            model: "gemini-3.5-flash",
+            generationConfig: { responseMimeType: "application/json" }
+        });
 
         const prompt = `
                     Você é um professor especialista criando uma prova.

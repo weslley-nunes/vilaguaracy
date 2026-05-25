@@ -235,9 +235,9 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
 
                     <p className="text-center text-sm font-bold uppercase mb-4 tracking-widest border-b border-black pb-2 w-full">Folha de Respostas Oficial</p>
                     
-                    <div className="w-full px-4 mb-2">
+                    <div className="w-full px-2 mb-2">
                         {/* Bubbles Grid Section Grouped by Blocks */}
-                        <div className="w-full flex flex-wrap gap-4 justify-center">
+                        <div className="w-full flex flex-wrap gap-x-2 gap-y-3 justify-center">
                             {(() => {
                                 const columnBlocks = [];
                                 let globalIdx = 1;
@@ -269,7 +269,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                                 });
                                 
                                 return columnBlocks.map((block, bIdx) => (
-                                    <div key={bIdx} className="border border-gray-100 p-2 rounded bg-gray-50/50 print:bg-transparent print:border-black min-w-[120px]">
+                                    <div key={bIdx} className="border border-gray-100 p-1.5 rounded bg-gray-50/50 print:bg-transparent print:border-black min-w-[114px]">
                                         <p className="text-[9px] font-black uppercase mb-2 border-b border-gray-200 pb-1 print:border-black truncate">{block.subject}</p>
                                         <div className="space-y-1.5">
                                             {Array.from({ length: block.count }).map((_, i) => {
@@ -294,7 +294,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                         </div>
                     </div>
                     
-                    <div className="mt-6 text-[10px] font-bold uppercase text-gray-500 text-center">
+                    <div className="mt-4 text-[10px] font-bold uppercase text-gray-500 text-center">
                         Mantenha esta área dentro do quadro da câmera para correção automática
                     </div>
                 </div>
