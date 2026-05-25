@@ -1,7 +1,7 @@
 import React, { forwardRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 
-const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConfig, showAnswers = false, isAdapted = false, scoringMode = "auto", totalScore = 3, onQuestionChange = null, printConfig = {} }, ref) => {
+const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConfig, showAnswers = false, isAdapted = false, scoringMode = "auto", totalScore = 3, onQuestionChange = null, onQuestionEdit = null, onQuestionDelete = null, printConfig = {} }, ref) => {
     // Determine exam ID for QR (fallback to timestamp if not provided in headerConfig)
     const examId = headerConfig?.examId || "PREVIEW";
     const studentName = headerConfig?.studentName || "";
@@ -393,7 +393,31 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                                                                 )}
                                                             </p>
                                                         </div>
-                                                        <div className="flex items-center gap-1 shrink-0 whitespace-nowrap text-gray-500">
+                                                        <div className="flex items-center gap-2 shrink-0 whitespace-nowrap text-gray-500">
+                                                            {/* Action buttons (only in builder) */}
+                                                            {onQuestionChange && (
+                                                                <div className="print:hidden flex items-center gap-1 mr-1">
+                                                                    {onQuestionEdit && (
+                                                                        <button
+                                                                            onClick={() => onQuestionEdit(q)}
+                                                                            className="p-1 rounded text-gray-400 hover:text-vg-dark hover:bg-gray-100 transition-colors"
+                                                                            title="Editar Questão"
+                                                                        >
+                                                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                                                                        </button>
+                                                                    )}
+                                                                    {onQuestionDelete && (
+                                                                        <button
+                                                                            onClick={() => onQuestionDelete(q.id)}
+                                                                            className="p-1 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                                                            title="Excluir Questão"
+                                                                        >
+                                                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                            )}
+
                                                             {scoringMode === 'manual' && onQuestionChange ? (
                                                                 <div className="print:hidden flex items-center gap-1 bg-vg-light/50 p-1 rounded-lg border border-vg-light">
                                                                     <input

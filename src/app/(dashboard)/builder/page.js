@@ -102,6 +102,7 @@ export default function BuilderPage() {
 
     // Manual Question State
     const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+    const [editingQuestionId, setEditingQuestionId] = useState(null);
     const [manualQuestion, setManualQuestion] = useState({
         text: "",
         type: "multiple_choice",
@@ -456,13 +457,44 @@ export default function BuilderPage() {
         reader.readAsDataURL(file);
     };
 
+    const startEditQuestion = (question) => {
+        setEditingQuestionId(question.id);
+        setManualQuestion({
+            text: question.text || "",
+            type: question.type || "multiple_choice",
+            options: Array.isArray(question.options) ? [...question.options] : ["", "", "", ""],
+            correct: question.correct || "",
+            imageUrl: question.imageUrl || "",
+            imageSize: question.imageSize || "medium",
+            habilidade: question.habilidade || ""
+        });
+        setIsManualModalOpen(true);
+    };
+
+    const removeQuestion = (id) => {
+        if (confirm("Tem certeza que deseja excluir esta questão da prova?")) {
+            setExamQuestions(examQuestions.filter(q => q.id !== id));
+        }
+    };
+
+    const closeManualModal = () => {
+        setIsManualModalOpen(false);
+        setEditingQuestionId(null);
+    };
+
     const openManualModal = () => {
+        setEditingQuestionId(null);
         setManualQuestion({ text: "", imageUrl: "", imageSize: "medium", type: "multiple_choice", options: ["", "", "", ""], correct: "" });
         setIsManualModalOpen(true);
     };
     const handleManualSave = () => {
         if (!manualQuestion.text) return alert("Digite o enunciado!");
-        addToExam(manualQuestion);
+        if (editingQuestionId) {
+            updateQuestion(editingQuestionId, manualQuestion);
+            setEditingQuestionId(null);
+        } else {
+            addToExam(manualQuestion);
+        }
         setIsManualModalOpen(false);
     };
     const updateOption = (index, value) => {
@@ -687,6 +719,8 @@ export default function BuilderPage() {
                             scoringMode={scoringMode}
                             totalScore={Number(totalScore) || 10}
                             onQuestionChange={updateQuestion}
+                            onQuestionEdit={startEditQuestion}
+                            onQuestionDelete={removeQuestion}
                             printConfig={printConfig}
                         />
                     </div>
@@ -966,8 +1000,8 @@ export default function BuilderPage() {
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in">
                         {/* ... Modal Content ... */}
                         <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                            <h3 className="font-bold text-lg text-gray-800">Adicionar Questão Manual</h3>
-                            <button onClick={() => setIsManualModalOpen(false)} className="text-gray-400 hover:text-red-500"><Trash size={20} className="rotate-45" /></button>
+                            <h3 className="font-bold text-lg text-gray-800">{editingQuestionId ? "Editar Questão" : "Adicionar Questão Manual"}</h3>
+                            <button onClick={closeManualModal} className="text-gray-400 hover:text-red-500"><Trash size={20} className="rotate-45" /></button>
                         </div>
                         <div className="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar space-y-4">
                             <div><label className="block text-sm font-bold text-gray-700 mb-1">Enunciado</label><textarea value={manualQuestion.text} onChange={(e) => setManualQuestion({ ...manualQuestion, text: e.target.value })} className="w-full p-3 rounded-lg border border-gray-300 focus:border-vg-dark outline-none min-h-[100px]" placeholder="Digite a pergunta aqui..." /></div>
@@ -1020,8 +1054,8 @@ export default function BuilderPage() {
                             )}
                         </div>
                         <div className="p-5 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
-                            <button onClick={() => setIsManualModalOpen(false)} className="btn btn-outline text-gray-600 border-gray-300 hover:bg-gray-100">Cancelar</button>
-                            <button onClick={handleManualSave} className="btn btn-primary px-8">Adicionar na Prova</button>
+                            <button onClick={closeManualModal} className="btn btn-outline text-gray-600 border-gray-300 hover:bg-gray-100">Cancelar</button>
+                            <button onClick={handleManualSave} className="btn btn-primary px-8">{editingQuestionId ? "Salvar Alterações" : "Adicionar na Prova"}</button>
                         </div>
                     </div>
                 </div>
