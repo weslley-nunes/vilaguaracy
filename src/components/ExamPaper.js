@@ -6,6 +6,23 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
     const examId = headerConfig?.examId || "PREVIEW";
     const studentName = headerConfig?.studentName || "";
 
+    // Extract class from title if className is empty or generic
+    let displayClassName = headerConfig?.className;
+    if (!displayClassName || displayClassName.trim() === "" || displayClassName.trim() === "82.____") {
+        // Try to match "Turma [Nome da Turma]"
+        const turmaMatch = title?.match(/turma\s+([^–\-—]+)/i);
+        if (turmaMatch) {
+            displayClassName = turmaMatch[1].trim();
+        } else {
+            // Try to match standard XX.XX pattern (e.g., 92.01)
+            const patternMatch = title?.match(/\b\d{2}\.\d{2}\b/);
+            if (patternMatch) {
+                displayClassName = patternMatch[0];
+            }
+        }
+    }
+    const finalClassName = displayClassName || "82.____";
+
     // Accessibility Styles
     const fontStyle = isAdapted ? { fontFamily: 'Verdana, sans-serif' } : { fontFamily: 'Times New Roman, serif' };
     const baseTextSize = isAdapted ? 'text-lg' : 'text-base';
@@ -143,7 +160,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                             <div className="flex justify-between w-[95%]">
                                 <p>Gurupi, _____ / _____ / 2026</p>
                                 <p>{headerConfig?.bimester || "2º Bimestre"}</p>
-                                <p>Turma: {headerConfig?.className || "82.____"}</p>
+                                <p>Turma: {finalClassName}</p>
                             </div>
 
                             {/* Row 3 */}
