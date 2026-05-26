@@ -71,7 +71,14 @@ export default function BuilderPage() {
         const data = await ExamService.getById(id);
         if (data) {
             setExamTitle(data.title || "Avaliação de História");
-            setExamQuestions(data.questions || []);
+            
+            // Garante que cada questão carregada possua um ID único para evitar erros na edição
+            const sanitizedQuestions = (data.questions || []).map((q, idx) => ({
+                ...q,
+                id: q.id !== undefined && q.id !== null ? q.id : `loaded-${Date.now()}-${idx}-${Math.random()}`
+            }));
+            setExamQuestions(sanitizedQuestions);
+            
             setHeaderConfig(data.headerConfig || headerConfig);
             setCollaborators(data.collaborators || []);
             setScoringMode(data.scoringMode || "auto");
@@ -425,7 +432,7 @@ export default function BuilderPage() {
     };
 
     const updateQuestion = (id, updates) => {
-        setExamQuestions(examQuestions.map(q => q.id === id ? { ...q, ...updates } : q));
+        setExamQuestions(examQuestions.map(q => q.id == id ? { ...q, ...updates } : q));
     };
 
     // Manual Question Helpers
@@ -484,7 +491,7 @@ export default function BuilderPage() {
 
     const removeQuestion = (id) => {
         if (confirm("Tem certeza que deseja excluir esta questão da prova?")) {
-            setExamQuestions(examQuestions.filter(q => q.id !== id));
+            setExamQuestions(examQuestions.filter(q => q.id != id));
         }
     };
 
@@ -500,7 +507,7 @@ export default function BuilderPage() {
     };
     const handleManualSave = () => {
         if (!manualQuestion.text) return alert("Digite o enunciado!");
-        if (editingQuestionId) {
+        if (editingQuestionId !== null && editingQuestionId !== undefined) {
             updateQuestion(editingQuestionId, manualQuestion);
             setEditingQuestionId(null);
         } else {
