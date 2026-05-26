@@ -26,22 +26,31 @@ export default function ResultadosPage() {
     const loadData = async () => {
         setIsLoading(true);
         try {
+            // Check if user is coordinator or gestao
+            const isCoordinator = user?.role === "gestao" || user?.role === "coordenador";
+            
             // Load exams and classes
             const [examList, classList] = await Promise.all([
-                ExamService.listByTeacher(user?.uid),
+                isCoordinator ? ExamService.listAll() : ExamService.listByTeacher(user?.uid),
                 getClassesByUser()
             ]);
+            
+            // Filter classes client-side: coordinators see all, teachers only see their own
+            const filteredClassList = isCoordinator
+                ? classList
+                : classList.filter(cls => cls.userId === user?.uid);
+
             setExams(examList);
-            setClasses(classList);
+            setClasses(filteredClassList);
             
             // Read query parameters for class and exam selection
             const urlParams = new URLSearchParams(window.location.search);
             const qExamId = urlParams.get("examId");
             const qClassId = urlParams.get("classId");
             
-            let classIdToSelect = classList.length > 0 ? classList[0].id : "";
+            let classIdToSelect = filteredClassList.length > 0 ? filteredClassList[0].id : "";
             if (qClassId) {
-                const matchedClass = classList.find(c => c.id === qClassId || c.name === qClassId);
+                const matchedClass = filteredClassList.find(c => c.id === qClassId || c.name === qClassId);
                 if (matchedClass) {
                     classIdToSelect = matchedClass.id;
                 }
@@ -105,8 +114,54 @@ export default function ResultadosPage() {
         fetchCorrections();
     }, [selectedExamId, selectedClassId, classes]);
 
-    const selectedExam = exams.find(e => e.id === selectedExamId);
+    // Auto-select the first exam of the selected class when selectedClassId changes
+    useEffect(() => {
+        if (!selectedClassId || exams.length === 0 || classes.length === 0) return;
+        
+        const selectedClass = classes.find(c => c.id === selectedClassId);
+        const filtered = exams.filter(exam => {
+            if (exam.classId === selectedClassId) return true;
+            if (selectedClass && exam.className === selectedClass.name) return true;
+            if (selectedClass && exam.title?.includes(selectedClass.name)) return true;
+            return false;
+        });
+
+        // Check if query parameter has a specific exam to select
+        const urlParams = new URLSearchParams(window.location.search);
+        const qExamId = urlParams.get("examId");
+
+        if (qExamId) {
+            const matchedExam = filtered.find(e => e.id === qExamId || e.shortId === qExamId);
+            if (matchedExam) {
+                setSelectedExamId(matchedExam.id);
+                return;
+            }
+        }
+
+        // If the current selected exam is in the filtered list, keep it.
+        // Otherwise, auto-select the first exam.
+        if (filtered.length > 0) {
+            if (!filtered.some(e => e.id === selectedExamId)) {
+                setSelectedExamId(filtered[0].id);
+            }
+        } else {
+            setSelectedExamId("");
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedClassId, exams, classes]);
+
     const selectedClassObj = classes.find(c => c.id === selectedClassId);
+
+    // Filter exams to only show those that belong to the selected class
+    const examsForSelectedClass = exams.filter(exam => {
+        if (!selectedClassId) return false;
+        if (exam.classId === selectedClassId) return true;
+        if (selectedClassObj && exam.className === selectedClassObj.name) return true;
+        if (selectedClassObj && exam.title?.includes(selectedClassObj.name)) return true;
+        return false;
+    });
+
+    const selectedExam = examsForSelectedClass.find(e => e.id === selectedExamId);
 
     return (
         <div className="max-w-6xl mx-auto h-full flex flex-col">
@@ -160,10 +215,10 @@ export default function ResultadosPage() {
                     <div className={`w-full md:w-72 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 shrink-0 overflow-y-auto custom-scrollbar transition-opacity ${!selectedClassId ? 'opacity-50 pointer-events-none' : ''}`}>
                         <h3 className="font-bold text-sm uppercase text-gray-400 mb-4 tracking-wider">2. Avaliação</h3>
                         <div className="space-y-2">
-                            {exams.length === 0 ? (
-                                <p className="text-sm text-gray-400">Nenhuma avaliação encontrada.</p>
+                            {examsForSelectedClass.length === 0 ? (
+                                <p className="text-sm text-gray-400">Nenhuma avaliação encontrada para esta turma.</p>
                             ) : (
-                                exams.map(exam => (
+                                examsForSelectedClass.map(exam => (
                                     <button
                                         key={exam.id}
                                         onClick={() => setSelectedExamId(exam.id)}
