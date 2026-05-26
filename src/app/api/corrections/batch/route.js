@@ -110,18 +110,38 @@ export async function POST(req) {
                 const realExamId = snapshot.docs[0].id;
                 const questionsKey = docData.questions || [];
 
-                let score = 0;
                 let correctCount = 0;
                 const detailedResults = [];
                 const skillsStats = {};
+                const subjectQuestions = {};
+                const subjectCorrect = {};
 
-                answers.forEach((ans) => {
+                // Inicializa os contadores por componente curricular da prova oficial
+                questionsKey.forEach(q => {
+                    const sub = q.subject || "Geral";
+                    if (!subjectQuestions[sub]) {
+                        subjectQuestions[sub] = 0;
+                        subjectCorrect[sub] = 0;
+                    }
+                    subjectQuestions[sub]++;
+                });
+
+                 answers.forEach((ans) => {
                     const questionKey = questionsKey.find(q => q.id === (ans.q).toString()) || questionsKey[ans.q - 1];
                     if (questionKey) {
-                        const isCorrect = ans.r === questionKey.correct;
+                        const baseCorrect = questionKey.correct;
+                        const correctStr = String(baseCorrect || "").trim();
+                        const cleanCorrect = correctStr.length === 1 
+                            ? correctStr.toUpperCase() 
+                            : correctStr.replace(/^[a-zA-Z\d]+[).:-]\s*/, "").toUpperCase();
+                        
+                        const studentAns = String(ans.r || "").trim().toUpperCase();
+                        const isCorrect = studentAns === cleanCorrect || studentAns === correctStr.toUpperCase();
+
                         if (isCorrect) {
-                            score += parseFloat(questionKey.points || 1);
                             correctCount++;
+                            const sub = questionKey.subject || "Geral";
+                            subjectCorrect[sub]++;
                         }
 
                         const skill = questionKey.bncc || "Geral";
@@ -131,28 +151,38 @@ export async function POST(req) {
 
                         detailedResults.push({
                             q: ans.q,
-                            marked: ans.r,
-                            correct: questionKey.correct,
+                            marked: studentAns || null,
+                            correct: cleanCorrect || correctStr,
                             isCorrect,
-                            skill
+                            skill,
+                            subject: questionKey.subject || "Geral"
                         });
                     }
                 });
 
-                // Calculate final percentage score (0-10) based on points
-                const totalPoints = questionsKey.reduce((sum, q) => sum + parseFloat(q.points || 1), 0);
-                const finalScore = totalPoints > 0 ? ((score / totalPoints) * 10).toFixed(1) : "0.0";
+                // Calcula as notas de 0 a 2 para cada disciplina
+                const scoresBySubject = {};
+                let totalCalculatedScore = 0;
+                Object.keys(subjectQuestions).forEach(sub => {
+                    const totalQ = subjectQuestions[sub];
+                    const correctQ = subjectCorrect[sub];
+                    const subjectScore = totalQ > 0 ? (correctQ / totalQ) * 2.0 : 0;
+                    scoresBySubject[sub] = parseFloat(subjectScore.toFixed(2));
+                    totalCalculatedScore += subjectScore;
+                });
+                totalCalculatedScore = parseFloat(totalCalculatedScore.toFixed(2));
 
                 // Save to Database
                 const correctionData = {
                     examId: realExamId,
                     studentName: studentName || "Anônimo",
                     classId: "Lote PDF",
-                    score: finalScore,
+                    score: totalCalculatedScore,
                     correctCount,
                     totalCount: questionsKey.length,
                     details: detailedResults,
                     skills: skillsStats,
+                    scoresBySubject,
                     teacherId: teacherId || null,
                     correctedAt: new Date(),
                     createdAt: new Date(),
@@ -164,7 +194,7 @@ export async function POST(req) {
                     studentName, 
                     examId, 
                     success: true, 
-                    score: finalScore 
+                    score: totalCalculatedScore 
                 });
 
             } catch (err) {

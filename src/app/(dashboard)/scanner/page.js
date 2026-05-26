@@ -129,6 +129,8 @@ export default function ScannerPage() {
         
         let correctCount = 0;
         const details = [];
+        const subjectQuestions = {};
+        const subjectCorrect = {};
 
         examData.questions.forEach((q, idx) => {
             const studentAns = studentAnswers[idx];
@@ -144,10 +146,20 @@ export default function ScannerPage() {
             
             if (isCorrect) correctCount++;
             
+            const subject = q.subject || "Geral";
+            if (!subjectQuestions[subject]) {
+                subjectQuestions[subject] = 0;
+                subjectCorrect[subject] = 0;
+            }
+            subjectQuestions[subject]++;
+            if (isCorrect) {
+                subjectCorrect[subject]++;
+            }
+
             details.push({
                 questionIndex: idx,
                 habilidade: q.habilidade || "N/A",
-                subject: q.subject || "Geral",
+                subject,
                 isCorrect,
                 studentAnswer: studentAns || null,
                 correctAnswer: cleanCorrect || correctStr
@@ -155,18 +167,28 @@ export default function ScannerPage() {
         });
 
         const totalCount = examData.questions.length;
-        const rawScore = examData.totalScore || 10;
-        const score = (correctCount / totalCount) * rawScore;
+        
+        const scoresBySubject = {};
+        let totalCalculatedScore = 0;
+        Object.keys(subjectQuestions).forEach(subject => {
+            const totalQ = subjectQuestions[subject];
+            const correctQ = subjectCorrect[subject];
+            const subjectScore = totalQ > 0 ? (correctQ / totalQ) * 2.0 : 0;
+            scoresBySubject[subject] = parseFloat(subjectScore.toFixed(2));
+            totalCalculatedScore += subjectScore;
+        });
+        totalCalculatedScore = parseFloat(totalCalculatedScore.toFixed(2));
 
         const payload = {
             examId: examData.id,
             studentName: scanResult.s,
             classId: scanResult.c || "Geral",
-            score,
+            score: totalCalculatedScore,
             correctCount,
             totalCount,
             details,
-            answers: studentAnswers
+            answers: studentAnswers,
+            scoresBySubject
         };
 
         try {
@@ -176,7 +198,7 @@ export default function ScannerPage() {
             });
             
             setCorrectionResult({
-                score,
+                score: totalCalculatedScore,
                 correctCount,
                 totalCount
             });
@@ -521,7 +543,10 @@ export default function ScannerPage() {
                         </button>
                         
                         <div className="mt-6">
-                            <Link href="/dashboard/resultados" className="text-sm font-bold text-vg-dark hover:underline">
+                            <Link 
+                                href={`/resultados?examId=${examData.id}&classId=${scanResult.c || ""}&studentName=${encodeURIComponent(scanResult.s)}`} 
+                                className="text-sm font-bold text-vg-dark hover:underline"
+                            >
                                 Ver Boletim Analítico Completo
                             </Link>
                         </div>

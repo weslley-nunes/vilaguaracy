@@ -248,6 +248,8 @@ export default function HabilidadesPage() {
             const details = [];
             const skillsStats = {};
             const totalCount = exam.questions?.length || editingCorrection.totalCount || 0;
+            const subjectQuestions = {};
+            const subjectCorrect = {};
 
             if (exam.questions) {
                 exam.questions.forEach((q, idx) => {
@@ -261,10 +263,20 @@ export default function HabilidadesPage() {
                     const isCorrect = studentAns === cleanCorrect || studentAns === correctStr.toUpperCase();
                     if (isCorrect) correctCount++;
 
+                    const subject = q.subject || "Geral";
+                    if (!subjectQuestions[subject]) {
+                        subjectQuestions[subject] = 0;
+                        subjectCorrect[subject] = 0;
+                    }
+                    subjectQuestions[subject]++;
+                    if (isCorrect) {
+                        subjectCorrect[subject]++;
+                    }
+
                     details.push({
                         questionIndex: idx,
                         habilidade: q.habilidade || "N/A",
-                        subject: q.subject || "Geral",
+                        subject,
                         isCorrect,
                         studentAnswer: studentAns || null,
                         correctAnswer: cleanCorrect || correctStr
@@ -283,16 +295,25 @@ export default function HabilidadesPage() {
                 });
             }
 
-            const rawScore = exam.totalScore || 10;
-            const score = (correctCount / totalCount) * rawScore;
+            const scoresBySubject = {};
+            let totalCalculatedScore = 0;
+            Object.keys(subjectQuestions).forEach(sub => {
+                const totalQ = subjectQuestions[sub];
+                const correctQ = subjectCorrect[sub];
+                const subjectScore = totalQ > 0 ? (correctQ / totalQ) * 2.0 : 0;
+                scoresBySubject[sub] = parseFloat(subjectScore.toFixed(2));
+                totalCalculatedScore += subjectScore;
+            });
+            totalCalculatedScore = parseFloat(totalCalculatedScore.toFixed(2));
 
             const updatedData = {
-                score,
+                score: totalCalculatedScore,
                 correctCount,
                 totalCount,
                 details,
                 answers: editingAnswers,
-                skills: skillsStats
+                skills: skillsStats,
+                scoresBySubject
             };
 
             await ExamService.updateCorrection(editingCorrection.id, updatedData);
