@@ -1,6 +1,17 @@
 import React, { forwardRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 
+const renderFormattedText = (text) => {
+    if (typeof text !== 'string') return String(text || "");
+    const parts = text.split(/(\*\*[^*]+\*\*)/g);
+    return parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+            return <strong key={i} className="font-bold">{part.slice(2, -2)}</strong>;
+        }
+        return part;
+    });
+};
+
 const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConfig, showAnswers = false, isAdapted = false, scoringMode = "auto", totalScore = 3, onQuestionChange = null, onQuestionEdit = null, onQuestionDelete = null, printConfig = {} }, ref) => {
     // Determine exam ID for QR (fallback to timestamp if not provided in headerConfig)
     const examId = headerConfig?.examId || "PREVIEW";
@@ -385,7 +396,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                                                     <div className="flex justify-between items-start gap-4 mb-2">
                                                         <div className="flex-1">
                                                             <p className={`whitespace-pre-wrap inline ${isAdapted ? 'font-medium' : ''} ${lineHeight}`}>
-                                                                {typeof q.text === 'string' ? q.text : String(q.text || "")}
+                                                                {renderFormattedText(q.text)}
                                                                 {q.habilidade && q.habilidade !== "N/A" && printConfig?.showHabilidades !== false && (
                                                                     <span className="ml-2 px-2 py-0.5 bg-vg-light text-vg-hover border border-vg-light text-[9px] font-bold rounded-full uppercase tracking-wider inline-flex items-center align-middle relative -top-0.5 print:border-gray-300 print:text-gray-500 print:bg-transparent">
                                                                         {typeof q.habilidade === 'string' ? q.habilidade : String(q.habilidade)}

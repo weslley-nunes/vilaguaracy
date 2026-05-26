@@ -11,6 +11,17 @@ import ExamPaper from "@/components/ExamPaper";
 import { useReactToPrint } from "react-to-print";
 import { Sparkles, PlusCircle, Printer, Save, Trash, ArrowRight, Loader2, FileText, Check, X, Users, Shuffle, Copy, Eye, EyeOff, Activity } from "lucide-react";
 
+const renderFormattedText = (text) => {
+    if (typeof text !== 'string') return String(text || "");
+    const parts = text.split(/(\*\*[^*]+\*\*)/g);
+    return parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+            return <strong key={i} className="font-bold">{part.slice(2, -2)}</strong>;
+        }
+        return part;
+    });
+};
+
 export default function BuilderPage() {
     const { user } = useAuth();
     const [topic, setTopic] = useState("");
@@ -596,7 +607,7 @@ export default function BuilderPage() {
                         </div>
                         {generatedQuestions.map((q, i) => (
                             <div key={i} className="p-3 rounded-lg border border-gray-200 bg-white shadow-sm flex flex-col gap-2 transition-all">
-                                <p className="text-sm font-medium text-gray-800 line-clamp-3">{q.text}</p>
+                                <p className="text-sm font-medium text-gray-800 line-clamp-3">{renderFormattedText(q.text)}</p>
                                 <div className="flex justify-between items-center mt-1">
                                     <span className="text-[10px] uppercase font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{q.type === 'multiple_choice' ? 'Múltipla Escolha' : 'Dissertativa'}</span>
                                     <div className="flex gap-2">

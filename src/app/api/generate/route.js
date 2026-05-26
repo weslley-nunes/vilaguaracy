@@ -42,6 +42,10 @@ export async function POST(req) {
                     CADA questão DEVE ter EXATAMENTE 4 alternativas (A, B, C, D).
                     Como especialista, identifique e insira o código da habilidade da BNCC correspondente para CADA questão.
                     
+                    REGRAS PARA O ENUNCIADO:
+                    1. O enunciado de CADA questão DEVE iniciar obrigatoriamente com um verbo de comando da Taxonomia de Bloom (exemplos: **Analise**, **Compare**, **Identifique**, **Calcule**, **Classifique**, **Explique**, **Diferencie**, **Relacione**).
+                    2. Este verbo de comando DEVE estar em destaque (negrito) utilizando exatamente dois asteriscos no início e no fim do verbo, por exemplo: "**Analise** a situação..." ou "**Calcule** o valor...".
+                    
                     REGRAS CRÍTICAS DE SAÍDA:
                     1. RETORNE EXCLUSIVAMENTE O JSON ABAIXO.
                     2. NÃO ADICIONE NENHUM TEXTO ANTES, DEPOIS OU FORA DO JSON.
