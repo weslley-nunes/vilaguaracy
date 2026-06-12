@@ -199,6 +199,9 @@ export default function BuilderPage() {
         }
         setIsPreparingPrint(true);
 
+        // Find student access code if class is selected
+        const selectedClassObj = classes.find(c => c.id === selectedClass);
+
         // Parse Students
         const students = printConfig.studentList
             .split('\n')
@@ -227,8 +230,6 @@ export default function BuilderPage() {
                 });
             }
 
-            // Find student access code if class is selected
-            const selectedClassObj = classes.find(c => c.id === selectedClass);
             const studentInfo = selectedClassObj?.students?.find(s => s.name === students[i]);
 
             newVariations.push({

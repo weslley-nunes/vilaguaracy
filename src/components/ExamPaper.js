@@ -36,7 +36,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
 
     // Accessibility Styles
     const fontStyle = isAdapted ? { fontFamily: 'Verdana, sans-serif' } : { fontFamily: 'Times New Roman, serif' };
-    const baseTextSize = isAdapted ? 'text-lg' : 'text-base';
+    const baseTextSize = isAdapted ? 'text-[22px]' : 'text-base';
     const titleSize = isAdapted ? 'text-3xl' : 'text-2xl';
     const spacing = isAdapted ? 'space-y-8' : 'space-y-6';
     const lineHeight = isAdapted ? 'leading-relaxed' : '';
@@ -135,7 +135,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
     }
 
     return (
-        <div ref={ref} className={`bg-white p-12 shadow-lg min-h-[1123px] w-[794px] mx-auto text-black print:shadow-none print:w-full relative ${isAdapted ? 'text-lg' : ''}`} style={fontStyle}>
+        <div ref={ref} className={`bg-white p-12 shadow-lg min-h-[1123px] w-[794px] mx-auto text-black print:shadow-none print:w-full relative ${isAdapted ? 'text-[22px]' : ''}`} style={fontStyle}>
 
             {/* Header */}
             <div className="mb-4">
@@ -202,7 +202,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                 {/* Instructions */}
                 <div className="flex-1 border border-gray-300 p-3 rounded-lg bg-gray-50 print:bg-transparent print:border-black">
                     <h3 className="font-bold text-[11px] uppercase mb-1">📝 Orientações Importantes:</h3>
-                    <p className={`text-[10px] ${isAdapted ? 'text-lg' : ''} font-medium text-gray-800`}>
+                    <p className={`text-[10px] ${isAdapted ? 'text-[22px]' : ''} font-medium text-gray-800`}>
                         Caneta: Utilize apenas caneta azul ou preta. <br/>
                         Questões: A prova possui {flatQuestions.length} questões com alternativas de A a D. <br/>
                         Resposta: Marque apenas uma alternativa por questão. <br/>
@@ -232,7 +232,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
 
             {/* Tabelinha dos Comandos */}
             <div className="mb-3 w-full">
-                <table className="w-full border-collapse border border-black text-[9px] text-left print:border-black">
+                <table className={`w-full border-collapse border border-black ${isAdapted ? 'text-[16px] border-2' : 'text-[9px]'} text-left print:border-black`}>
                     <thead>
                         <tr>
                             <th colSpan="2" className="border border-black text-center font-bold uppercase py-0.5 bg-gray-100 print:bg-transparent print:border-black">Tabelinha dos Comandos</th>
@@ -298,16 +298,16 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                                 
                                 return columnBlocks.map((block, bIdx) => (
                                     <div key={bIdx} className="border border-gray-100 p-1.5 rounded bg-gray-50/50 print:bg-transparent print:border-black min-w-[114px]">
-                                        <p className="text-[9px] font-black uppercase mb-2 border-b border-gray-200 pb-1 print:border-black truncate">{block.subject}</p>
+                                        <p className={`font-black uppercase mb-2 border-b border-gray-200 pb-1 print:border-black truncate ${isAdapted ? 'text-[14px]' : 'text-[9px]'}`}>{block.subject}</p>
                                         <div className="space-y-1.5">
                                             {Array.from({ length: block.count }).map((_, i) => {
                                                 const qNum = block.startNumber + i;
                                                 return (
-                                                    <div key={i} className="flex items-center gap-2 text-[10px]">
-                                                        <span className="font-black w-5 text-right">{qNum}.</span>
+                                                    <div key={i} className={`flex items-center ${isAdapted ? 'gap-4 text-[16px]' : 'gap-2 text-[10px]'}`}>
+                                                        <span className={`font-black text-right ${isAdapted ? 'w-8' : 'w-5'}`}>{qNum}.</span>
                                                         <div className="flex gap-1">
                                                             {['A', 'B', 'C', 'D'].map((opt) => (
-                                                                <div key={opt} className="w-3.5 h-3.5 rounded-full border border-black bg-white flex items-center justify-center text-[7px] font-bold">
+                                                                <div key={opt} className={`rounded-full border border-black bg-white flex items-center justify-center font-bold ${isAdapted ? 'w-7 h-7 text-[12px]' : 'w-3.5 h-3.5 text-[7px]'}`}>
                                                                     {opt}
                                                                 </div>
                                                             ))}
@@ -370,7 +370,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                                         return (
                                             <div key={q.id} className="break-inside-avoid mb-10 opacity-40">
                                                 <div className="flex gap-2">
-                                                    <span className="font-bold w-8 shrink-0">{index + 1}.</span>
+                                                    <span className={`font-bold ${isAdapted ? 'w-14' : 'w-8'} shrink-0`}>{index + 1}.</span>
                                                     <div className="flex-1 space-y-4">
                                                         <div className="h-4 bg-gray-200 rounded w-3/4"></div>
                                                         <div className="grid grid-cols-1 gap-2 pl-4">
@@ -389,7 +389,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                                     return (
                                         <div key={q.id || index} className="break-inside-avoid mb-6">
                                             <div className="flex gap-2">
-                                                <div className="flex flex-col items-center gap-1 w-8 shrink-0">
+                                                <div className={`flex flex-col items-center gap-1 ${isAdapted ? 'w-14' : 'w-8'} shrink-0`}>
                                                     <span className="font-bold">{index + 1}.</span>
                                                 </div>
                                                 <div className="flex-1">
@@ -478,8 +478,8 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                                                                         onClick={() => onQuestionChange && onQuestionChange(q.id, { correct: optionLetter })}
                                                                         className={`flex items-start gap-2 p-1.5 rounded transition-colors ${displayAsCorrect ? 'bg-green-100 dark:bg-green-900/30 -ml-1 pl-1.5' : ''} ${onQuestionChange ? 'cursor-pointer hover:bg-gray-100 group' : ''}`}
                                                                     >
-                                                                        <span className={`font-medium ${isAdapted ? 'text-lg font-bold' : 'text-sm'} ${displayAsCorrect ? 'text-green-700 font-bold' : ''}`}>({optionLetter.toLowerCase()})</span>
-                                                                        <span className={`flex-1 ${isAdapted ? 'text-lg' : ''} ${displayAsCorrect ? 'text-green-700 font-bold' : ''}`}>{cleanOpt}</span>
+                                                                        <span className={`font-medium ${isAdapted ? 'text-[22px] font-bold' : 'text-sm'} ${displayAsCorrect ? 'text-green-700 font-bold' : ''}`}>({optionLetter.toLowerCase()})</span>
+                                                                        <span className={`flex-1 ${isAdapted ? 'text-[22px]' : ''} ${displayAsCorrect ? 'text-green-700 font-bold' : ''}`}>{cleanOpt}</span>
                                                                         
                                                                         {onQuestionChange && (
                                                                             <span className={`print:hidden text-[10px] uppercase font-bold px-2 py-0.5 rounded transition-opacity ${isCorrectOption ? 'bg-green-600 text-white opacity-100' : 'bg-gray-200 text-gray-500 opacity-0 group-hover:opacity-100'}`}>
