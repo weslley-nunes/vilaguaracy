@@ -48,7 +48,7 @@ export default function DashboardLayout({ children }) {
                 <div className="absolute top-6 right-8 z-50 print:hidden">
                     <ThemeToggle />
                 </div>
-                <div className="max-w-6xl mx-auto pt-8">
+                <div className="max-w-6xl mx-auto pt-8 print:max-w-full print:w-full print:pt-0">
                     {children}
                 </div>
             </main>

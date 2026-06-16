@@ -179,7 +179,7 @@ export default function ResultadosPage() {
     });
 
     return (
-        <div className="max-w-6xl mx-auto h-full flex flex-col print:h-auto print:block">
+        <div className="max-w-6xl mx-auto h-full flex flex-col print:max-w-full print:w-full print:h-auto print:block">
             <div className="flex items-center gap-4 mb-8 shrink-0 print:hidden">
                 <Link href="/dashboard" className="p-2 rounded-full hover:bg-gray-100 transition-colors">
                     <ChevronLeft size={24} className="text-gray-600" />
@@ -444,7 +444,7 @@ export default function ResultadosPage() {
                                                     <p className="text-center text-gray-400 text-sm py-12">Nenhum boletim disponível para esta turma.</p>
                                                 ) : (
                                                     sortedCorrections.map((corr, idx) => (
-                                                        <div key={corr.id} className={`print-sheet bg-white p-8 border border-gray-200 rounded-2xl shadow-sm print:shadow-none print:border-none print:m-0 print:p-0 print:break-inside-avoid ${idx !== sortedCorrections.length - 1 ? 'print:break-after-page' : ''}`}>
+                                                        <div key={corr.id} className={`print-sheet bg-white p-8 border border-gray-200 rounded-2xl shadow-sm print:shadow-none print:border-none print:m-0 print:p-0 print:break-inside-avoid ${idx !== 0 ? 'print:break-before-page' : ''}`}>
                                                             {/* Header in Print Mode */}
                                                             <div className="hidden print:flex border-b-2 border-vg-dark pb-2 mb-4 justify-between items-end">
                                                                 <div>
