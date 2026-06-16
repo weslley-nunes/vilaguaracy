@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { ChevronLeft, Loader2, Search, Target, Users, BookOpen, CheckCircle, XCircle, Printer } from "lucide-react";
+import { ChevronLeft, Loader2, Search, Target, Users, BookOpen, CheckCircle, XCircle, Printer, List } from "lucide-react";
 import Link from "next/link";
 import { ExamService } from "@/services/examService";
 import { useAuth } from "@/context/AuthContext";
@@ -162,6 +162,9 @@ export default function ResultadosPage() {
     });
 
     const selectedExam = examsForSelectedClass.find(e => e.id === selectedExamId);
+    
+    // Calcula todas as disciplinas únicas presentes nas correções desta turma
+    const allSubjects = Array.from(new Set(corrections.flatMap(c => Object.keys(c.scoresBySubject || {})))).sort();
 
     return (
         <div className="max-w-6xl mx-auto h-full flex flex-col">
@@ -280,6 +283,16 @@ export default function ResultadosPage() {
                                     >
                                         <Printer size={16} />
                                         Boletins para Impressão
+                                    <button
+                                        onClick={() => setActiveTab("summary")}
+                                        className={`py-4 px-6 font-bold text-sm border-b-2 transition-all flex items-center gap-2 ${
+                                            activeTab === "summary" 
+                                                ? "border-vg-navy border-b-vg-navy text-vg-dark" 
+                                                : "border-transparent text-gray-400 hover:text-gray-600"
+                                        }`}
+                                    >
+                                        <List size={16} />
+                                        Resumo (Notas)
                                     </button>
                                 </div>
 
@@ -328,6 +341,60 @@ export default function ResultadosPage() {
                                                 })}
                                             </div>
                                         )
+                                    ) : activeTab === "summary" ? (
+                                        <div className="space-y-6 print:space-y-0">
+                                            <div className="flex justify-between items-center bg-vg-light/30 border border-vg-light/50 p-6 rounded-2xl print:hidden shadow-sm">
+                                                <div>
+                                                    <h3 className="font-bold text-vg-dark text-base">Resumo de Notas</h3>
+                                                    <p className="text-xs text-gray-600 mt-1">Visão geral das notas por disciplina e nota final de todos os alunos.</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => window.print()}
+                                                    className="btn btn-primary py-3 px-6 text-sm flex items-center gap-2 shadow-lg shadow-vg-dark/20"
+                                                >
+                                                    <Printer size={18} />
+                                                    Imprimir Resumo
+                                                </button>
+                                            </div>
+                                            
+                                            <div className="print-container bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden print:border-none print:shadow-none">
+                                                <div className="hidden print:block text-center mb-6">
+                                                    <h2 className="text-xl font-bold text-vg-dark">Resumo de Notas: {selectedClassObj.name}</h2>
+                                                    <p className="text-sm text-gray-500">{selectedExam.title}</p>
+                                                </div>
+                                                <div className="overflow-x-auto">
+                                                    <table className="w-full text-left text-sm border-collapse">
+                                                        <thead>
+                                                            <tr className="border-b border-gray-200 bg-gray-50">
+                                                                <th className="py-3 px-4 font-bold text-gray-500 uppercase tracking-wider">Aluno</th>
+                                                                {allSubjects.map(sub => (
+                                                                    <th key={sub} className="py-3 px-4 font-bold text-gray-500 uppercase tracking-wider text-center">{sub}</th>
+                                                                ))}
+                                                                <th className="py-3 px-4 font-bold text-vg-dark uppercase tracking-wider text-center">Nota Geral</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody className="divide-y divide-gray-150">
+                                                            {corrections.map((corr, idx) => (
+                                                                <tr key={corr.id} className="hover:bg-gray-50/50 print:break-inside-avoid">
+                                                                    <td className="py-2 px-4 font-bold text-gray-700">{corr.studentName}</td>
+                                                                    {allSubjects.map(sub => {
+                                                                        const score = corr.scoresBySubject?.[sub];
+                                                                        return (
+                                                                            <td key={sub} className="py-2 px-4 text-center font-medium text-gray-600">
+                                                                                {score !== undefined ? Number(score).toFixed(1) : "-"}
+                                                                            </td>
+                                                                        );
+                                                                    })}
+                                                                    <td className="py-2 px-4 text-center font-black text-vg-dark">
+                                                                        {corr.score.toFixed(1)}
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
                                     ) : (
                                         <div className="space-y-6 print:space-y-0">
                                             <div className="flex justify-between items-center bg-vg-light/30 border border-vg-light/50 p-6 rounded-2xl print:hidden shadow-sm">
@@ -351,10 +418,10 @@ export default function ResultadosPage() {
                                                     corrections.map(corr => (
                                                         <div key={corr.id} className="print-sheet bg-white p-8 border border-gray-200 rounded-2xl shadow-sm print:shadow-none print:border-none print:m-0 print:p-0">
                                                             {/* School Header */}
-                                                            <div className="border-b-2 border-vg-dark pb-4 mb-6 flex justify-between items-end">
+                                                            <div className="border-b-2 border-vg-dark pb-4 print:pb-2 mb-6 print:mb-4 flex justify-between items-end">
                                                                 <div>
-                                                                    <h1 className="text-2xl font-black text-vg-dark tracking-tight">Escola Estadual Vila Guaracy</h1>
-                                                                    <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mt-1">Boletim de Correção da Avaliação</p>
+                                                                    <h1 className="text-2xl print:text-xl font-black text-vg-dark tracking-tight">Escola Estadual Vila Guaracy</h1>
+                                                                    <p className="text-xs print:text-[10px] text-gray-500 uppercase font-bold tracking-wider mt-1">Boletim de Correção da Avaliação</p>
                                                                 </div>
                                                                 <div className="text-right">
                                                                     <p className="text-[10px] uppercase font-bold text-gray-400">ID da Prova</p>
@@ -363,7 +430,7 @@ export default function ResultadosPage() {
                                                             </div>
 
                                                             {/* Student & Exam Info */}
-                                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 text-sm bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 print:gap-2 mb-6 print:mb-4 text-sm print:text-xs bg-gray-50 p-4 print:p-2 rounded-xl border border-gray-100">
                                                                 <div>
                                                                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Aluno</p>
                                                                     <p className="font-bold text-gray-800">{corr.studentName}</p>
@@ -389,50 +456,50 @@ export default function ResultadosPage() {
                                                             </div>
 
                                                             {/* Component Scores */}
-                                                            <div className="mb-6 p-4 bg-vg-light/10 border border-vg-light/30 rounded-xl">
-                                                                <h3 className="text-xs font-bold text-vg-dark uppercase tracking-wider mb-3">Notas por Componente Curricular</h3>
-                                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                                            <div className="mb-6 print:mb-4 p-4 print:p-2 bg-vg-light/10 border border-vg-light/30 rounded-xl">
+                                                                <h3 className="text-xs print:text-[10px] font-bold text-vg-dark uppercase tracking-wider mb-3 print:mb-2">Notas por Componente Curricular</h3>
+                                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 print:gap-2">
                                                                     {corr.scoresBySubject && Object.entries(corr.scoresBySubject).map(([sub, score]) => (
-                                                                        <div key={sub} className="bg-white p-3 rounded-lg border border-gray-200 flex justify-between items-center shadow-sm">
-                                                                            <span className="font-bold text-xs text-gray-700">{sub}</span>
-                                                                            <span className="font-black text-sm text-vg-dark">{Number(score).toFixed(1)} <span className="text-[10px] text-gray-400 font-normal">/ 2.0</span></span>
+                                                                        <div key={sub} className="bg-white p-3 print:p-1.5 rounded-lg border border-gray-200 flex justify-between items-center shadow-sm">
+                                                                            <span className="font-bold text-xs print:text-[10px] text-gray-700">{sub}</span>
+                                                                            <span className="font-black text-sm print:text-xs text-vg-dark">{Number(score).toFixed(1)} <span className="text-[10px] print:text-[8px] text-gray-400 font-normal">/ 2.0</span></span>
                                                                         </div>
                                                                     ))}
-                                                                    <div className="bg-white p-3 rounded-lg border-2 border-vg-dark flex justify-between items-center shadow-sm sm:col-span-3">
-                                                                        <span className="font-bold text-xs text-vg-dark font-black">SOMA DAS NOTAS (NOTA FINAL):</span>
-                                                                        <span className="font-black text-base text-vg-dark">{corr.score.toFixed(1)}</span>
+                                                                    <div className="bg-white p-3 print:p-1.5 rounded-lg border-2 border-vg-dark flex justify-between items-center shadow-sm sm:col-span-3">
+                                                                        <span className="font-bold text-xs print:text-[10px] text-vg-dark font-black">SOMA DAS NOTAS (NOTA FINAL):</span>
+                                                                        <span className="font-black text-base print:text-sm text-vg-dark">{corr.score.toFixed(1)}</span>
                                                                     </div>
                                                                 </div>
                                                             </div>
 
                                                             {/* Details Table */}
-                                                            <div className="mb-8">
-                                                                <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-3">Detalhamento por Questão (BNCC / Erros e Acertos)</h3>
-                                                                <div className="border border-gray-200 rounded-xl overflow-hidden">
+                                                            <div className="mb-8 print:mb-2">
+                                                                <h3 className="text-xs print:text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-3 print:mb-1">Detalhamento por Questão (BNCC / Erros e Acertos)</h3>
+                                                                <div className="border border-gray-200 rounded-xl overflow-hidden print:rounded-none print:border-t print:border-b print:border-l-0 print:border-r-0">
                                                                     <table className="w-full text-left text-xs border-collapse">
                                                                         <thead>
-                                                                            <tr className="border-b border-gray-200 bg-gray-50">
-                                                                                <th className="py-2.5 px-3 font-bold text-gray-500 uppercase tracking-wider w-16">Q.</th>
-                                                                                <th className="py-2.5 px-3 font-bold text-gray-500 uppercase tracking-wider">Componente</th>
-                                                                                <th className="py-2.5 px-3 font-bold text-gray-500 uppercase tracking-wider">Habilidade</th>
-                                                                                <th className="py-2.5 px-3 font-bold text-gray-500 uppercase tracking-wider text-center w-24">Marcou</th>
-                                                                                <th className="py-2.5 px-3 font-bold text-gray-500 uppercase tracking-wider text-center w-24">Gabarito</th>
-                                                                                <th className="py-2.5 px-3 font-bold text-gray-500 uppercase tracking-wider text-center w-24">Status</th>
+                                                                            <tr className="border-b border-gray-200 bg-gray-50 print:text-[10px]">
+                                                                                <th className="py-2.5 px-3 print:py-1 print:px-1 font-bold text-gray-500 uppercase tracking-wider w-16 print:w-8">Q.</th>
+                                                                                <th className="py-2.5 px-3 print:py-1 print:px-1 font-bold text-gray-500 uppercase tracking-wider">Componente</th>
+                                                                                <th className="py-2.5 px-3 print:py-1 print:px-1 font-bold text-gray-500 uppercase tracking-wider">Habilidade</th>
+                                                                                <th className="py-2.5 px-3 print:py-1 print:px-1 font-bold text-gray-500 uppercase tracking-wider text-center w-24 print:w-16">Marcou</th>
+                                                                                <th className="py-2.5 px-3 print:py-1 print:px-1 font-bold text-gray-500 uppercase tracking-wider text-center w-24 print:w-16">Gabarito</th>
+                                                                                <th className="py-2.5 px-3 print:py-1 print:px-1 font-bold text-gray-500 uppercase tracking-wider text-center w-24 print:w-16">Status</th>
                                                                             </tr>
                                                                         </thead>
-                                                                        <tbody className="divide-y divide-gray-150">
+                                                                        <tbody className="divide-y divide-gray-150 print:text-[10px]">
                                                                             {corr.details?.map((detail, idx) => (
-                                                                                <tr key={idx} className="hover:bg-gray-50/50">
-                                                                                    <td className="py-2 px-3 font-bold text-gray-700 text-center">{detail.questionIndex !== undefined ? detail.questionIndex + 1 : (detail.q !== undefined ? detail.q : idx + 1)}</td>
-                                                                                    <td className="py-2 px-3 text-gray-600 font-semibold">{detail.subject || "Geral"}</td>
-                                                                                    <td className="py-2 px-3">
-                                                                                        <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase border border-gray-200">
+                                                                                <tr key={idx} className="hover:bg-gray-50/50 print:py-0">
+                                                                                    <td className="py-2 px-3 print:py-0.5 print:px-1 font-bold text-gray-700 text-center">{detail.questionIndex !== undefined ? detail.questionIndex + 1 : (detail.q !== undefined ? detail.q : idx + 1)}</td>
+                                                                                    <td className="py-2 px-3 print:py-0.5 print:px-1 text-gray-600 font-semibold">{detail.subject || "Geral"}</td>
+                                                                                    <td className="py-2 px-3 print:py-0.5 print:px-1">
+                                                                                        <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-[10px] print:text-[8px] font-bold tracking-wider uppercase border border-gray-200 print:border-none print:bg-transparent print:p-0">
                                                                                             {detail.habilidade || detail.skill || "N/A"}
                                                                                         </span>
                                                                                     </td>
-                                                                                    <td className="py-2 px-3 text-center font-bold text-gray-700">{detail.studentAnswer || detail.marked || "-"}</td>
-                                                                                    <td className="py-2 px-3 text-center font-bold text-green-600">{detail.correctAnswer || detail.correct || "-"}</td>
-                                                                                    <td className="py-2 px-3 text-center">
+                                                                                    <td className="py-2 px-3 print:py-0.5 print:px-1 text-center font-bold text-gray-700">{detail.studentAnswer || detail.marked || "-"}</td>
+                                                                                    <td className="py-2 px-3 print:py-0.5 print:px-1 text-center font-bold text-green-600">{detail.correctAnswer || detail.correct || "-"}</td>
+                                                                                    <td className="py-2 px-3 print:py-0.5 print:px-1 text-center">
                                                                                         {detail.isCorrect ? (
                                                                                             <span className="text-green-600 font-black">Acertou</span>
                                                                                         ) : (
@@ -447,14 +514,14 @@ export default function ResultadosPage() {
                                                             </div>
 
                                                             {/* Signatures */}
-                                                            <div className="grid grid-cols-2 gap-12 mt-12 pt-8 border-t border-dashed border-gray-300 text-center text-xs text-gray-500 print:mt-16 print:pt-6">
+                                                            <div className="grid grid-cols-2 gap-12 mt-12 print:mt-4 pt-8 print:pt-4 border-t border-dashed border-gray-300 text-center text-xs text-gray-500">
                                                                 <div>
-                                                                    <div className="border-t border-gray-400 w-48 mx-auto mb-2"></div>
-                                                                    <p className="font-semibold text-gray-600">Assinatura do Responsável</p>
+                                                                    <div className="border-t border-gray-400 w-48 mx-auto mb-2 print:mb-1"></div>
+                                                                    <p className="font-semibold text-gray-600 print:text-[10px]">Assinatura do Responsável</p>
                                                                 </div>
                                                                 <div>
-                                                                    <div className="border-t border-gray-400 w-48 mx-auto mb-2"></div>
-                                                                    <p className="font-semibold text-gray-600">Assinatura do Professor</p>
+                                                                    <div className="border-t border-gray-400 w-48 mx-auto mb-2 print:mb-1"></div>
+                                                                    <p className="font-semibold text-gray-600 print:text-[10px]">Assinatura do Professor</p>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -590,15 +657,15 @@ export default function ResultadosPage() {
                         page-break-after: always !important;
                         break-after: page !important;
                         margin: 0 !important;
-                        padding: 1.5cm !important;
+                        padding: 1cm !important;
                         box-shadow: none !important;
                         border: none !important;
                         background: white !important;
-                        min-height: 297mm;
+                        height: 297mm;
                         box-sizing: border-box;
                         display: flex !important;
                         flex-direction: column !important;
-                        justify-content: space-between !important;
+                        justify-content: flex-start !important;
                     }
                     .bg-gray-50, .bg-gray-100 {
                         background-color: #f3f4f6 !important;
