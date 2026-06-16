@@ -283,6 +283,7 @@ export default function ResultadosPage() {
                                     >
                                         <Printer size={16} />
                                         Boletins para Impressão
+                                    </button>
                                     <button
                                         onClick={() => setActiveTab("summary")}
                                         className={`py-4 px-6 font-bold text-sm border-b-2 transition-all flex items-center gap-2 ${
