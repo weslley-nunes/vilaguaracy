@@ -8,7 +8,12 @@ export function ThemeProvider({ children }) {
 
     useEffect(() => {
         // Check local storage or system preference
-        const savedTheme = localStorage.getItem("theme");
+        let savedTheme = null;
+        try {
+            savedTheme = localStorage.getItem("theme");
+        } catch (e) {
+            console.warn("localStorage access denied in ThemeContext:", e);
+        }
         if (savedTheme) {
             setTheme(savedTheme);
             document.documentElement.classList.toggle("dark", savedTheme === "dark");
@@ -22,7 +27,11 @@ export function ThemeProvider({ children }) {
     const toggleTheme = () => {
         const newTheme = theme === "dark" ? "light" : "dark";
         setTheme(newTheme);
-        localStorage.setItem("theme", newTheme);
+        try {
+            localStorage.setItem("theme", newTheme);
+        } catch (e) {
+            console.warn("localStorage write denied in ThemeContext:", e);
+        }
         document.documentElement.classList.toggle("dark", newTheme === "dark");
     };
 

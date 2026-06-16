@@ -37,7 +37,12 @@ export const AuthContextProvider = ({ children }) => {
                 });
 
                 // Carregar perfil ativo do localStorage ou usar o padrão
-                const savedRole = localStorage.getItem(`activeRole_${firebaseUser.uid}`);
+                let savedRole = null;
+                try {
+                    savedRole = localStorage.getItem(`activeRole_${firebaseUser.uid}`);
+                } catch (e) {
+                    console.warn("localStorage access denied in AuthContext:", e);
+                }
                 setActiveRole(savedRole || role);
             } else {
                 setUser(null);
@@ -60,7 +65,11 @@ export const AuthContextProvider = ({ children }) => {
 
         if (canSwitch) {
             setActiveRole(newRole);
-            localStorage.setItem(`activeRole_${user.uid}`, newRole);
+            try {
+                localStorage.setItem(`activeRole_${user.uid}`, newRole);
+            } catch (e) {
+                console.warn("localStorage write denied in AuthContext:", e);
+            }
             router.push("/dashboard"); // Redireciona para o início do novo perfil
         }
     };

@@ -2,7 +2,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Camera, ChevronLeft, Loader2, CheckCircle, Save, XCircle, FileText, PenTool } from "lucide-react";
 import Link from "next/link";
-import { Html5QrcodeScanner } from "html5-qrcode";
 import { ExamService } from "@/services/examService";
 import { db } from "@/services/firebase";
 import { collection, addDoc } from "firebase/firestore";
@@ -42,48 +41,63 @@ export default function ScannerPage() {
 
         if (scanResult) return; // Stop scanning if we have a result
 
-        const scanner = new Html5QrcodeScanner(
-            "reader",
-            { fps: 10, qrbox: { width: 250, height: 250 } },
-            false
-        );
+        let scanner = null;
+        let isMounted = true;
 
-        scanner.render(
-            (decodedText) => {
-                try {
-                    let data;
-                    if (decodedText.startsWith('http')) {
-                        // Handle URL format
-                        const url = new URL(decodedText);
-                        data = {
-                            id: url.searchParams.get('id'),
-                            s: url.searchParams.get('s'),
-                            c: url.searchParams.get('c'),
-                            ac: url.searchParams.get('ac')
-                        };
-                    } else {
-                        // Handle Legacy JSON format
-                        data = JSON.parse(decodedText);
-                    }
+        import("html5-qrcode").then((module) => {
+            if (!isMounted) return;
 
-                    if (data.id && data.s) {
-                        scanner.clear();
-                        setScanResult(data);
-                        fetchExam(data.id);
-                    } else {
-                        setError("QR Code inválido. Não contém dados suficientes.");
+            const Html5QrcodeScanner = module.Html5QrcodeScanner;
+            scanner = new Html5QrcodeScanner(
+                "reader",
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                /* verbose= */ false
+            );
+
+            scanner.render(
+                (decodedText) => {
+                    try {
+                        let data;
+                        if (decodedText.startsWith('http')) {
+                            // Handle URL format
+                            const url = new URL(decodedText);
+                            data = {
+                                id: url.searchParams.get('id'),
+                                s: url.searchParams.get('s'),
+                                c: url.searchParams.get('c'),
+                                ac: url.searchParams.get('ac')
+                            };
+                        } else {
+                            // Handle Legacy JSON format
+                            data = JSON.parse(decodedText);
+                        }
+
+                        if (data.id && data.s) {
+                            if (scanner) {
+                                scanner.clear().catch(e => console.error("Failed to clear scanner", e));
+                            }
+                            setScanResult(data);
+                            fetchExam(data.id);
+                        } else {
+                            setError("QR Code inválido. Não contém dados suficientes.");
+                        }
+                    } catch (e) {
+                        setError("QR Code no formato incorreto ou link inválido.");
                     }
-                } catch (e) {
-                    setError("QR Code no formato incorreto ou link inválido.");
+                },
+                (errorMessage) => {
+                    // Ignore background scanning errors
                 }
-            },
-            (errorMessage) => {
-                // Ignore background scanning errors
-            }
-        );
+            );
+        }).catch(err => {
+            console.error("Failed to load html5-qrcode dynamically:", err);
+        });
 
         return () => {
-            scanner.clear().catch(e => console.error("Failed to clear scanner", e));
+            isMounted = false;
+            if (scanner) {
+                scanner.clear().catch(e => console.error("Failed to clear scanner", e));
+            }
         };
     }, [scanResult]);
 
