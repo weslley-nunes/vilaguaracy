@@ -262,65 +262,64 @@ export default function ResultadosPage() {
                                 <div className="p-6 border-b border-gray-100 bg-gray-50 flex flex-col sm:flex-row justify-between sm:items-center gap-4 shrink-0 print:hidden">
                                     <div>
                                         <h2 className="text-xl font-bold text-gray-800 line-clamp-1">{selectedExam.title}</h2>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <span className="bg-vg-navy text-white text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider">
+                                        <div className="flex flex-wrap items-center gap-3 mt-2">
+                                            <span className="bg-vg-navy text-white text-[10px] px-2 py-1.5 rounded font-bold uppercase tracking-wider">
                                                 {selectedClassObj.name}
                                             </span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs font-bold text-gray-500 uppercase">Ordem:</span>
+                                                <select 
+                                                    value={sortOrder} 
+                                                    onChange={e => setSortOrder(e.target.value)}
+                                                    className="input bg-white border-gray-200 text-xs py-1 px-2 w-auto rounded-md shadow-sm text-gray-600 font-semibold focus:ring-vg-navy"
+                                                >
+                                                    <option value="alfabetica">Alfabética</option>
+                                                    <option value="correcao">Correção</option>
+                                                    <option value="maior">Maior Nota</option>
+                                                    <option value="menor">Menor Nota</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="text-right">
+                                    <div className="text-left sm:text-right">
                                         <p className="text-[10px] uppercase font-bold text-gray-400">Provas Corrigidas</p>
                                         <p className="text-2xl font-black text-vg-dark">{corrections.length} <span className="text-sm text-gray-400 font-medium">/ {selectedClassObj.students?.length || 0}</span></p>
                                     </div>
                                 </div>
 
-                                <div className="flex flex-col md:flex-row justify-between md:items-end border-b border-gray-100 px-6 bg-white shrink-0 print:hidden">
-                                    <div className="flex overflow-x-auto custom-scrollbar">
-                                        <button
-                                            onClick={() => setActiveTab("cards")}
-                                            className={`py-4 px-6 font-bold text-sm border-b-2 transition-all whitespace-nowrap ${
-                                                activeTab === "cards" 
-                                                    ? "border-vg-navy border-b-vg-navy text-vg-dark" 
-                                                    : "border-transparent text-gray-400 hover:text-gray-600"
-                                            }`}
-                                        >
-                                            Visão por Cartões
-                                        </button>
-                                        <button
-                                            onClick={() => setActiveTab("print")}
-                                            className={`py-4 px-6 font-bold text-sm border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
-                                                activeTab === "print" 
-                                                    ? "border-vg-navy border-b-vg-navy text-vg-dark" 
-                                                    : "border-transparent text-gray-400 hover:text-gray-600"
-                                            }`}
-                                        >
-                                            <Printer size={16} />
-                                            Boletins para Impressão
-                                        </button>
-                                        <button
-                                            onClick={() => setActiveTab("summary")}
-                                            className={`py-4 px-6 font-bold text-sm border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
-                                                activeTab === "summary" 
-                                                    ? "border-vg-navy border-b-vg-navy text-vg-dark" 
-                                                    : "border-transparent text-gray-400 hover:text-gray-600"
-                                            }`}
-                                        >
-                                            <List size={16} />
-                                            Resumo (Notas)
-                                        </button>
-                                    </div>
-                                    <div className="pb-3 pt-3 md:pt-0">
-                                        <select 
-                                            value={sortOrder} 
-                                            onChange={e => setSortOrder(e.target.value)}
-                                            className="input bg-gray-50 border-gray-200 text-xs py-2 px-3 w-full md:w-auto rounded-lg shadow-sm text-gray-600 font-semibold focus:ring-vg-navy"
-                                        >
-                                            <option value="alfabetica">Ordem Alfabética</option>
-                                            <option value="correcao">Ordem de Correção</option>
-                                            <option value="maior">Maior para Menor Nota</option>
-                                            <option value="menor">Menor para Maior Nota</option>
-                                        </select>
-                                    </div>
+                                <div className="flex border-b border-gray-100 px-6 bg-white shrink-0 print:hidden overflow-x-auto custom-scrollbar">
+                                    <button
+                                        onClick={() => setActiveTab("cards")}
+                                        className={`py-4 px-6 font-bold text-sm border-b-2 transition-all whitespace-nowrap ${
+                                            activeTab === "cards" 
+                                                ? "border-vg-navy border-b-vg-navy text-vg-dark" 
+                                                : "border-transparent text-gray-400 hover:text-gray-600"
+                                        }`}
+                                    >
+                                        Visão por Cartões
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab("print")}
+                                        className={`py-4 px-6 font-bold text-sm border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
+                                            activeTab === "print" 
+                                                ? "border-vg-navy border-b-vg-navy text-vg-dark" 
+                                                : "border-transparent text-gray-400 hover:text-gray-600"
+                                        }`}
+                                    >
+                                        <Printer size={16} />
+                                        Boletins para Impressão
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab("summary")}
+                                        className={`py-4 px-6 font-bold text-sm border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
+                                            activeTab === "summary" 
+                                                ? "border-vg-navy border-b-vg-navy text-vg-dark" 
+                                                : "border-transparent text-gray-400 hover:text-gray-600"
+                                        }`}
+                                    >
+                                        <List size={16} />
+                                        Resumo (Notas)
+                                    </button>
                                 </div>
 
                                 <div className="p-6 overflow-y-auto flex-1 custom-scrollbar print:overflow-visible print:p-0 print:block print:h-auto">
@@ -462,20 +461,20 @@ export default function ResultadosPage() {
                                                             </div>
 
                                                             {/* Student & Exam Info */}
-                                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 print:gap-2 mb-6 print:mb-4 text-sm print:text-xs bg-gray-50 p-4 print:p-2 rounded-xl border border-gray-100">
-                                                                <div>
+                                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 print:gap-2 mb-6 print:mb-4 text-sm print:text-xs bg-gray-50 p-4 print:p-2 rounded-xl border border-gray-100 print:flex print:flex-row print:justify-between print:w-full">
+                                                                <div className="print:w-1/4">
                                                                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Aluno</p>
                                                                     <p className="font-bold text-gray-800">{corr.studentName}</p>
                                                                 </div>
-                                                                <div>
+                                                                <div className="print:w-1/4">
                                                                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Turma</p>
                                                                     <p className="font-bold text-gray-800">{selectedClassObj.name}</p>
                                                                 </div>
-                                                                <div>
+                                                                <div className="print:w-1/4">
                                                                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Avaliação</p>
                                                                     <p className="font-bold text-gray-800 line-clamp-1">{selectedExam.title}</p>
                                                                 </div>
-                                                                <div>
+                                                                <div className="print:w-1/4">
                                                                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Data da Prova</p>
                                                                     <p className="font-bold text-gray-800">
                                                                         {corr.correctedAt?.seconds 
@@ -507,12 +506,12 @@ export default function ResultadosPage() {
                                                             {/* Details Table */}
                                                             <div className="mb-8 print:mb-2">
                                                                 <h3 className="text-xs print:text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-3 print:mb-1">Detalhamento por Questão (BNCC / Erros e Acertos)</h3>
-                                                                <div className="grid grid-cols-1 print:grid-cols-2 gap-4 print:gap-2">
+                                                                <div className="grid grid-cols-1 print:flex print:flex-row print:justify-between print:w-full gap-4 print:gap-2">
                                                                     {[
                                                                         corr.details?.slice(0, Math.ceil((corr.details?.length || 0) / 2)),
                                                                         corr.details?.slice(Math.ceil((corr.details?.length || 0) / 2))
                                                                     ].filter(half => half && half.length > 0).map((half, hIdx) => (
-                                                                        <div key={hIdx} className="border border-gray-200 rounded-xl overflow-hidden print:rounded-none print:border-t print:border-b print:border-l-0 print:border-r-0">
+                                                                        <div key={hIdx} className="border border-gray-200 rounded-xl overflow-hidden print:rounded-none print:border-t print:border-b print:border-l-0 print:border-r-0 print:w-[49%]">
                                                                             <table className="w-full text-left text-xs border-collapse">
                                                                                 <thead>
                                                                                     <tr className="border-b border-gray-200 bg-gray-50 print:text-[8px]">
