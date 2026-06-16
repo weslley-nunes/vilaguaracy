@@ -179,8 +179,8 @@ export default function ResultadosPage() {
     });
 
     return (
-        <div className="max-w-6xl mx-auto h-full flex flex-col">
-            <div className="flex items-center gap-4 mb-8 shrink-0">
+        <div className="max-w-6xl mx-auto h-full flex flex-col print:h-auto print:block">
+            <div className="flex items-center gap-4 mb-8 shrink-0 print:hidden">
                 <Link href="/dashboard" className="p-2 rounded-full hover:bg-gray-100 transition-colors">
                     <ChevronLeft size={24} className="text-gray-600" />
                 </Link>
@@ -196,9 +196,9 @@ export default function ResultadosPage() {
                     <p className="text-gray-500 font-medium">Carregando dados...</p>
                 </div>
             ) : (
-                <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
+                <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0 print:block print:h-auto">
                     {/* Sidebar 1: Classes */}
-                    <div className="w-full md:w-64 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 shrink-0 overflow-y-auto custom-scrollbar">
+                    <div className="w-full md:w-64 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 shrink-0 overflow-y-auto custom-scrollbar print:hidden">
                         <h3 className="font-bold text-sm uppercase text-gray-400 mb-4 tracking-wider">1. Selecione a Turma</h3>
                         <div className="space-y-2">
                             {classes.length === 0 ? (
@@ -227,7 +227,7 @@ export default function ResultadosPage() {
                     </div>
 
                     {/* Sidebar 2: Exams */}
-                    <div className={`w-full md:w-72 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 shrink-0 overflow-y-auto custom-scrollbar transition-opacity ${!selectedClassId ? 'opacity-50 pointer-events-none' : ''}`}>
+                    <div className={`w-full md:w-72 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 shrink-0 overflow-y-auto custom-scrollbar transition-opacity print:hidden ${!selectedClassId ? 'opacity-50 pointer-events-none' : ''}`}>
                         <h3 className="font-bold text-sm uppercase text-gray-400 mb-4 tracking-wider">2. Avaliação</h3>
                         <div className="space-y-2">
                             {examsForSelectedClass.length === 0 ? (
@@ -256,10 +256,10 @@ export default function ResultadosPage() {
                     </div>
 
                     {/* Main View: Class Results */}
-                    <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
+                    <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden print:overflow-visible print:border-none print:shadow-none print:block print:h-auto">
                         {selectedExam && selectedClassObj ? (
                             <>
-                                <div className="p-6 border-b border-gray-100 bg-gray-50 flex flex-col sm:flex-row justify-between sm:items-center gap-4 shrink-0">
+                                <div className="p-6 border-b border-gray-100 bg-gray-50 flex flex-col sm:flex-row justify-between sm:items-center gap-4 shrink-0 print:hidden">
                                     <div>
                                         <h2 className="text-xl font-bold text-gray-800 line-clamp-1">{selectedExam.title}</h2>
                                         <div className="flex items-center gap-2 mt-1">
@@ -309,7 +309,7 @@ export default function ResultadosPage() {
                                     </button>
                                 </div>
 
-                                <div className="p-6 overflow-y-auto flex-1 custom-scrollbar print:overflow-visible print:p-0">
+                                <div className="p-6 overflow-y-auto flex-1 custom-scrollbar print:overflow-visible print:p-0 print:block print:h-auto">
                                     {activeTab === "cards" ? (
                                         corrections.length === 0 ? (
                                             <div className="h-full flex flex-col items-center justify-center text-center">
@@ -439,12 +439,24 @@ export default function ResultadosPage() {
                                                 </button>
                                             </div>
 
-                                            <div className="print-container space-y-8 print:space-y-0">
+                                            <div className="print-container space-y-8 print:space-y-0 print:block print:h-auto">
                                                 {corrections.length === 0 ? (
                                                     <p className="text-center text-gray-400 text-sm py-12">Nenhum boletim disponível para esta turma.</p>
                                                 ) : (
-                                                    sortedCorrections.map(corr => (
-                                                        <div key={corr.id} className="print-sheet bg-white p-8 border border-gray-200 rounded-2xl shadow-sm print:shadow-none print:border-none print:m-0 print:p-0 print:break-after-page">
+                                                    sortedCorrections.map((corr, idx) => (
+                                                        <div key={corr.id} className={`print-sheet bg-white p-8 border border-gray-200 rounded-2xl shadow-sm print:shadow-none print:border-none print:m-0 print:p-0 print:break-inside-avoid ${idx !== sortedCorrections.length - 1 ? 'print:break-after-page' : ''}`}>
+                                                            {/* Header in Print Mode */}
+                                                            <div className="hidden print:flex border-b-2 border-vg-dark pb-2 mb-4 justify-between items-end">
+                                                                <div>
+                                                                    <h1 className="text-xl font-black text-vg-dark tracking-tight">{selectedClassObj.name} - {selectedExam.title}</h1>
+                                                                    <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mt-1">Boletim de Correção da Avaliação</p>
+                                                                </div>
+                                                                <div className="text-right flex items-center gap-2">
+                                                                    <p className="text-[8px] uppercase font-bold text-gray-400 text-right">Provas<br/>Corrigidas</p>
+                                                                    <p className="text-xl font-black text-vg-dark">{idx + 1} <span className="text-xs text-gray-400">/ {corrections.length}</span></p>
+                                                                </div>
+                                                            </div>
+
                                                             {/* Student & Exam Info */}
                                                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 print:gap-2 mb-6 print:mb-4 text-sm print:text-xs bg-gray-50 p-4 print:p-2 rounded-xl border border-gray-100">
                                                                 <div>
