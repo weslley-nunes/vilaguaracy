@@ -348,8 +348,28 @@ export default function BuilderPage() {
 
         setIsSaving(true);
         try {
+            // Apply sorting logic to match PDF output
+            const subjectOrder = [
+                "Arte", "Educação Física", "Língua Inglesa", "Inglês",
+                "Língua Portuguesa", "História", "Geografia", "Ciências", "Matemática"
+            ];
+            
+            const getSubjectIndex = (subjectName) => {
+                if (!subjectName) return 999;
+                const lowerName = subjectName.toLowerCase().trim();
+                for (let i = 0; i < subjectOrder.length; i++) {
+                    const ord = subjectOrder[i].toLowerCase();
+                    if (lowerName === ord || lowerName.includes(ord) || ord.includes(lowerName)) {
+                        return i;
+                    }
+                }
+                return 999;
+            };
+
+            const sortedQuestions = [...examQuestions].sort((a, b) => getSubjectIndex(a.subject) - getSubjectIndex(b.subject));
+
             const answerKey = {};
-            examQuestions.forEach((q, idx) => {
+            sortedQuestions.forEach((q, idx) => {
                 if (q.correct) {
                     answerKey[idx] = q.correct;
                 }
@@ -359,10 +379,10 @@ export default function BuilderPage() {
                 ...(isEditMode && examId ? { id: examId } : {}),
                 title: examTitle || "Sem título",
                 headerConfig,
-                questions: examQuestions,
+                questions: sortedQuestions,
                 answerKey, // Direct mapping for easy correction
                 scoringMode,
-                totalScore: scoringMode === 'auto' ? (Number(totalScore) || 10) : examQuestions.reduce((sum, q) => sum + (Number(q.points) || 0), 0),
+                totalScore: scoringMode === 'auto' ? (Number(totalScore) || 10) : sortedQuestions.reduce((sum, q) => sum + (Number(q.points) || 0), 0),
                 collaborators: collaborators,
                 bimester: selectedBimester,
                 ...(selectedTemplate ? { templateType: selectedTemplate } : {})
