@@ -214,7 +214,8 @@ export default function ScannerPage() {
             setCorrectionResult({
                 score: totalCalculatedScore,
                 correctCount,
-                totalCount
+                totalCount,
+                scoresBySubject
             });
         } catch (err) {
             setError(err.message);
@@ -551,6 +552,20 @@ export default function ScannerPage() {
                                 <p className="text-3xl font-bold text-red-500">{correctionResult.totalCount - correctionResult.correctCount}</p>
                             </div>
                         </div>
+
+                        {correctionResult.scoresBySubject && Object.keys(correctionResult.scoresBySubject).length > 0 && (
+                            <div className="mb-8 border-b border-gray-100 pb-8">
+                                <h3 className="text-sm font-bold text-gray-700 uppercase mb-4">Notas por Componente</h3>
+                                <div className="flex flex-wrap justify-center gap-4">
+                                    {Object.entries(correctionResult.scoresBySubject).map(([subject, score]) => (
+                                        <div key={subject} className="bg-gray-50 border border-gray-100 rounded-xl p-4 min-w-[120px]">
+                                            <p className="text-xs text-gray-500 uppercase font-bold mb-1">{subject}</p>
+                                            <p className="text-2xl font-bold text-vg-dark">{score.toFixed(1)}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         <button onClick={resetScanner} className="btn btn-primary py-4 w-full text-lg shadow-lg shadow-vg-dark/20">
                             Escanear Próximo Aluno
