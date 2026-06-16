@@ -16,7 +16,8 @@ export default function ResultadosPage() {
     const [selectedClassId, setSelectedClassId] = useState("");
     const [selectedExamId, setSelectedExamId] = useState("");
     const [selectedStudent, setSelectedStudent] = useState(null); // Modal state
-    const [activeTab, setActiveTab] = useState("cards"); // "cards" | "print"
+    const [activeTab, setActiveTab] = useState("cards"); // "cards" | "print" | "summary"
+    const [sortOrder, setSortOrder] = useState("correcao"); // "correcao" | "maior" | "menor" | "alfabetica"
 
     useEffect(() => {
         loadData();
@@ -166,6 +167,17 @@ export default function ResultadosPage() {
     // Calcula todas as disciplinas únicas presentes nas correções desta turma
     const allSubjects = Array.from(new Set(corrections.flatMap(c => Object.keys(c.scoresBySubject || {})))).sort();
 
+    // Sorting logic
+    const sortedCorrections = [...corrections].sort((a, b) => {
+        if (sortOrder === "maior") return b.score - a.score;
+        if (sortOrder === "menor") return a.score - b.score;
+        if (sortOrder === "alfabetica") return (a.studentName || "").localeCompare(b.studentName || "");
+        // "correcao" is default
+        const timeA = a.createdAt?.seconds || 0;
+        const timeB = b.createdAt?.seconds || 0;
+        return timeA - timeB;
+    });
+
     return (
         <div className="max-w-6xl mx-auto h-full flex flex-col">
             <div className="flex items-center gap-4 mb-8 shrink-0">
@@ -308,8 +320,22 @@ export default function ResultadosPage() {
                                                 </p>
                                             </div>
                                         ) : (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                {corrections.map(corr => {
+                                            <div className="flex flex-col h-full">
+                                                <div className="flex justify-between items-center mb-6 shrink-0">
+                                                    <h3 className="font-bold text-gray-700 text-sm uppercase tracking-wider">Desempenho dos Alunos</h3>
+                                                    <select 
+                                                        value={sortOrder} 
+                                                        onChange={e => setSortOrder(e.target.value)}
+                                                        className="input bg-gray-50 border-gray-200 text-sm py-2 px-4 w-auto rounded-xl shadow-sm text-gray-600 font-semibold focus:ring-vg-navy"
+                                                    >
+                                                        <option value="correcao">Ordem de Correção</option>
+                                                        <option value="alfabetica">Ordem Alfabética</option>
+                                                        <option value="maior">Maior para Menor Nota</option>
+                                                        <option value="menor">Menor para Maior Nota</option>
+                                                    </select>
+                                                </div>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-12">
+                                                    {sortedCorrections.map(corr => {
                                                     const hitRate = (corr.correctCount / corr.totalCount) * 100;
                                                     let gradeColor = "text-red-500";
                                                     if (hitRate >= 70) gradeColor = "text-green-500";
@@ -340,6 +366,7 @@ export default function ResultadosPage() {
                                                         </div>
                                                     )
                                                 })}
+                                                </div>
                                             </div>
                                         )
                                     ) : activeTab === "summary" ? (
@@ -375,7 +402,7 @@ export default function ResultadosPage() {
                                                             </tr>
                                                         </thead>
                                                         <tbody className="divide-y divide-gray-150">
-                                                            {corrections.map((corr, idx) => (
+                                                            {sortedCorrections.map((corr, idx) => (
                                                                 <tr key={corr.id} className="hover:bg-gray-50/50 print:break-inside-avoid">
                                                                     <td className="py-2 px-4 font-bold text-gray-700">{corr.studentName}</td>
                                                                     {allSubjects.map(sub => {
@@ -416,20 +443,8 @@ export default function ResultadosPage() {
                                                 {corrections.length === 0 ? (
                                                     <p className="text-center text-gray-400 text-sm py-12">Nenhum boletim disponível para esta turma.</p>
                                                 ) : (
-                                                    corrections.map(corr => (
-                                                        <div key={corr.id} className="print-sheet bg-white p-8 border border-gray-200 rounded-2xl shadow-sm print:shadow-none print:border-none print:m-0 print:p-0">
-                                                            {/* School Header */}
-                                                            <div className="border-b-2 border-vg-dark pb-4 print:pb-2 mb-6 print:mb-4 flex justify-between items-end">
-                                                                <div>
-                                                                    <h1 className="text-2xl print:text-xl font-black text-vg-dark tracking-tight">Escola Estadual Vila Guaracy</h1>
-                                                                    <p className="text-xs print:text-[10px] text-gray-500 uppercase font-bold tracking-wider mt-1">Boletim de Correção da Avaliação</p>
-                                                                </div>
-                                                                <div className="text-right">
-                                                                    <p className="text-[10px] uppercase font-bold text-gray-400">ID da Prova</p>
-                                                                    <p className="font-mono text-sm font-bold bg-gray-100 px-2 py-0.5 rounded text-gray-700">{selectedExam.shortId || selectedExam.id?.slice(-6)}</p>
-                                                                </div>
-                                                            </div>
-
+                                                    sortedCorrections.map(corr => (
+                                                        <div key={corr.id} className="print-sheet bg-white p-8 border border-gray-200 rounded-2xl shadow-sm print:shadow-none print:border-none print:m-0 print:p-0 print:break-after-page">
                                                             {/* Student & Exam Info */}
                                                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 print:gap-2 mb-6 print:mb-4 text-sm print:text-xs bg-gray-50 p-4 print:p-2 rounded-xl border border-gray-100">
                                                                 <div>
@@ -476,53 +491,48 @@ export default function ResultadosPage() {
                                                             {/* Details Table */}
                                                             <div className="mb-8 print:mb-2">
                                                                 <h3 className="text-xs print:text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-3 print:mb-1">Detalhamento por Questão (BNCC / Erros e Acertos)</h3>
-                                                                <div className="border border-gray-200 rounded-xl overflow-hidden print:rounded-none print:border-t print:border-b print:border-l-0 print:border-r-0">
-                                                                    <table className="w-full text-left text-xs border-collapse">
-                                                                        <thead>
-                                                                            <tr className="border-b border-gray-200 bg-gray-50 print:text-[10px]">
-                                                                                <th className="py-2.5 px-3 print:py-1 print:px-1 font-bold text-gray-500 uppercase tracking-wider w-16 print:w-8">Q.</th>
-                                                                                <th className="py-2.5 px-3 print:py-1 print:px-1 font-bold text-gray-500 uppercase tracking-wider">Componente</th>
-                                                                                <th className="py-2.5 px-3 print:py-1 print:px-1 font-bold text-gray-500 uppercase tracking-wider">Habilidade</th>
-                                                                                <th className="py-2.5 px-3 print:py-1 print:px-1 font-bold text-gray-500 uppercase tracking-wider text-center w-24 print:w-16">Marcou</th>
-                                                                                <th className="py-2.5 px-3 print:py-1 print:px-1 font-bold text-gray-500 uppercase tracking-wider text-center w-24 print:w-16">Gabarito</th>
-                                                                                <th className="py-2.5 px-3 print:py-1 print:px-1 font-bold text-gray-500 uppercase tracking-wider text-center w-24 print:w-16">Status</th>
-                                                                            </tr>
-                                                                        </thead>
-                                                                        <tbody className="divide-y divide-gray-150 print:text-[10px]">
-                                                                            {corr.details?.map((detail, idx) => (
-                                                                                <tr key={idx} className="hover:bg-gray-50/50 print:py-0">
-                                                                                    <td className="py-2 px-3 print:py-0.5 print:px-1 font-bold text-gray-700 text-center">{detail.questionIndex !== undefined ? detail.questionIndex + 1 : (detail.q !== undefined ? detail.q : idx + 1)}</td>
-                                                                                    <td className="py-2 px-3 print:py-0.5 print:px-1 text-gray-600 font-semibold">{detail.subject || "Geral"}</td>
-                                                                                    <td className="py-2 px-3 print:py-0.5 print:px-1">
-                                                                                        <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-[10px] print:text-[8px] font-bold tracking-wider uppercase border border-gray-200 print:border-none print:bg-transparent print:p-0">
-                                                                                            {detail.habilidade || detail.skill || "N/A"}
-                                                                                        </span>
-                                                                                    </td>
-                                                                                    <td className="py-2 px-3 print:py-0.5 print:px-1 text-center font-bold text-gray-700">{detail.studentAnswer || detail.marked || "-"}</td>
-                                                                                    <td className="py-2 px-3 print:py-0.5 print:px-1 text-center font-bold text-green-600">{detail.correctAnswer || detail.correct || "-"}</td>
-                                                                                    <td className="py-2 px-3 print:py-0.5 print:px-1 text-center">
-                                                                                        {detail.isCorrect ? (
-                                                                                            <span className="text-green-600 font-black">Acertou</span>
-                                                                                        ) : (
-                                                                                            <span className="text-red-500 font-black">Errou</span>
-                                                                                        )}
-                                                                                    </td>
-                                                                                </tr>
-                                                                            ))}
-                                                                        </tbody>
-                                                                    </table>
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Signatures */}
-                                                            <div className="grid grid-cols-2 gap-12 mt-12 print:mt-4 pt-8 print:pt-4 border-t border-dashed border-gray-300 text-center text-xs text-gray-500">
-                                                                <div>
-                                                                    <div className="border-t border-gray-400 w-48 mx-auto mb-2 print:mb-1"></div>
-                                                                    <p className="font-semibold text-gray-600 print:text-[10px]">Assinatura do Responsável</p>
-                                                                </div>
-                                                                <div>
-                                                                    <div className="border-t border-gray-400 w-48 mx-auto mb-2 print:mb-1"></div>
-                                                                    <p className="font-semibold text-gray-600 print:text-[10px]">Assinatura do Professor</p>
+                                                                <div className="grid grid-cols-1 print:grid-cols-2 gap-4 print:gap-2">
+                                                                    {[
+                                                                        corr.details?.slice(0, Math.ceil((corr.details?.length || 0) / 2)),
+                                                                        corr.details?.slice(Math.ceil((corr.details?.length || 0) / 2))
+                                                                    ].filter(half => half && half.length > 0).map((half, hIdx) => (
+                                                                        <div key={hIdx} className="border border-gray-200 rounded-xl overflow-hidden print:rounded-none print:border-t print:border-b print:border-l-0 print:border-r-0">
+                                                                            <table className="w-full text-left text-xs border-collapse">
+                                                                                <thead>
+                                                                                    <tr className="border-b border-gray-200 bg-gray-50 print:text-[8px]">
+                                                                                        <th className="py-2.5 px-2 print:py-1 print:px-1 font-bold text-gray-500 uppercase tracking-wider w-8">Q.</th>
+                                                                                        <th className="py-2.5 px-2 print:py-1 print:px-1 font-bold text-gray-500 uppercase tracking-wider">Comp.</th>
+                                                                                        <th className="py-2.5 px-2 print:py-1 print:px-1 font-bold text-gray-500 uppercase tracking-wider">Habilidade</th>
+                                                                                        <th className="py-2.5 px-2 print:py-1 print:px-1 font-bold text-gray-500 uppercase tracking-wider text-center w-10">Mar.</th>
+                                                                                        <th className="py-2.5 px-2 print:py-1 print:px-1 font-bold text-gray-500 uppercase tracking-wider text-center w-10">Gab.</th>
+                                                                                        <th className="py-2.5 px-2 print:py-1 print:px-1 font-bold text-gray-500 uppercase tracking-wider text-center w-10">Status</th>
+                                                                                    </tr>
+                                                                                </thead>
+                                                                                <tbody className="divide-y divide-gray-150 print:text-[8px]">
+                                                                                    {half.map((detail, idx) => (
+                                                                                        <tr key={idx} className="hover:bg-gray-50/50 print:py-0">
+                                                                                            <td className="py-2 px-2 print:py-0 print:px-1 font-bold text-gray-700 text-center">{detail.questionIndex !== undefined ? detail.questionIndex + 1 : (detail.q !== undefined ? detail.q : "-")}</td>
+                                                                                            <td className="py-2 px-2 print:py-0 print:px-1 text-gray-600 font-semibold truncate max-w-[50px]">{detail.subject || "Geral"}</td>
+                                                                                            <td className="py-2 px-2 print:py-0 print:px-1">
+                                                                                                <span className="bg-gray-100 text-gray-700 px-1 py-0 rounded text-[9px] print:text-[7px] font-bold tracking-wider uppercase border border-gray-200 print:border-none print:bg-transparent print:p-0">
+                                                                                                    {detail.habilidade || detail.skill || "N/A"}
+                                                                                                </span>
+                                                                                            </td>
+                                                                                            <td className="py-2 px-2 print:py-0 print:px-1 text-center font-bold text-gray-700">{detail.studentAnswer || detail.marked || "-"}</td>
+                                                                                            <td className="py-2 px-2 print:py-0 print:px-1 text-center font-bold text-green-600">{detail.correctAnswer || detail.correct || "-"}</td>
+                                                                                            <td className="py-2 px-2 print:py-0 print:px-1 text-center">
+                                                                                                {detail.isCorrect ? (
+                                                                                                    <span className="text-green-600 font-black">Acertou</span>
+                                                                                                ) : (
+                                                                                                    <span className="text-red-500 font-black">Errou</span>
+                                                                                                )}
+                                                                                            </td>
+                                                                                        </tr>
+                                                                                    ))}
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>
+                                                                    ))}
                                                                 </div>
                                                             </div>
                                                         </div>
