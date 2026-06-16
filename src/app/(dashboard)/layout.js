@@ -42,10 +42,10 @@ export default function DashboardLayout({ children }) {
     }
 
     return (
-        <div className="min-h-screen bg-[var(--background)] flex transition-colors duration-500">
+        <div className="min-h-screen bg-[var(--background)] flex transition-colors duration-500 print:block print:min-h-0 print:h-auto print:bg-white">
             <Sidebar isCollapsed={isSidebarCollapsed} setIsCollapsed={setIsSidebarCollapsed} />
-            <main className={`flex-1 transition-all duration-300 ${isSidebarCollapsed ? 'ml-20' : 'ml-72'} p-8 relative`}>
-                <div className="absolute top-6 right-8 z-50">
+            <main className={`flex-1 transition-all duration-300 ${isSidebarCollapsed ? 'ml-20' : 'ml-72'} p-8 relative print:ml-0 print:p-0 print:block print:w-full print:bg-white`}>
+                <div className="absolute top-6 right-8 z-50 print:hidden">
                     <ThemeToggle />
                 </div>
                 <div className="max-w-6xl mx-auto pt-8">

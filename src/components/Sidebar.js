@@ -65,7 +65,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
     useEffect(() => setMounted(true), []);
 
     return (
-        <aside className={`${isCollapsed ? 'w-20' : 'w-72'} h-screen flex flex-col fixed left-0 top-0 z-50 glass border-r-0 transition-all duration-300 group/sidebar`}>
+        <aside className={`${isCollapsed ? 'w-20' : 'w-72'} h-screen flex flex-col fixed left-0 top-0 z-50 glass border-r-0 transition-all duration-300 group/sidebar print:hidden`}>
             {/* Header / Logo */}
             <div className={`p-6 flex items-center justify-between mb-4 ${isCollapsed ? 'px-4' : 'px-8'}`}>
                 <div className="flex items-center gap-3">
