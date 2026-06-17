@@ -57,6 +57,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
             { href: "/exams", label: "Minhas Avaliações", icon: ClipboardList },
             { href: "/scanner", label: "Scanner de Correção", icon: Sparkles },
             { href: "/resultados", label: "Resultados Analíticos", icon: BarChart2 },
+            { href: "/habilidades", label: "Habilidades", icon: TrendingUp },
             { href: "/tutorial", label: "Ajuda & Tutoriais", icon: BookOpen },
         ];
     }

@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { ExamService } from "@/services/examService";
 import { getClassesByUser } from "@/services/classesService";
+import { UserService } from "@/services/userService";
 import { Shield, Target, Users, BookOpen, Filter, Search, Loader2, Trash2, RotateCcw, Edit3, X, AlertCircle } from "lucide-react";
 import { 
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
@@ -14,13 +15,15 @@ export default function HabilidadesPage() {
     const [allCorrections, setAllCorrections] = useState([]);
     const [exams, setExams] = useState([]);
     const [classes, setClasses] = useState([]);
+    const [staff, setStaff] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const [filters, setFilters] = useState({
         classId: "",
         subject: "",
         bimester: "",
-        examId: ""
+        examId: "",
+        teacherId: ""
     });
 
     const [searchStudent, setSearchStudent] = useState("");
@@ -32,14 +35,16 @@ export default function HabilidadesPage() {
         async function loadData() {
             setIsLoading(true);
             try {
-                const [corrs, exms, clss] = await Promise.all([
+                const [corrs, exms, clss, stf] = await Promise.all([
                     ExamService.listAllCorrections(),
                     ExamService.listAll(),
-                    getClassesByUser()
+                    getClassesByUser(),
+                    UserService.listStaff()
                 ]);
                 setAllCorrections(corrs);
                 setExams(exms);
                 setClasses(clss);
+                setStaff(stf);
             } catch (e) {
                 console.error("Error loading dashboard data", e);
             } finally {
@@ -50,22 +55,45 @@ export default function HabilidadesPage() {
     }, []);
 
     // Derived Data: List of unique subjects and bimesters for filters
-    const subjects = useMemo(() => [...new Set(exams.map(e => e.subject).filter(Boolean))], [exams]);
+    const subjects = useMemo(() => {
+        const subs = new Set();
+        allCorrections.forEach(c => {
+            if (c.scoresBySubject && Object.keys(c.scoresBySubject).length > 0) {
+                Object.keys(c.scoresBySubject).forEach(s => subs.add(s));
+            } else {
+                const ex = exams.find(e => e.id === c.examId);
+                if (ex && ex.subject) subs.add(ex.subject);
+            }
+        });
+        return [...subs].sort();
+    }, [allCorrections, exams]);
+    
     const bimesters = useMemo(() => [...new Set(exams.map(e => e.bimester).filter(Boolean))], [exams]);
 
     // Apply Filters
     const filteredCorrections = useMemo(() => {
         return allCorrections.filter(corr => {
             const exam = exams.find(e => e.id === corr.examId);
+            const corrClass = classes.find(cl => cl.id === corr.classId || cl.name === corr.classId);
             
+            // Filter by Teacher
+            if (filters.teacherId) {
+                if (exam?.teacherId !== filters.teacherId && corrClass?.userId !== filters.teacherId) return false;
+            }
+
             // Filter by Class (matching ID or Name for robustness)
             if (filters.classId) {
-                const selectedClass = classes.find(cl => cl.id === filters.classId);
-                if (corr.classId !== filters.classId && corr.classId !== selectedClass?.name) return false;
+                if (corr.classId !== filters.classId && corr.classId !== corrClass?.name) return false;
             }
             
             // Filter by Subject
-            if (filters.subject && exam?.subject !== filters.subject) return false;
+            if (filters.subject) {
+                if (corr.scoresBySubject && corr.scoresBySubject[filters.subject] !== undefined) {
+                    // has subject in multiobjective exam
+                } else if (exam?.subject !== filters.subject) {
+                    return false;
+                }
+            }
             
             // Filter by Bimester
             if (filters.bimester && exam?.bimester !== filters.bimester) return false;
@@ -140,6 +168,80 @@ export default function HabilidadesPage() {
             return result;
         });
     }, [filteredCorrections, classes]);
+
+    // Performance Dashboard Calculations (IDEB Simulado & Areas)
+    const performanceDashboard = useMemo(() => {
+        if (filteredCorrections.length === 0) return null;
+
+        let totalScore = 0;
+        const studentAverages = {};
+        
+        const areaMapping = {
+            "Linguagens": ["Língua Portuguesa", "Arte", "Educação Física", "Língua Inglesa", "Inglês", "Redação"],
+            "Matemática": ["Matemática"],
+            "Ciências da Natureza": ["Ciências", "Biologia", "Física", "Química"],
+            "Ciências Humanas": ["História", "Geografia", "Ensino Religioso", "Filosofia", "Sociologia"]
+        };
+        const areaStats = {
+            "Linguagens": { sum: 0, count: 0 },
+            "Matemática": { sum: 0, count: 0 },
+            "Ciências da Natureza": { sum: 0, count: 0 },
+            "Ciências Humanas": { sum: 0, count: 0 }
+        };
+
+        filteredCorrections.forEach(corr => {
+            const exam = exams.find(e => e.id === corr.examId);
+            const hitRate = corr.totalCount > 0 ? (corr.correctCount / corr.totalCount) : 0;
+            totalScore += hitRate * 10; // Transform to 0-10 scale
+            
+            // Student averages
+            if (!studentAverages[corr.studentName]) studentAverages[corr.studentName] = { sum: 0, count: 0 };
+            studentAverages[corr.studentName].sum += hitRate * 10;
+            studentAverages[corr.studentName].count++;
+
+            // Area averages
+            if (corr.scoresBySubject && Object.keys(corr.scoresBySubject).length > 0) {
+                Object.keys(corr.scoresBySubject).forEach(sub => {
+                    const area = Object.keys(areaMapping).find(a => areaMapping[a].includes(sub));
+                    if (area) {
+                        const subDetails = corr.details?.filter(d => d.subject === sub) || [];
+                        const subTotal = subDetails.length;
+                        const subCorrect = subDetails.filter(d => d.isCorrect).length;
+                        if (subTotal > 0) {
+                            areaStats[area].sum += (subCorrect / subTotal) * 100;
+                            areaStats[area].count++;
+                        }
+                    }
+                });
+            } else {
+                const sub = exam?.subject;
+                if (sub) {
+                    const area = Object.keys(areaMapping).find(a => areaMapping[a].includes(sub));
+                    if (area) {
+                        areaStats[area].sum += hitRate * 100;
+                        areaStats[area].count++;
+                    }
+                }
+            }
+        });
+
+        const ideb = (totalScore / filteredCorrections.length).toFixed(1);
+        
+        const students = Object.keys(studentAverages).map(name => ({
+            name,
+            score: studentAverages[name].sum / studentAverages[name].count
+        })).sort((a, b) => b.score - a.score);
+
+        const top3 = students.slice(0, 3);
+        const bottom3 = [...students].reverse().slice(0, 3);
+
+        const areas = Object.keys(areaStats).map(a => ({
+            name: a,
+            score: areaStats[a].count > 0 ? Math.round(areaStats[a].sum / areaStats[a].count) : 0
+        }));
+
+        return { ideb, top3, bottom3, areas, allStudents: students };
+    }, [filteredCorrections, exams]);
 
     // Filter corrections for administration table
     const paginatedCorrections = useMemo(() => {
@@ -331,18 +433,6 @@ export default function HabilidadesPage() {
     const role = user?.role || "professor";
     const isGestao = role === "gestao" || role === "coordenador";
 
-    if (!isGestao) {
-        return (
-            <div className="flex-1 flex items-center justify-center h-full">
-                <div className="text-center bg-red-50 p-8 rounded-2xl border border-red-100">
-                    <Shield size={48} className="text-red-400 mx-auto mb-4" />
-                    <h2 className="text-xl font-bold text-red-700">Acesso Restrito</h2>
-                    <p className="text-red-500 text-sm mt-2">Esta visualização analítica é exclusiva para Gestão e Coordenação.</p>
-                </div>
-            </div>
-        );
-    }
-
     if (isLoading) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center h-[60vh]">
@@ -376,7 +466,7 @@ export default function HabilidadesPage() {
             </div>
 
             {/* Filters Bar */}
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                 <div className="space-y-1">
                     <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 flex items-center gap-1">
                         <Users size={10} /> Turma
@@ -429,13 +519,82 @@ export default function HabilidadesPage() {
                         {exams.map(ex => <option key={ex.id} value={ex.id}>{ex.title}</option>)}
                     </select>
                 </div>
+                <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 flex items-center gap-1">
+                        <Users size={10} /> Professor
+                    </label>
+                    <select 
+                        value={filters.teacherId} 
+                        onChange={e => setFilters({...filters, teacherId: e.target.value})}
+                        className="w-full text-xs p-2 rounded-lg border border-gray-200 focus:border-vg-navy outline-none"
+                    >
+                        <option value="">Todos</option>
+                        {staff.map(t => <option key={t.uid} value={t.uid}>{t.displayName}</option>)}
+                    </select>
+                </div>
                 <button 
-                    onClick={() => setFilters({ classId: "", subject: "", bimester: "", examId: "" })}
+                    onClick={() => setFilters({ classId: "", subject: "", bimester: "", examId: "", teacherId: "" })}
                     className="md:col-span-1 text-[10px] font-bold uppercase text-red-400 hover:text-red-600 transition-colors self-end pb-2"
                 >
                     Limpar Filtros
                 </button>
             </div>
+
+            {/* Performance Dashboard */}
+            {performanceDashboard && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* IDEB Simulado */}
+                    <div className="bg-gradient-to-br from-vg-navy to-vg-dark p-6 rounded-2xl shadow-sm border border-transparent text-white flex flex-col justify-center items-center relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10">
+                            <Target size={64} />
+                        </div>
+                        <h3 className="text-sm uppercase font-bold text-white/80 tracking-widest mb-2 z-10">IDEB Simulado</h3>
+                        <div className="text-6xl font-black z-10">{performanceDashboard.ideb}</div>
+                        <div className="text-xs text-white/60 mt-2 z-10">Média geral de 0 a 10</div>
+                    </div>
+
+                    {/* Destaques e Atenção */}
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
+                        <h3 className="text-sm uppercase font-bold text-gray-400 tracking-widest mb-4">Análise de Alunos</h3>
+                        <div className="flex-1 grid grid-cols-2 gap-4">
+                            <div>
+                                <h4 className="text-[10px] font-bold text-green-600 uppercase mb-2">Destaques</h4>
+                                <ul className="space-y-1">
+                                    {performanceDashboard.top3.map((st, i) => (
+                                        <li key={i} className="text-xs font-bold text-gray-700 truncate"><span className="text-green-500 mr-1">{st.score.toFixed(1)}</span> {st.name}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 className="text-[10px] font-bold text-red-500 uppercase mb-2">Atenção</h4>
+                                <ul className="space-y-1">
+                                    {performanceDashboard.bottom3.map((st, i) => (
+                                        <li key={i} className="text-xs font-bold text-gray-700 truncate"><span className="text-red-400 mr-1">{st.score.toFixed(1)}</span> {st.name}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Médias por Área */}
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                        <h3 className="text-sm uppercase font-bold text-gray-400 tracking-widest mb-4">Média por Área (%)</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            {performanceDashboard.areas.map((area, i) => (
+                                <div key={i}>
+                                    <div className="text-[10px] font-bold text-gray-500 uppercase mb-1 truncate" title={area.name}>{area.name.replace("Ciências da ", "").replace("Ciências ", "")}</div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                            <div className="h-full bg-vg-hover" style={{ width: `${area.score}%` }}></div>
+                                        </div>
+                                        <span className="text-xs font-black text-vg-dark">{area.score}%</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Radar Chart */}
@@ -569,7 +728,7 @@ export default function HabilidadesPage() {
                                 <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Avaliação</th>
                                 <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Acertos</th>
                                 <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Nota</th>
-                                <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide text-right">Ações</th>
+                                {isGestao && <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide text-right">Ações</th>}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -610,34 +769,36 @@ export default function HabilidadesPage() {
                                             <td className="p-4 text-sm font-black">
                                                 <span className={gradeColor}>{corr.score?.toFixed(1) || "0.0"}</span>
                                             </td>
-                                            <td className="p-4 text-right">
-                                                <div className="flex justify-end gap-1.5">
-                                                    <button 
-                                                        onClick={() => handleEditCorrection(corr)}
-                                                        disabled={isSavingAction}
-                                                        className="text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition-colors disabled:opacity-50"
-                                                        title="Editar Resultados"
-                                                    >
-                                                        <Edit3 size={16} />
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => handleResetCorrection(corr)}
-                                                        disabled={isSavingAction}
-                                                        className="text-orange-600 hover:bg-orange-50 p-2 rounded-lg transition-colors disabled:opacity-50"
-                                                        title="Zerar Correção"
-                                                    >
-                                                        <RotateCcw size={16} />
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => handleDeleteCorrection(corr.id)}
-                                                        disabled={isSavingAction}
-                                                        className="text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors disabled:opacity-50"
-                                                        title="Excluir Correção"
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </button>
-                                                </div>
-                                            </td>
+                                            {isGestao && (
+                                                <td className="p-4 text-right">
+                                                    <div className="flex justify-end gap-1.5">
+                                                        <button 
+                                                            onClick={() => handleEditCorrection(corr)}
+                                                            disabled={isSavingAction}
+                                                            className="text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition-colors disabled:opacity-50"
+                                                            title="Editar Resultados"
+                                                        >
+                                                            <Edit3 size={16} />
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleResetCorrection(corr)}
+                                                            disabled={isSavingAction}
+                                                            className="text-orange-600 hover:bg-orange-50 p-2 rounded-lg transition-colors disabled:opacity-50"
+                                                            title="Zerar Correção"
+                                                        >
+                                                            <RotateCcw size={16} />
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleDeleteCorrection(corr.id)}
+                                                            disabled={isSavingAction}
+                                                            className="text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors disabled:opacity-50"
+                                                            title="Excluir Correção"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            )}
                                         </tr>
                                     );
                                 })
