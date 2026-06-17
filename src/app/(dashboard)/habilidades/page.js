@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { ExamService } from "@/services/examService";
 import { getClassesByUser } from "@/services/classesService";
 import { UserService } from "@/services/userService";
-import { Shield, Target, Users, BookOpen, Filter, Search, Loader2, Trash2, RotateCcw, Edit3, X, AlertCircle } from "lucide-react";
+import { Shield, Target, Users, BookOpen, Filter, Search, Loader2, Trash2, RotateCcw, Edit3, X, AlertCircle, Sparkles } from "lucide-react";
 import { 
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
     RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar 
@@ -27,9 +27,12 @@ export default function HabilidadesPage() {
     });
 
     const [searchStudent, setSearchStudent] = useState("");
+    const [sortOrder, setSortOrder] = useState("correcao");
     const [editingCorrection, setEditingCorrection] = useState(null);
     const [editingAnswers, setEditingAnswers] = useState({});
     const [isSavingAction, setIsSavingAction] = useState(false);
+    const [generatingIntervention, setGeneratingIntervention] = useState(null);
+    const [interventionResult, setInterventionResult] = useState(null);
 
     useEffect(() => {
         async function loadData() {
@@ -245,11 +248,21 @@ export default function HabilidadesPage() {
 
     // Filter corrections for administration table
     const paginatedCorrections = useMemo(() => {
-        return filteredCorrections.filter(corr => {
+        const filtered = filteredCorrections.filter(corr => {
             if (!searchStudent) return true;
             return corr.studentName?.toLowerCase().includes(searchStudent.toLowerCase());
         });
-    }, [filteredCorrections, searchStudent]);
+
+        return filtered.sort((a, b) => {
+            if (sortOrder === "maior") return (b.score || 0) - (a.score || 0);
+            if (sortOrder === "menor") return (a.score || 0) - (b.score || 0);
+            if (sortOrder === "alfabetica") return (a.studentName || "").localeCompare(b.studentName || "");
+            // "correcao" is default
+            const timeA = a.createdAt?.seconds || 0;
+            const timeB = b.createdAt?.seconds || 0;
+            return timeB - timeA; // Descending order for newest first
+        });
+    }, [filteredCorrections, searchStudent, sortOrder]);
 
     // Administrative Handlers
     const handleDeleteCorrection = async (corrId) => {
@@ -427,6 +440,26 @@ export default function HabilidadesPage() {
             alert("Erro ao atualizar correção: " + error.message);
         } finally {
             setIsSavingAction(false);
+        }
+    };
+
+    const handleGenerateIntervention = async (skill) => {
+        setGeneratingIntervention(skill.subject);
+        try {
+            const className = classes.find(c => c.id === filters.classId)?.name || "";
+            const res = await fetch("/api/intervention", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ skill: skill.subject, hitRate: skill.A, className })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            
+            setInterventionResult({ skill: skill.subject, ...data });
+        } catch (err) {
+            alert("Erro ao gerar intervenção: " + err.message);
+        } finally {
+            setGeneratingIntervention(null);
         }
     };
 
@@ -646,54 +679,123 @@ export default function HabilidadesPage() {
                 </div>
             </div>
 
-            {/* Critical Skills Table */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-6 border-b border-gray-100 bg-orange-50/50">
-                    <h3 className="font-bold text-orange-800 flex items-center gap-2">
-                        <BookOpen size={18} className="text-orange-500" />
-                        Atenção: Habilidades com Baixo Desempenho
-                    </h3>
-                    <p className="text-sm text-orange-600 mt-1">Habilidades com índice de acerto abaixo de 50% nos filtros aplicados.</p>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left min-w-[600px]">
-                        <thead className="bg-gray-50 border-b border-gray-100">
-                            <tr>
-                                <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Código Habilidade</th>
-                                <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Volume (Qtd)</th>
-                                <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Proficiência</th>
-                                <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Ação Recomendada</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {processedSkills.filter(s => s.A < 50).length === 0 ? (
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                {/* Critical Skills Table */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
+                    <div className="p-6 border-b border-gray-100 bg-orange-50/50">
+                        <h3 className="font-bold text-orange-800 flex items-center gap-2">
+                            <BookOpen size={18} className="text-orange-500" />
+                            Atenção: Habilidades Críticas
+                        </h3>
+                        <p className="text-sm text-orange-600 mt-1">Acertos abaixo de 50%.</p>
+                    </div>
+                    <div className="overflow-x-auto flex-1">
+                        <table className="w-full text-left min-w-[500px]">
+                            <thead className="bg-gray-50 border-b border-gray-100">
                                 <tr>
-                                    <td colSpan="4" className="p-10 text-center text-gray-400 italic">Ótimo trabalho! Nenhuma habilidade crítica identificada com estes filtros.</td>
+                                    <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Código Habilidade</th>
+                                    <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Proficiência</th>
+                                    <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Ação</th>
                                 </tr>
-                            ) : (
-                                processedSkills.filter(s => s.A < 50).map((skill, i) => (
-                                    <tr key={i} className="hover:bg-gray-50">
-                                        <td className="p-4">
-                                            <div className="font-bold text-gray-800">{skill.subject}</div>
-                                            <div className="text-[10px] text-gray-400 uppercase font-bold">BNCC / Referencial</div>
-                                        </td>
-                                        <td className="p-4 text-sm font-bold text-gray-600">{skill.total} questões</td>
-                                        <td className="p-4">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-16 bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                                                    <div className="bg-red-500 h-full" style={{ width: `${skill.A}%` }}></div>
-                                                </div>
-                                                <span className="text-xs font-black text-red-600">{skill.A}%</span>
-                                            </div>
-                                        </td>
-                                        <td className="p-4">
-                                            <button className="text-xs text-vg-dark font-bold hover:underline px-3 py-1.5 bg-vg-light rounded-lg">Sugestão: Reforço Pedagógico</button>
-                                        </td>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {processedSkills.filter(s => s.A < 50).length === 0 ? (
+                                    <tr>
+                                        <td colSpan="3" className="p-10 text-center text-gray-400 italic">Nenhuma habilidade crítica identificada.</td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                ) : (
+                                    processedSkills.filter(s => s.A < 50).map((skill, i) => (
+                                        <tr key={i} className="hover:bg-gray-50">
+                                            <td className="p-4">
+                                                <div className="font-bold text-gray-800">{skill.subject}</div>
+                                                <div className="text-[10px] text-gray-400 uppercase font-bold">{skill.total} questões</div>
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-16 bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                                                        <div className="bg-red-500 h-full" style={{ width: `${skill.A}%` }}></div>
+                                                    </div>
+                                                    <span className="text-xs font-black text-red-600">{skill.A}%</span>
+                                                </div>
+                                            </td>
+                                            <td className="p-4">
+                                                <button 
+                                                    onClick={() => handleGenerateIntervention(skill)}
+                                                    disabled={generatingIntervention === skill.subject}
+                                                    className="text-[10px] uppercase flex items-center gap-1 text-vg-hover font-bold hover:bg-vg-light px-3 py-2 rounded-lg transition-colors border border-vg-hover/20 disabled:opacity-50"
+                                                >
+                                                    {generatingIntervention === skill.subject ? (
+                                                        <><Loader2 size={14} className="animate-spin" /> Gerando...</>
+                                                    ) : (
+                                                        <><Sparkles size={14} /> Gerar Intervenção</>
+                                                    )}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {/* High Performance Skills Table */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
+                    <div className="p-6 border-b border-gray-100 bg-green-50/50">
+                        <h3 className="font-bold text-green-800 flex items-center gap-2">
+                            <Target size={18} className="text-green-500" />
+                            Destaque: Maior Desempenho
+                        </h3>
+                        <p className="text-sm text-green-600 mt-1">Acertos iguais ou acima de 70%.</p>
+                    </div>
+                    <div className="overflow-x-auto flex-1">
+                        <table className="w-full text-left min-w-[500px]">
+                            <thead className="bg-gray-50 border-b border-gray-100">
+                                <tr>
+                                    <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Código Habilidade</th>
+                                    <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Proficiência</th>
+                                    <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wide">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {processedSkills.filter(s => s.A >= 70).length === 0 ? (
+                                    <tr>
+                                        <td colSpan="3" className="p-10 text-center text-gray-400 italic">Nenhuma habilidade de alto desempenho encontrada.</td>
+                                    </tr>
+                                ) : (
+                                    processedSkills.filter(s => s.A >= 70).map((skill, i) => (
+                                        <tr key={i} className="hover:bg-gray-50">
+                                            <td className="p-4">
+                                                <div className="font-bold text-gray-800">{skill.subject}</div>
+                                                <div className="text-[10px] text-gray-400 uppercase font-bold">{skill.total} questões</div>
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-16 bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                                                        <div className="bg-green-500 h-full" style={{ width: `${skill.A}%` }}></div>
+                                                    </div>
+                                                    <span className="text-xs font-black text-green-600">{skill.A}%</span>
+                                                </div>
+                                            </td>
+                                            <td className="p-4">
+                                                <button 
+                                                    onClick={() => handleGenerateIntervention(skill)}
+                                                    disabled={generatingIntervention === skill.subject}
+                                                    className="text-[10px] uppercase flex items-center gap-1 text-vg-hover font-bold hover:bg-vg-light px-3 py-2 rounded-lg transition-colors border border-vg-hover/20 disabled:opacity-50"
+                                                >
+                                                    {generatingIntervention === skill.subject ? (
+                                                        <><Loader2 size={14} className="animate-spin" /> Gerando...</>
+                                                    ) : (
+                                                        <><Sparkles size={14} /> Sugerir Avanço</>
+                                                    )}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -707,15 +809,27 @@ export default function HabilidadesPage() {
                         </h3>
                         <p className="text-xs text-gray-500 mt-1">Exclua, zere ou edite os cartões de respostas dos alunos caso existam divergências.</p>
                     </div>
-                    <div className="relative max-w-xs w-full">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                        <input 
-                            type="text" 
-                            placeholder="Buscar aluno..." 
-                            value={searchStudent}
-                            onChange={e => setSearchStudent(e.target.value)}
-                            className="w-full text-xs pl-9 pr-4 py-2 rounded-lg border border-gray-200 focus:border-vg-navy outline-none"
-                        />
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <select
+                            value={sortOrder}
+                            onChange={(e) => setSortOrder(e.target.value)}
+                            className="text-xs p-2 rounded-lg border border-gray-200 focus:border-vg-navy outline-none bg-white min-w-[140px]"
+                        >
+                            <option value="correcao">Data de Correção</option>
+                            <option value="alfabetica">Ordem Alfabética</option>
+                            <option value="maior">Maior Nota</option>
+                            <option value="menor">Menor Nota</option>
+                        </select>
+                        <div className="relative w-full sm:w-48">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                            <input 
+                                type="text" 
+                                placeholder="Buscar aluno..." 
+                                value={searchStudent}
+                                onChange={e => setSearchStudent(e.target.value)}
+                                className="w-full text-xs pl-9 pr-4 py-2 rounded-lg border border-gray-200 focus:border-vg-navy outline-none"
+                            />
+                        </div>
                     </div>
                 </div>
                 
@@ -943,6 +1057,63 @@ export default function HabilidadesPage() {
                             >
                                 {isSavingAction ? <Loader2 size={14} className="animate-spin" /> : null}
                                 Salvar Alterações
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Intervention Result Modal */}
+            {interventionResult && (
+                <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-vg-light to-white">
+                            <div>
+                                <span className="text-[10px] font-black uppercase tracking-widest bg-vg-navy text-white px-2 py-1 rounded-full mb-1 inline-block">
+                                    IA Educacional
+                                </span>
+                                <h2 className="text-lg font-bold text-gray-800">Sugestão de Intervenção</h2>
+                                <p className="text-xs text-gray-500 mt-0.5">Habilidade: {interventionResult.skill}</p>
+                            </div>
+                            <button 
+                                onClick={() => setInterventionResult(null)}
+                                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <h4 className="text-[11px] font-bold text-vg-dark uppercase mb-1 flex items-center gap-1">
+                                    <Target size={12} /> Diagnóstico Rápido
+                                </h4>
+                                <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                    {interventionResult.analysis}
+                                </p>
+                            </div>
+                            <div>
+                                <h4 className="text-[11px] font-bold text-vg-dark uppercase mb-1 flex items-center gap-1">
+                                    <BookOpen size={12} /> Metodologia Sugerida
+                                </h4>
+                                <p className="text-sm font-bold text-vg-hover bg-vg-light/30 p-3 rounded-xl border border-vg-light">
+                                    {interventionResult.methodology}
+                                </p>
+                            </div>
+                            <div>
+                                <h4 className="text-[11px] font-bold text-vg-dark uppercase mb-1 flex items-center gap-1">
+                                    <Sparkles size={12} /> Prática de Sala
+                                </h4>
+                                <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                    {interventionResult.activity}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+                            <button 
+                                onClick={() => setInterventionResult(null)}
+                                className="px-6 py-2 bg-vg-dark text-white rounded-xl text-xs font-bold hover:bg-vg-navy transition-colors"
+                            >
+                                Entendido
                             </button>
                         </div>
                     </div>
