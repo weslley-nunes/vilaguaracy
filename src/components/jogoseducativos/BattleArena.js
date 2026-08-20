@@ -1,179 +1,214 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { obstacles } from './GameData';
 
 export default function BattleArena({ character, onRestart }) {
   const [currentObstacleIndex, setCurrentObstacleIndex] = useState(0);
+  const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
   const [playerHp, setPlayerHp] = useState(100);
-  const maxPlayerHp = 100;
-  const [obstacleHp, setObstacleHp] = useState(obstacles[0].hp);
   
-  const [logs, setLogs] = useState([{ text: `VOCE ENCONTROU O ${obstacles[0].name.toUpperCase()}!`, type: 'info' }]);
-  const [isPlayerTurn, setIsPlayerTurn] = useState(true);
+  // Start with empty chat, the enemy sends the first message in useEffect
+  const [messages, setMessages] = useState([]);
+  const [showOptions, setShowOptions] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [victory, setVictory] = useState(false);
-
+  
+  const chatEndRef = useRef(null);
+  
   const currentObstacle = obstacles[currentObstacleIndex];
+  const currentDialogue = currentObstacle?.dialogues[currentDialogueIndex];
 
-  const addLog = (text, type) => {
-    setLogs(prev => [...prev, { text, type }]);
+  // Auto-scroll to bottom of chat
+  const scrollToBottom = () => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
-
-  const handleSkill = (skill) => {
-    if (!isPlayerTurn || gameOver || victory) return;
-
-    if (skill.type === 'attack') {
-      const newHp = Math.max(0, obstacleHp - skill.power);
-      setObstacleHp(newHp);
-      addLog(`VOCE USOU "${skill.name.toUpperCase()}"! INIMIGO PERDEU ${skill.power} HP.`, 'player');
-      
-      if (newHp === 0) {
-        handleObstacleDefeated();
-        return;
-      }
-    } else if (skill.type === 'heal') {
-      const healAmount = skill.power;
-      const newHp = Math.min(maxPlayerHp, playerHp + healAmount);
-      setPlayerHp(newHp);
-      addLog(`VOCE USOU "${skill.name.toUpperCase()}" E RECUPEROU HP!`, 'player');
-    }
-
-    setIsPlayerTurn(false);
-  };
-
-  const handleObstacleDefeated = () => {
-    addLog(`INIMIGO DERROTADO!`, 'success');
-    if (currentObstacleIndex + 1 < obstacles.length) {
-      setTimeout(() => {
-        const nextIdx = currentObstacleIndex + 1;
-        setCurrentObstacleIndex(nextIdx);
-        setObstacleHp(obstacles[nextIdx].hp);
-        addLog(`ATENCAO! SURGIU: ${obstacles[nextIdx].name.toUpperCase()}!`, 'info');
-        setIsPlayerTurn(true);
-      }, 2000);
-    } else {
-      setVictory(true);
-      addLog(`PARABENS! JORNADA CONCLUIDA!`, 'success');
-    }
-  };
-
+  
   useEffect(() => {
-    if (!isPlayerTurn && !gameOver && !victory && obstacleHp > 0) {
-      const timer = setTimeout(() => {
-        const attack = currentObstacle.attacks[Math.floor(Math.random() * currentObstacle.attacks.length)];
-        const newHp = Math.max(0, playerHp - attack.damage);
+    scrollToBottom();
+  }, [messages, showOptions]);
+
+  // Initial trigger for the first message of an obstacle
+  useEffect(() => {
+    if (!gameOver && !victory && currentObstacle && currentDialogue) {
+      if (currentDialogueIndex === 0 && messages.length === 0) {
+        triggerEnemyMessage(currentDialogue.enemyMessage);
+      }
+    }
+  }, [currentObstacleIndex, currentDialogueIndex, gameOver, victory]);
+
+  const triggerEnemyMessage = (text) => {
+    setShowOptions(false);
+    
+    // Simulates typing...
+    setTimeout(() => {
+      setMessages(prev => [...prev, { text, sender: 'enemy' }]);
+      setShowOptions(true);
+    }, 1500);
+  };
+
+  const handleOptionClick = (option) => {
+    setShowOptions(false);
+    
+    // Add player message
+    setMessages(prev => [...prev, { text: option.text, sender: 'player' }]);
+    
+    // Process consequence
+    setTimeout(() => {
+      if (option.isCorrect) {
+        setMessages(prev => [...prev, { text: `[SISTEMA]: ${option.feedback}`, sender: 'system_success' }]);
+      } else {
+        setMessages(prev => [...prev, { text: `[SISTEMA]: ${option.feedback}`, sender: 'system_error' }]);
+        const newHp = Math.max(0, playerHp - option.damage);
         setPlayerHp(newHp);
-        
-        addLog(`INIMIGO: ${attack.message.toUpperCase()} (-${attack.damage} HP)`, 'enemy');
         
         if (newHp === 0) {
           setGameOver(true);
-          addLog(`GAME OVER. NUNCA DESISTA!`, 'error');
-        } else {
-          setIsPlayerTurn(true);
+          setMessages(prev => [...prev, { text: 'Sua autoestima zerou. O ciclo de abuso venceu desta vez. Busque ajuda e tente novamente.', sender: 'system_error' }]);
+          return;
         }
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [isPlayerTurn, gameOver, victory, obstacleHp, playerHp, currentObstacle]);
+      }
 
-  useEffect(() => {
-    const logContainer = document.getElementById('battle-logs');
-    if (logContainer) {
-      logContainer.scrollTop = logContainer.scrollHeight;
-    }
-  }, [logs]);
+      // Next dialogue or next enemy
+      setTimeout(() => {
+        if (currentDialogueIndex + 1 < currentObstacle.dialogues.length) {
+          setCurrentDialogueIndex(prev => prev + 1);
+          triggerEnemyMessage(currentObstacle.dialogues[currentDialogueIndex + 1].enemyMessage);
+        } else {
+          // Defeated current obstacle
+          setMessages(prev => [...prev, { text: `${currentObstacle.name.toUpperCase()} FOI BLOQUEADO!`, sender: 'system_success' }]);
+          
+          setTimeout(() => {
+            if (currentObstacleIndex + 1 < obstacles.length) {
+              setCurrentObstacleIndex(prev => prev + 1);
+              setCurrentDialogueIndex(0);
+              setMessages([]); // Clear chat for new enemy
+              triggerEnemyMessage(obstacles[currentObstacleIndex + 1].dialogues[0].enemyMessage);
+            } else {
+              setVictory(true);
+            }
+          }, 3000);
+        }
+      }, 2000);
+      
+    }, 1000);
+  };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 font-pixel">
-      <div className="max-w-5xl w-full bg-black border-8 border-white p-4 md:p-8 flex flex-col h-[85vh] shadow-[16px_16px_0_0_rgba(0,0,0,0.5)] relative">
+    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-2 md:p-8 font-pixel">
+      
+      {/* Smartphone Frame */}
+      <div className="w-full max-w-md h-[90vh] bg-black border-[12px] border-slate-800 rounded-[3rem] relative shadow-2xl flex flex-col overflow-hidden">
         
-        {/* Arena Top (Enemy) */}
-        <div className="flex justify-between items-start mb-8">
-           <div className="bg-white border-4 border-black p-4 w-64 shadow-[8px_8px_0_0_rgba(255,255,255,0.2)]">
-              <h3 className="text-[10px] text-black font-bold mb-2 uppercase">{currentObstacle.name}</h3>
-              <div className="w-full bg-slate-300 h-4 border-2 border-black mb-1">
-                <div 
-                  className="bg-red-500 h-full transition-all duration-300" 
-                  style={{ width: `${(obstacleHp / currentObstacle.maxHp) * 100}%` }}
-                ></div>
-              </div>
-              <p className="text-[8px] text-right text-black">HP: {obstacleHp}/{currentObstacle.maxHp}</p>
-           </div>
-           
-           <div className="w-32 h-32 md:w-48 md:h-48 border-4 border-white bg-slate-800 overflow-hidden relative">
-              {!victory && (
-                <img 
-                    src={currentObstacle.image} 
-                    alt={currentObstacle.name} 
-                    className={`w-full h-full object-cover pixelated ${!isPlayerTurn && !gameOver && obstacleHp > 0 ? 'animate-bounce' : ''}`}
-                    style={{ imageRendering: 'pixelated' }}
-                />
-              )}
-           </div>
+        {/* Notch */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-800 rounded-b-2xl z-20"></div>
+
+        {/* Header - Chat App */}
+        <div className="bg-[#075e54] text-white p-4 pt-8 flex items-center shadow-md z-10">
+          <div className="w-10 h-10 bg-white rounded-full overflow-hidden border-2 border-white flex-shrink-0 mr-3">
+             <img 
+               src={currentObstacle?.image || '/logo.png'} 
+               alt="Enemy" 
+               className="w-full h-full object-cover"
+               style={{ imageRendering: 'pixelated' }}
+             />
+          </div>
+          <div className="flex-1">
+             <h3 className="text-[10px] md:text-xs font-bold truncate">
+               {victory ? 'AUTONOMIA ALCANÇADA' : gameOver ? 'FIM DE JOGO' : currentObstacle?.name}
+             </h3>
+             <p className="text-[8px] text-green-200">
+               {victory || gameOver ? 'Offline' : 'online'}
+             </p>
+          </div>
+          
+          {/* Player HP Indicator */}
+          <div className="text-right">
+             <p className="text-[8px] mb-1">AUTOESTIMA</p>
+             <div className="w-16 h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div className="bg-green-400 h-full transition-all" style={{ width: `${(playerHp/100)*100}%`}}></div>
+             </div>
+          </div>
         </div>
 
-        {/* Arena Center (Spacing) */}
-        <div className="flex-1"></div>
-
-        {/* Arena Bottom (Player) */}
-        <div className="flex justify-between items-end mb-8 relative">
-           <div className="w-32 h-32 md:w-48 md:h-48 border-4 border-white bg-slate-800 overflow-hidden relative shadow-[8px_8px_0_0_rgba(255,255,255,0.2)]">
-               <img 
-                    src={character.image} 
-                    alt={character.name} 
-                    className={`w-full h-full object-cover pixelated ${isPlayerTurn ? 'animate-pulse' : ''}`}
-                    style={{ imageRendering: 'pixelated' }}
-               />
-           </div>
-
-           <div className="bg-white border-4 border-black p-4 w-64 shadow-[8px_8px_0_0_rgba(255,255,255,0.2)] relative top-4">
-              <h3 className="text-[10px] text-black font-bold mb-2 uppercase">{character.name}</h3>
-              <div className="w-full bg-slate-300 h-4 border-2 border-black mb-1">
-                <div 
-                  className="bg-green-500 h-full transition-all duration-300" 
-                  style={{ width: `${(playerHp / maxPlayerHp) * 100}%` }}
-                ></div>
+        {/* Chat Area */}
+        <div className="flex-1 bg-[#ece5dd] p-4 overflow-y-auto bg-[url('/bg-login.png')] bg-cover bg-center relative">
+          <div className="absolute inset-0 bg-white/80"></div>
+          
+          <div className="relative z-10 flex flex-col gap-4">
+            
+            {/* Initial System Message */}
+            {!victory && !gameOver && (
+              <div className="mx-auto bg-[#dcf8c6] px-4 py-2 rounded-lg text-[8px] md:text-[10px] text-slate-700 text-center max-w-[80%] shadow-sm border border-[#c4e5b3]">
+                {new Date().toLocaleDateString()} - Você encontrou um novo obstáculo. Não deixe que afetem sua autonomia.
               </div>
-              <p className="text-[8px] text-right text-black">HP: {playerHp}/{maxPlayerHp}</p>
-           </div>
-        </div>
+            )}
 
-        {/* Dialog / Action Menu */}
-        <div className="w-full bg-white border-8 border-black p-1 md:p-2 flex flex-col md:flex-row min-h-[160px]">
-           {/* Logs Panel */}
-           <div id="battle-logs" className="flex-1 p-4 overflow-y-auto max-h-[120px] md:max-h-[140px] text-[10px] md:text-xs leading-loose text-black border-b-4 md:border-b-0 md:border-r-4 border-black">
-              {logs.map((log, idx) => (
-                <p key={idx} className={`mb-2 ${log.type === 'error' ? 'text-red-600' : log.type === 'success' ? 'text-green-600' : 'text-black'}`}>
-                  * {log.text}
-                </p>
-              ))}
-           </div>
-           
-           {/* Actions Panel */}
-           <div className="w-full md:w-1/3 p-2 flex flex-col gap-2 justify-center">
-              {!victory && !gameOver ? (
-                  character.skills.map(skill => (
-                    <button
-                      key={skill.id}
-                      disabled={!isPlayerTurn}
-                      onClick={() => handleSkill(skill)}
-                      className={`text-[8px] md:text-[10px] text-left p-3 border-4 border-black bg-slate-200 hover:bg-yellow-400 active:bg-yellow-500 transition-colors ${
-                        !isPlayerTurn ? 'opacity-50 cursor-not-allowed' : ''
+            {/* Messages */}
+            {messages.map((msg, idx) => (
+              <div 
+                key={idx} 
+                className={`flex ${msg.sender === 'player' ? 'justify-end' : 'justify-start'}`}
+              >
+                {msg.sender === 'system_success' || msg.sender === 'system_error' ? (
+                  <div className={`mx-auto px-4 py-2 rounded-lg text-[8px] md:text-[10px] text-white text-center max-w-[90%] shadow-sm border-2 ${msg.sender === 'system_success' ? 'bg-green-600 border-green-800' : 'bg-red-600 border-red-800'}`}>
+                    {msg.text}
+                  </div>
+                ) : (
+                  <div className="flex flex-col max-w-[85%]">
+                    <div 
+                      className={`p-3 text-[10px] md:text-[11px] leading-loose shadow-sm relative ${
+                        msg.sender === 'player' 
+                          ? 'bg-[#dcf8c6] text-slate-800 rounded-l-xl rounded-br-xl rounded-tr-sm border-b-2 border-r-2 border-[#b5db9d]' 
+                          : 'bg-white text-slate-800 rounded-r-xl rounded-bl-xl rounded-tl-sm border-b-2 border-l-2 border-slate-300'
                       }`}
                     >
-                      {skill.name.toUpperCase()}
-                    </button>
-                  ))
-              ) : (
-                  <button 
-                    onClick={onRestart}
-                    className="text-[10px] text-center p-4 border-4 border-black bg-yellow-400 hover:bg-yellow-500 uppercase"
-                  >
-                    JOGAR NOVAMENTE
-                  </button>
-              )}
-           </div>
+                      {msg.text}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+            <div ref={chatEndRef} />
+          </div>
         </div>
+
+        {/* Input Area / Options */}
+        <div className="bg-[#f0f0f0] border-t border-slate-300 min-h-[120px] flex flex-col p-2">
+           
+           {victory ? (
+             <div className="flex-1 flex flex-col items-center justify-center p-4">
+               <p className="text-green-600 text-[10px] text-center mb-4 leading-loose">Você dominou os dados e manteve sua autonomia corporal e mental!</p>
+               <button onClick={onRestart} className="w-full bg-green-600 text-white p-3 text-[10px] hover:bg-green-700 transition-colors rounded-xl">
+                 JOGAR NOVAMENTE
+               </button>
+             </div>
+           ) : gameOver ? (
+             <div className="flex-1 flex flex-col items-center justify-center p-4">
+               <button onClick={onRestart} className="w-full bg-red-600 text-white p-3 text-[10px] hover:bg-red-700 transition-colors rounded-xl">
+                 TENTAR NOVAMENTE
+               </button>
+             </div>
+           ) : showOptions && currentDialogue ? (
+             <div className="flex-1 flex flex-col gap-2 p-1 overflow-y-auto">
+               <p className="text-[8px] text-slate-500 mb-1 text-center">ESCOLHA SUA RESPOSTA:</p>
+               {currentDialogue.options.map((opt, idx) => (
+                 <button 
+                   key={idx}
+                   onClick={() => handleOptionClick(opt)}
+                   className="text-left w-full bg-white p-3 rounded-lg border-2 border-slate-300 text-[9px] md:text-[10px] leading-relaxed hover:bg-[#dcf8c6] hover:border-green-500 transition-all text-slate-700 flex items-center justify-between group"
+                 >
+                   <span>{opt.text}</span>
+                   <span className="text-green-500 opacity-0 group-hover:opacity-100 transition-opacity ml-2">►</span>
+                 </button>
+               ))}
+             </div>
+           ) : (
+             <div className="flex-1 flex items-center justify-center">
+                <span className="text-[10px] text-slate-400 animate-pulse">Aguardando mensagem...</span>
+             </div>
+           )}
+
+        </div>
+
       </div>
     </div>
   );

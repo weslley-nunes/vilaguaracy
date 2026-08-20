@@ -2,116 +2,68 @@ export const characters = [
   {
     id: 'dandara',
     name: 'Dandara',
-    description: 'Focada em força e empoderamento físico.',
+    description: 'Força e empoderamento físico.',
     color: 'bg-purple-600',
     hoverColor: 'hover:bg-purple-700',
     bgColor: 'bg-purple-100',
     borderColor: 'border-purple-600',
     image: '/jogoseducativos/sprites/sprite_dandara_1787256144306.jpg',
-    stats: {
-      autoestima: 90,
-      conhecimento: 70,
-      empatia: 80,
-    },
-    skills: [
-      { id: 'limite', name: 'Impor Limites', type: 'attack', power: 30, description: 'Diz NÃO com firmeza e afasta comportamentos abusivos.' },
-      { id: 'amor_proprio', name: 'Amor Próprio', type: 'heal', power: 40, description: 'Reconhece o próprio valor, recuperando a energia.' }
-    ]
+    stats: { autoestima: 90, conhecimento: 70, empatia: 80 }
   },
   {
     id: 'sofia_loira',
     name: 'Sofia',
-    description: 'Especialista em direitos, leis e sistêmico.',
+    description: 'Direitos, leis e proteção sistêmica.',
     color: 'bg-teal-600',
     hoverColor: 'hover:bg-teal-700',
     bgColor: 'bg-teal-100',
     borderColor: 'border-teal-600',
     image: '/jogoseducativos/sprites/sprite_sofia_loira_1787256358667.jpg',
-    stats: {
-      autoestima: 80,
-      conhecimento: 95,
-      empatia: 75,
-    },
-    skills: [
-      { id: 'maria_penha', name: 'Lei Maria da Penha', type: 'attack', power: 45, description: 'Usa o conhecimento da lei para neutralizar ameaças.' },
-      { id: 'informacao', name: 'Buscar Informação', type: 'heal', power: 30, description: 'Entende seus direitos e fortalece sua posição.' }
-    ]
+    stats: { autoestima: 80, conhecimento: 95, empatia: 75 }
   },
   {
     id: 'luna',
     name: 'Luna',
-    description: 'Mestra na criação de redes de apoio e empatia.',
+    description: 'Redes de apoio e acolhimento.',
     color: 'bg-amber-500',
     hoverColor: 'hover:bg-amber-600',
     bgColor: 'bg-amber-100',
     borderColor: 'border-amber-500',
     image: '/jogoseducativos/sprites/sprite_luna_1787256163256.jpg',
-    stats: {
-      autoestima: 75,
-      conhecimento: 80,
-      empatia: 95,
-    },
-    skills: [
-      { id: 'rede_apoio', name: 'Rede de Apoio', type: 'attack', power: 35, description: 'Chama amigas e familiares, enfraquecendo o isolamento.' },
-      { id: 'sororidade', name: 'Sororidade', type: 'heal', power: 45, description: 'Conecta-se com outras mulheres, recuperando grande energia.' }
-    ]
+    stats: { autoestima: 75, conhecimento: 80, empatia: 95 }
   },
   {
     id: 'maya',
     name: 'Maya',
-    description: 'Focada em independência financeira.',
+    description: 'Independência financeira e autonomia.',
     color: 'bg-blue-600',
     hoverColor: 'hover:bg-blue-700',
     bgColor: 'bg-blue-100',
     borderColor: 'border-blue-600',
     image: '/jogoseducativos/sprites/sprite_maya_1787256366265.jpg',
-    stats: {
-      autoestima: 85,
-      conhecimento: 90,
-      empatia: 70,
-    },
-    skills: [
-      { id: 'independencia', name: 'Independência Financeira', type: 'attack', power: 40, description: 'Garante o próprio sustento e recusa controle econômico.' },
-      { id: 'planejamento', name: 'Planejamento', type: 'heal', power: 35, description: 'Organiza seus recursos para um futuro seguro.' }
-    ]
+    stats: { autoestima: 85, conhecimento: 90, empatia: 70 }
   },
   {
     id: 'tereza',
     name: 'Tereza',
-    description: 'Focada em liderança e voz ativa.',
+    description: 'Liderança e voz ativa da comunidade.',
     color: 'bg-orange-600',
     hoverColor: 'hover:bg-orange-700',
     bgColor: 'bg-orange-100',
     borderColor: 'border-orange-600',
     image: '/jogoseducativos/sprites/sprite_tereza_1787256373037.jpg',
-    stats: {
-      autoestima: 95,
-      conhecimento: 85,
-      empatia: 85,
-    },
-    skills: [
-      { id: 'voz_ativa', name: 'Voz Ativa', type: 'attack', power: 45, description: 'Usa o megafone para denunciar injustiças.' },
-      { id: 'uniao', name: 'União Comunitária', type: 'heal', power: 40, description: 'Reúne a comunidade para apoio mútuo.' }
-    ]
+    stats: { autoestima: 95, conhecimento: 85, empatia: 85 }
   },
   {
     id: 'maria',
     name: 'Maria',
-    description: 'Focada em expressão e saúde mental.',
+    description: 'Expressão corporal e saúde mental.',
     color: 'bg-emerald-600',
     hoverColor: 'hover:bg-emerald-700',
     bgColor: 'bg-emerald-100',
     borderColor: 'border-emerald-600',
     image: '/jogoseducativos/sprites/sprite_clara_1787256389770.jpg',
-    stats: {
-      autoestima: 85,
-      conhecimento: 75,
-      empatia: 90,
-    },
-    skills: [
-      { id: 'expressao', name: 'Expressão Emocional', type: 'attack', power: 35, description: 'Usa a arte para quebrar barreiras psicológicas.' },
-      { id: 'terapia', name: 'Busca Terapia', type: 'heal', power: 50, description: 'Cuida da mente e recupera muita energia.' }
-    ]
+    stats: { autoestima: 85, conhecimento: 75, empatia: 90 }
   }
 ];
 
@@ -119,43 +71,73 @@ export const obstacles = [
   {
     id: 'gaslighting',
     name: 'Fantasma do Gaslighting',
-    description: 'Tenta fazer você duvidar da sua memória.',
-    hp: 100,
-    maxHp: 100,
-    color: 'bg-slate-800',
-    textColor: 'text-slate-800',
+    description: 'Manipulação Psicológica.',
     image: '/jogoseducativos/sprites/sprite_gaslighting_1787256180381.jpg',
-    attacks: [
-      { name: 'Distorção da Realidade', damage: 15, message: '"Você está louca, isso nunca aconteceu!"' },
-      { name: 'Minar Confiança', damage: 20, message: '"Ninguém vai acreditar em você além de mim."' }
+    dialogues: [
+      {
+        enemyMessage: 'Você sabe que as mulheres inventam muito essas histórias de violência para chamar atenção, né? Não tem dados que provem isso.',
+        options: [
+          { text: 'Tem razão, às vezes a gente exagera.', isCorrect: false, feedback: 'Você cedeu à manipulação.', damage: 30 },
+          { text: 'Isso é mito! Dados mostram que denúncias falsas são estatisticamente irrelevantes perto da taxa de feminicídio.', isCorrect: true, feedback: 'Excelente! Usou ESTATÍSTICAS para rebater.', damage: 50 },
+          { text: 'Eu não quero discutir isso com você.', isCorrect: false, feedback: 'Fugir agora dá mais força para a mentira dele.', damage: 20 }
+        ]
+      },
+      {
+        enemyMessage: 'Mesmo assim, violência doméstica é caso de família. Em briga de marido e mulher ninguém mete a colher.',
+        options: [
+          { text: 'A Lei Maria da Penha é clara: a sociedade e o Estado devem garantir a Proteção Integral da mulher.', isCorrect: true, feedback: 'Perfeito! Invocou a PROTEÇÃO INTEGRAL.', damage: 50 },
+          { text: 'Depende muito do que aconteceu entre eles.', isCorrect: false, feedback: 'A violência não tem justificativa.', damage: 30 },
+          { text: 'É verdade, cada um cuida da sua vida.', isCorrect: false, feedback: 'Isso contribui para o silêncio.', damage: 30 }
+        ]
+      }
     ]
   },
   {
     id: 'controle',
     name: 'Monstro do Controle',
-    description: 'Quer ditar com quem você fala e o que veste.',
-    hp: 120,
-    maxHp: 120,
-    color: 'bg-red-800',
-    textColor: 'text-red-800',
+    description: 'Fere a autonomia feminina.',
     image: '/jogoseducativos/sprites/sprite_controle_1787256188898.jpg',
-    attacks: [
-      { name: 'Isolamento Social', damage: 25, message: '"Por que você precisa de amigas se tem a mim?"' },
-      { name: 'Invasão de Privacidade', damage: 20, message: '*Olha o seu celular escondido.*' }
+    dialogues: [
+      {
+        enemyMessage: 'Se você me amasse de verdade, me deixaria ver seu celular e parar de sair com essas suas amigas.',
+        options: [
+          { text: 'Tá bom, eu não saio mais com elas.', isCorrect: false, feedback: 'Você abriu mão da sua Rede de Apoio.', damage: 30 },
+          { text: 'A privacidade é um direito. Minha AUTONOMIA não negocia a minha liberdade individual.', isCorrect: true, feedback: 'Maravilha! Você defendeu sua AUTONOMIA.', damage: 50 },
+          { text: 'Você pode ver meu celular, mas me deixa sair.', isCorrect: false, feedback: 'Ceder controle nunca é saudável.', damage: 20 }
+        ]
+      },
+      {
+        enemyMessage: 'Mulher independente não precisa de rede de apoio, você devia se virar sozinha se é tão autônoma.',
+        options: [
+          { text: 'Verdade, pedir ajuda é sinal de fraqueza.', isCorrect: false, feedback: 'Mentira! O isolamento é perigoso.', damage: 30 },
+          { text: 'Só você me basta, não preciso de mais ninguém.', isCorrect: false, feedback: 'Você está se isolando.', damage: 40 },
+          { text: 'Ter AUTONOMIA é também reconhecer que precisamos de políticas públicas e da comunidade ao nosso lado.', isCorrect: true, feedback: 'Exato! Saúde e Autonomia são construções coletivas.', damage: 50 }
+        ]
+      }
     ]
   },
   {
     id: 'assedio',
     name: 'Sombra do Assédio',
-    description: 'Não respeita o seu corpo e o seu espaço.',
-    hp: 90,
-    maxHp: 90,
-    color: 'bg-indigo-900',
-    textColor: 'text-indigo-900',
+    description: 'Viola a saúde e o corpo.',
     image: '/jogoseducativos/sprites/sprite_assedio_1787256197698.jpg',
-    attacks: [
-      { name: 'Comentário Invasivo', damage: 15, message: 'Faz um comentário indesejado sobre o seu corpo.' },
-      { name: 'Aproximação Forçada', damage: 25, message: 'Invade seu espaço pessoal sem consentimento.' }
+    dialogues: [
+      {
+        enemyMessage: 'Também, com essa roupa, você queria o quê? Você não respeita o próprio corpo.',
+        options: [
+          { text: 'O meu CORPO é meu, e a culpa do assédio é sempre do assediador. A roupa não justifica a violência.', isCorrect: true, feedback: 'Brilhante! Reafirmou o direito ao seu CORPO.', damage: 50 },
+          { text: 'Desculpa, eu vou me trocar.', isCorrect: false, feedback: 'Você se culpabilizou pelo erro do agressor.', damage: 30 },
+          { text: 'Eu não pensei que chamaria tanta atenção.', isCorrect: false, feedback: 'A roupa nunca é um convite ao desrespeito.', damage: 20 }
+        ]
+      },
+      {
+        enemyMessage: 'As mulheres são as que mais sofrem com depressão e ansiedade porque são muito emocionais.',
+        options: [
+          { text: 'Nossa SAÚDE mental é afetada pela sobrecarga de trabalho, machismo e pela violência estrutural.', isCorrect: true, feedback: 'Perfeito! Mostrou os Indicadores Sociais de Saúde.', damage: 50 },
+          { text: 'É que a gente chora muito mesmo.', isCorrect: false, feedback: 'Reforçou um estereótipo prejudicial.', damage: 30 },
+          { text: 'Acho que a genética não ajuda.', isCorrect: false, feedback: 'Ignorou os fatores sociais da violência.', damage: 30 }
+        ]
+      }
     ]
   }
 ];
