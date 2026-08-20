@@ -18,6 +18,9 @@ module.exports = {
                     hover: '#135c38'
                 }
             },
+            fontFamily: {
+                pixel: ['var(--font-press-start)'],
+            },
         },
     },
     plugins: [],
