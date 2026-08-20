@@ -2,7 +2,8 @@
 import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Shield, QrCode, ArrowRight, Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
+import { CheckCircle2, Shield, QrCode, ArrowRight, Eye, EyeOff, Gamepad2 } from "lucide-react";
 
 export default function Home() {
   const { user, googleLogin, emailLogin, emailRegister, loading } = useAuth();
@@ -65,6 +66,13 @@ export default function Home() {
                 </>
               )}
             </button>
+            <Link
+              href="/jogoseducativos"
+              className="px-6 py-3 rounded-xl bg-purple-600/20 border border-purple-500/50 text-purple-200 font-medium hover:bg-purple-600/40 hover:text-white transition-all flex items-center justify-center gap-2 backdrop-blur-sm"
+            >
+              <Gamepad2 size={20} />
+              Jornada da Autonomia
+            </Link>
           </div>
 
           <div className="flex items-center justify-center lg:justify-start gap-8 pt-8 opacity-80">
