@@ -20,11 +20,11 @@ export default function CharacterSelection({ onSelect }) {
               className="relative bg-black rounded-none p-6 cursor-pointer border-4 border-white hover:border-yellow-400 group transform hover:-translate-y-2 transition-transform shadow-[8px_8px_0_0_rgba(255,255,255,0.2)] hover:shadow-[8px_8px_0_0_rgba(250,204,21,0.5)] flex flex-col h-full"
             >
               <div className="flex flex-col items-center text-center flex-grow">
-                <div className="w-full h-48 border-4 border-white mb-4 bg-white overflow-hidden relative">
+                <div className="w-full aspect-square border-4 border-white mb-4 bg-white relative flex items-center justify-center p-2">
                   <img 
                     src={char.image} 
                     alt={char.name} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 pixelated"
+                    className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300 pixelated"
                     style={{ imageRendering: 'pixelated' }}
                   />
                 </div>
