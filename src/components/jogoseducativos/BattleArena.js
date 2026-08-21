@@ -1,20 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { obstacles } from './GameData';
 
-export default function BattleArena({ character, onRestart }) {
-  const [currentObstacleIndex, setCurrentObstacleIndex] = useState(0);
+export default function BattleArena({ selectedCharacter, obstacleIndex, onVictory, onDefeat, isModal }) {
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
   const [playerHp, setPlayerHp] = useState(100);
+  const [accumulatedPoints, setAccumulatedPoints] = useState(0);
   
   // Start with empty chat, the enemy sends the first message in useEffect
   const [messages, setMessages] = useState([]);
   const [showOptions, setShowOptions] = useState(false);
   const [gameOver, setGameOver] = useState(false);
-  const [victory, setVictory] = useState(false);
+  const [stageCleared, setStageCleared] = useState(false);
   
   const chatEndRef = useRef(null);
   
-  const currentObstacle = obstacles[currentObstacleIndex];
+  const currentObstacle = obstacles[obstacleIndex];
   const currentDialogue = currentObstacle?.dialogues[currentDialogueIndex];
 
   // Auto-scroll to bottom of chat
@@ -38,13 +38,13 @@ export default function BattleArena({ character, onRestart }) {
 
   // Initial trigger for the first message of an obstacle
   useEffect(() => {
-    if (!gameOver && !victory && currentObstacle && currentDialogue) {
+    if (!gameOver && !stageCleared && currentObstacle && currentDialogue) {
       if (currentDialogueIndex === 0 && messages.length === 0) {
         triggerEnemyMessage(currentDialogue.enemyMessage);
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentObstacleIndex, currentDialogueIndex, gameOver, victory]);
+  }, [obstacleIndex, currentDialogueIndex, gameOver, stageCleared]);
 
   const handleOptionClick = (option) => {
     setShowOptions(false);
@@ -56,6 +56,7 @@ export default function BattleArena({ character, onRestart }) {
     setTimeout(() => {
       if (option.isCorrect) {
         setMessages(prev => [...prev, { text: `[SISTEMA]: ${option.feedback}`, sender: 'system_success' }]);
+        setAccumulatedPoints(prev => prev + option.damage); // Using damage as points for simplicity
       } else {
         setMessages(prev => [...prev, { text: `[SISTEMA]: ${option.feedback}`, sender: 'system_error' }]);
         const newHp = Math.max(0, playerHp - option.damage);
@@ -76,28 +77,24 @@ export default function BattleArena({ character, onRestart }) {
         } else {
           // Defeated current obstacle
           setMessages(prev => [...prev, { text: `${currentObstacle.name.toUpperCase()} FOI BLOQUEADO!`, sender: 'system_success' }]);
-          
-          setTimeout(() => {
-            if (currentObstacleIndex + 1 < obstacles.length) {
-              setCurrentObstacleIndex(prev => prev + 1);
-              setCurrentDialogueIndex(0);
-              setMessages([]); // Clear chat for new enemy
-              triggerEnemyMessage(obstacles[currentObstacleIndex + 1].dialogues[0].enemyMessage);
-            } else {
-              setVictory(true);
-            }
-          }, 3000);
+          setStageCleared(true);
         }
       }, 2000);
       
     }, 1000);
   };
 
+  const handleFinishStage = () => {
+    if (onVictory) {
+      // Add bonus points based on remaining HP
+      onVictory(accumulatedPoints + playerHp);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-2 md:p-8 font-pixel">
-      
+    <div className={`flex items-center justify-center font-pixel h-full w-full`}>
       {/* Smartphone Frame */}
-      <div className="w-full max-w-md h-[90vh] bg-black border-[12px] border-slate-800 rounded-[3rem] relative shadow-2xl flex flex-col overflow-hidden">
+      <div className="w-full max-w-md h-full max-h-[90vh] bg-black border-[12px] border-slate-800 rounded-[3rem] relative shadow-2xl flex flex-col overflow-hidden">
         
         {/* Notch */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-800 rounded-b-2xl z-20"></div>
@@ -114,10 +111,10 @@ export default function BattleArena({ character, onRestart }) {
           </div>
           <div className="flex-1">
              <h3 className="text-[10px] md:text-xs font-bold truncate">
-               {victory ? 'AUTONOMIA ALCANÇADA' : gameOver ? 'FIM DE JOGO' : currentObstacle?.name}
+               {stageCleared ? 'VITÓRIA NA FASE' : gameOver ? 'FIM DE JOGO' : currentObstacle?.name}
              </h3>
              <p className="text-[8px] text-green-200">
-               {victory || gameOver ? 'Offline' : 'online'}
+               {stageCleared || gameOver ? 'Offline' : 'online'}
              </p>
           </div>
           
@@ -137,7 +134,7 @@ export default function BattleArena({ character, onRestart }) {
           <div className="relative z-10 flex flex-col gap-4">
             
             {/* Initial System Message */}
-            {!victory && !gameOver && (
+            {!stageCleared && !gameOver && (
               <div className="mx-auto bg-[#dcf8c6] px-4 py-2 rounded-lg text-[8px] md:text-[10px] text-slate-700 text-center max-w-[80%] shadow-sm border border-[#c4e5b3]">
                 {new Date().toLocaleDateString()} - Você encontrou um novo obstáculo. Não deixe que afetem sua autonomia.
               </div>
@@ -175,17 +172,17 @@ export default function BattleArena({ character, onRestart }) {
         {/* Input Area / Options */}
         <div className="bg-[#f0f0f0] border-t border-slate-300 min-h-[120px] flex flex-col p-2">
            
-           {victory ? (
+           {stageCleared ? (
              <div className="flex-1 flex flex-col items-center justify-center p-4">
-               <p className="text-green-600 text-[10px] text-center mb-4 leading-loose">Você dominou os dados e manteve sua autonomia corporal e mental!</p>
-               <button onClick={onRestart} className="w-full bg-green-600 text-white p-3 text-[10px] hover:bg-green-700 transition-colors rounded-xl">
-                 JOGAR NOVAMENTE
+               <p className="text-green-600 text-[10px] text-center mb-4 leading-loose">Obstáculo superado! Você ganhou pontos bônus por sua autoestima restante.</p>
+               <button onClick={handleFinishStage} className="w-full bg-green-600 text-white p-3 text-[10px] hover:bg-green-700 transition-colors rounded-xl">
+                 VOLTAR AO MAPA
                </button>
              </div>
            ) : gameOver ? (
              <div className="flex-1 flex flex-col items-center justify-center p-4">
-               <button onClick={onRestart} className="w-full bg-red-600 text-white p-3 text-[10px] hover:bg-red-700 transition-colors rounded-xl">
-                 TENTAR NOVAMENTE
+               <button onClick={onDefeat} className="w-full bg-red-600 text-white p-3 text-[10px] hover:bg-red-700 transition-colors rounded-xl">
+                 FECHAR
                </button>
              </div>
            ) : showOptions && currentDialogue ? (

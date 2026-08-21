@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import CharacterSelection from '@/components/jogoseducativos/CharacterSelection';
-import BattleArena from '@/components/jogoseducativos/BattleArena';
+import GameDashboard from '@/components/jogoseducativos/GameDashboard';
 
 export default function JogosEducativosPage() {
   const [selectedCharacter, setSelectedCharacter] = useState(null);
@@ -16,7 +16,7 @@ export default function JogosEducativosPage() {
       {!selectedCharacter ? (
         <CharacterSelection onSelect={setSelectedCharacter} />
       ) : (
-        <BattleArena character={selectedCharacter} onRestart={handleRestart} />
+        <GameDashboard selectedCharacter={selectedCharacter} onBackToSelection={handleRestart} />
       )}
     </main>
   );
