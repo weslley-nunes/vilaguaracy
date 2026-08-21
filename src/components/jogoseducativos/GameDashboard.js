@@ -64,7 +64,7 @@ export default function GameDashboard({ selectedCharacter, onBackToSelection }) 
   return (
     <div className="min-h-screen bg-gray-900 flex text-white font-pixel selection:bg-amber-500 selection:text-white">
       {/* Background Audio */}
-      <audio autoPlay loop muted={isMuted} src="https://actions.google.com/sounds/v1/horror/creepy_background_wind.ogg" />
+      <audio autoPlay loop muted={isMuted} src="/suspense.mp3" />
       
       {/* Sidebar */}
       <aside className="w-64 bg-gray-800 border-r-4 border-amber-900/50 p-6 flex flex-col relative">
