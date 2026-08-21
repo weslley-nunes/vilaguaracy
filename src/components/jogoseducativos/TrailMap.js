@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Lock, Play } from 'lucide-react';
+import { Check, Lock, Play, Skull } from 'lucide-react';
 import { obstacles } from './GameData';
 
 export default function TrailMap({ currentStage, onSelectStage }) {
@@ -8,7 +8,8 @@ export default function TrailMap({ currentStage, onSelectStage }) {
     { top: '55%', left: '35%' },
     { top: '75%', left: '60%' },
     { top: '45%', left: '80%' },
-    { top: '20%', left: '55%' }
+    { top: '20%', left: '55%' },
+    { top: '10%', left: '20%' } // Boss Node
   ];
 
   return (
@@ -34,8 +35,11 @@ export default function TrailMap({ currentStage, onSelectStage }) {
           bgColor = "bg-green-500 hover:bg-green-600";
           Icon = Check;
         } else if (isCurrent) {
-          bgColor = "bg-amber-500 hover:bg-amber-400 animate-pulse";
-          Icon = Play;
+          bgColor = obstacle.isEpic ? "bg-red-600 hover:bg-red-500 animate-[pulse_0.5s_infinite]" : "bg-amber-500 hover:bg-amber-400 animate-pulse";
+          Icon = obstacle.isEpic ? Skull : Play;
+        } else if (isLocked && obstacle.isEpic) {
+          bgColor = "bg-red-950";
+          Icon = Skull;
         }
 
         return (

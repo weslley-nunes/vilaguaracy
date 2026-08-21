@@ -187,5 +187,40 @@ export const obstacles = [
         ]
       }
     ]
+  },
+  {
+    id: 'superboss',
+    name: 'O Sistema (Patriarcado)',
+    description: 'A raiz da desigualdade. Use o conhecimento máximo.',
+    image: '/sprite_superboss.jpg',
+    isEpic: true,
+    dialogues: [
+      {
+        enemyMessage: 'VOCÊ ACHA QUE PODE MUDAR ALGO? OLHE PARA ISTO. A VIOLÊNCIA É INEVITÁVEL.',
+        imageInMessage: '/infografico_feminicidio.jpg',
+        options: [
+          { text: 'Esses números me assustam. Talvez eu não possa fazer nada.', isCorrect: false, feedback: 'O Sistema se fortaleceu com seu medo.', damage: 50 },
+          { text: 'Esses 1.467 casos de feminicídio em 2023 mostram a urgência da nossa luta. Conscientização e educação são nossas armas!', isCorrect: true, feedback: 'GOLPE CRÍTICO! Você usou os dados para ganhar força.', damage: 100 },
+          { text: 'As leis vão resolver isso sozinhas com o tempo.', isCorrect: false, feedback: 'A passividade não destrói O Sistema.', damage: 40 }
+        ]
+      },
+      {
+        enemyMessage: 'O CICLO NUNCA TERÁ FIM. VEJA QUANTAS SOFREM NAS SOMBRAS DE SUAS CASAS!',
+        imageInMessage: '/infografico_violencia.jpg',
+        options: [
+          { text: 'Quase 259 mil agressões... O ciclo de abuso DEVE ser rompido pela denúncia e pela Rede de Apoio. Ninguém está sozinha!', isCorrect: true, feedback: 'GOLPE CRÍTICO! A Rede de Apoio desestabilizou o Boss.', damage: 100 },
+          { text: 'É impossível combater algo tão grande e oculto.', isCorrect: false, feedback: 'O Sistema se alimenta da sua desesperança.', damage: 50 },
+          { text: 'O que acontece em casa, fica em casa.', isCorrect: false, feedback: 'A omissão é a maior aliada do Sistema.', damage: 60 }
+        ]
+      },
+      {
+        enemyMessage: 'VOCÊ ESTÁ SOZINHA CONTRA MIM. NÃO HÁ QUEM TE ESCUTE. RENDA-SE.',
+        options: [
+          { text: 'Talvez eu não tenha voz mesmo.', isCorrect: false, feedback: 'Seu silêncio o fortalece.', damage: 50 },
+          { text: 'Eu tenho voz e não estou sozinha!', isCorrect: false, feedback: 'Faltou indicar AÇÃO prática.', damage: 30 },
+          { text: 'A central de atendimento LIGUE 180 está disponível 24 horas! Nós temos a lei, a informação e umas às outras. O SEU FIM CHEGOU!', isCorrect: true, feedback: 'GOLPE FINAL! O SISTEMA COLAPSOU!', damage: 150 }
+        ]
+      }
+    ]
   }
 ];

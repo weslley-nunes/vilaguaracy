@@ -4,6 +4,7 @@ import TrailMap from './TrailMap';
 import Scoreboard from './Scoreboard';
 import BattleArena from './BattleArena';
 import GameIntro from './GameIntro';
+import VictoryScreen from './VictoryScreen';
 
 export default function GameDashboard({ selectedCharacter, onBackToSelection }) {
   const [currentView, setCurrentView] = useState('trail');
@@ -28,8 +29,8 @@ export default function GameDashboard({ selectedCharacter, onBackToSelection }) 
     const nextStage = currentStage + 1;
     setCurrentStage(nextStage);
 
-    // If all 5 stages are cleared
-    if (nextStage >= 5) {
+    // If all 6 stages are cleared
+    if (nextStage >= 6) {
       setGameFinished(true);
       saveScore(newScore);
     }
@@ -59,6 +60,10 @@ export default function GameDashboard({ selectedCharacter, onBackToSelection }) 
 
   if (showIntro) {
     return <GameIntro selectedCharacter={selectedCharacter} onFinishIntro={() => setShowIntro(false)} />;
+  }
+
+  if (gameFinished && currentView !== 'ranking') {
+    return <VictoryScreen selectedCharacter={selectedCharacter} score={score} onFinish={() => setCurrentView('ranking')} />;
   }
 
   return (

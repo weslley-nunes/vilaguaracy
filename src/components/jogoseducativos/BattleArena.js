@@ -26,12 +26,12 @@ export default function BattleArena({ selectedCharacter, obstacleIndex, onVictor
     scrollToBottom();
   }, [messages, showOptions]);
 
-  const triggerEnemyMessage = (text) => {
+  const triggerEnemyMessage = (text, image = null) => {
     setShowOptions(false);
     
     // Simulates typing...
     setTimeout(() => {
-      setMessages(prev => [...prev, { text, sender: 'enemy' }]);
+      setMessages(prev => [...prev, { text, sender: 'enemy', image }]);
       setShowOptions(true);
     }, 1500);
   };
@@ -40,7 +40,7 @@ export default function BattleArena({ selectedCharacter, obstacleIndex, onVictor
   useEffect(() => {
     if (!gameOver && !stageCleared && currentObstacle && currentDialogue) {
       if (currentDialogueIndex === 0 && messages.length === 0) {
-        triggerEnemyMessage(currentDialogue.enemyMessage);
+        triggerEnemyMessage(currentDialogue.enemyMessage, currentDialogue.imageInMessage);
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -72,8 +72,9 @@ export default function BattleArena({ selectedCharacter, obstacleIndex, onVictor
       // Next dialogue or next enemy
       setTimeout(() => {
         if (currentDialogueIndex + 1 < currentObstacle.dialogues.length) {
+          const nextDialogue = currentObstacle.dialogues[currentDialogueIndex + 1];
           setCurrentDialogueIndex(prev => prev + 1);
-          triggerEnemyMessage(currentObstacle.dialogues[currentDialogueIndex + 1].enemyMessage);
+          triggerEnemyMessage(nextDialogue.enemyMessage, nextDialogue.imageInMessage);
         } else {
           // Defeated current obstacle
           setMessages(prev => [...prev, { text: `${currentObstacle.name.toUpperCase()} FOI BLOQUEADO!`, sender: 'system_success' }]);
@@ -94,14 +95,14 @@ export default function BattleArena({ selectedCharacter, obstacleIndex, onVictor
   return (
     <div className={`flex items-center justify-center font-pixel h-full w-full`}>
       {/* Smartphone Frame */}
-      <div className="w-full max-w-md h-full max-h-[90vh] bg-black border-[12px] border-slate-800 rounded-[3rem] relative shadow-2xl flex flex-col overflow-hidden">
+      <div className={`w-full max-w-md h-full max-h-[90vh] bg-black border-[12px] rounded-[3rem] relative shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ${currentObstacle?.isEpic ? 'border-red-900 shadow-[0_0_50px_rgba(220,38,38,0.6)] animate-pulse' : 'border-slate-800'}`}>
         
         {/* Notch */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-800 rounded-b-2xl z-20"></div>
 
         {/* Header - Chat App */}
-        <div className="bg-[#075e54] text-white p-4 pt-8 flex items-center shadow-md z-10">
-          <div className="w-10 h-10 bg-white rounded-full overflow-hidden border-2 border-white flex-shrink-0 mr-3">
+        <div className={`text-white p-4 pt-8 flex items-center shadow-md z-10 transition-colors duration-300 ${currentObstacle?.isEpic ? 'bg-red-950 border-b-2 border-red-800' : 'bg-[#075e54]'}`}>
+          <div className={`w-10 h-10 bg-white rounded-full overflow-hidden border-2 flex-shrink-0 mr-3 ${currentObstacle?.isEpic ? 'border-red-500' : 'border-white'}`}>
              <img 
                src={currentObstacle?.image || '/logo.png'} 
                alt="Enemy" 
@@ -156,10 +157,17 @@ export default function BattleArena({ selectedCharacter, obstacleIndex, onVictor
                       className={`p-3 text-[10px] md:text-[11px] leading-loose shadow-sm relative ${
                         msg.sender === 'player' 
                           ? 'bg-[#dcf8c6] text-slate-800 rounded-l-xl rounded-br-xl rounded-tr-sm border-b-2 border-r-2 border-[#b5db9d]' 
-                          : 'bg-white text-slate-800 rounded-r-xl rounded-bl-xl rounded-tl-sm border-b-2 border-l-2 border-slate-300'
+                          : currentObstacle.isEpic 
+                            ? 'bg-black text-red-500 rounded-r-xl rounded-bl-xl rounded-tl-sm border-b-2 border-l-2 border-red-900 shadow-[0_0_15px_rgba(220,38,38,0.5)] font-bold'
+                            : 'bg-white text-slate-800 rounded-r-xl rounded-bl-xl rounded-tl-sm border-b-2 border-l-2 border-slate-300'
                       }`}
                     >
                       {msg.text}
+                      {msg.image && (
+                        <div className="mt-2 rounded overflow-hidden border border-red-900/50">
+                          <img src={msg.image} alt="Enviado pelo inimigo" className="w-full h-auto object-cover" style={{ imageRendering: 'pixelated' }} />
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
