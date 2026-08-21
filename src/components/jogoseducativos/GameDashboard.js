@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Map, Trophy, LogOut, User } from 'lucide-react';
+import { Map, Trophy, LogOut, User, Volume2, VolumeX } from 'lucide-react';
 import TrailMap from './TrailMap';
 import Scoreboard from './Scoreboard';
 import BattleArena from './BattleArena';
+import GameIntro from './GameIntro';
 
 export default function GameDashboard({ selectedCharacter, onBackToSelection }) {
   const [currentView, setCurrentView] = useState('trail');
@@ -10,6 +11,8 @@ export default function GameDashboard({ selectedCharacter, onBackToSelection }) 
   const [score, setScore] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [gameFinished, setGameFinished] = useState(false);
+  const [showIntro, setShowIntro] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
 
   const handleSelectStage = (stageIndex) => {
     if (stageIndex === currentStage) {
@@ -25,8 +28,8 @@ export default function GameDashboard({ selectedCharacter, onBackToSelection }) 
     const nextStage = currentStage + 1;
     setCurrentStage(nextStage);
 
-    // If all 3 stages are cleared
-    if (nextStage >= 3) {
+    // If all 5 stages are cleared
+    if (nextStage >= 5) {
       setGameFinished(true);
       saveScore(newScore);
     }
@@ -54,10 +57,24 @@ export default function GameDashboard({ selectedCharacter, onBackToSelection }) 
     { id: 'ranking', label: 'Ranking', icon: Trophy }
   ];
 
+  if (showIntro) {
+    return <GameIntro selectedCharacter={selectedCharacter} onFinishIntro={() => setShowIntro(false)} />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-900 flex text-white font-pixel selection:bg-amber-500 selection:text-white">
+      {/* Background Audio */}
+      <audio autoPlay loop muted={isMuted} src="https://actions.google.com/sounds/v1/horror/creepy_background_wind.ogg" />
+      
       {/* Sidebar */}
-      <aside className="w-64 bg-gray-800 border-r-4 border-amber-900/50 p-6 flex flex-col">
+      <aside className="w-64 bg-gray-800 border-r-4 border-amber-900/50 p-6 flex flex-col relative">
+        <button 
+          onClick={() => setIsMuted(!isMuted)}
+          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+        >
+          {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+        </button>
+
         {/* Profile Card */}
         <div className="bg-gray-700 rounded-xl p-4 mb-8 border-2 border-gray-600 flex flex-col items-center">
           <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-amber-500 mb-3 bg-white">

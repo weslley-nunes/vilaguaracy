@@ -3,11 +3,12 @@ import { Check, Lock, Play } from 'lucide-react';
 import { obstacles } from './GameData';
 
 export default function TrailMap({ currentStage, onSelectStage }) {
-  // Define positions for the 3 stages on the map
   const nodes = [
-    { top: '70%', left: '25%' },
-    { top: '50%', left: '55%' },
-    { top: '30%', left: '80%' }
+    { top: '80%', left: '15%' },
+    { top: '55%', left: '35%' },
+    { top: '75%', left: '60%' },
+    { top: '45%', left: '80%' },
+    { top: '20%', left: '55%' }
   ];
 
   return (

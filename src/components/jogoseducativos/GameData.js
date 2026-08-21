@@ -139,5 +139,53 @@ export const obstacles = [
         ]
       }
     ]
+  },
+  {
+    id: 'silencio',
+    name: 'Coronel do Silêncio',
+    description: 'Opressor que desencoraja denúncias.',
+    image: '/sprite_silencio.jpg',
+    dialogues: [
+      {
+        enemyMessage: 'Deixa disso. A Lei Maria da Penha nem funciona na prática. Vai dar em nada e você vai ficar mal falada.',
+        options: [
+          { text: 'A lei funciona sim, e a PROTEÇÃO INTEGRAL obriga o Estado e a sociedade a agirem. O silêncio só protege você!', isCorrect: true, feedback: 'Perfeito! Você defendeu a Proteção Integral.', damage: 50 },
+          { text: 'Talvez seja melhor não me expor mesmo...', isCorrect: false, feedback: 'Você aceitou a mordaça do Coronel.', damage: 30 },
+          { text: 'Eu vou resolver isso sozinha.', isCorrect: false, feedback: 'Isolar-se dificulta a busca por justiça.', damage: 20 }
+        ]
+      },
+      {
+        enemyMessage: 'Isso é assunto de casal, ninguém deve interferir. O Estado não tem que se meter.',
+        options: [
+          { text: 'Eu concordo, a polícia só piora as coisas.', isCorrect: false, feedback: 'A violência não é um problema privado.', damage: 30 },
+          { text: 'A violência contra a mulher é um crime de ação incondicionada. A sociedade e o Estado TÊM o dever de intervir.', isCorrect: true, feedback: 'Brilhante! O Estado não pode se omitir.', damage: 50 },
+          { text: 'Vou apenas me afastar dele.', isCorrect: false, feedback: 'Apenas se afastar não quebra o ciclo de impunidade.', damage: 20 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'desinformacao',
+    name: 'Mago da Desinformação',
+    description: 'Distorce dados e nega a realidade.',
+    image: '/sprite_desinformacao.jpg',
+    dialogues: [
+      {
+        enemyMessage: 'Vocês feministas exageram! As estatísticas de violência doméstica caíram muito nos últimos anos.',
+        options: [
+          { text: 'Na verdade não vi os dados recentes...', isCorrect: false, feedback: 'A ignorância fortalece o Mago.', damage: 30 },
+          { text: 'Os INDICADORES SOCIAIS provam o contrário: o Brasil ainda é um dos países com maiores taxas de feminicídio do mundo!', isCorrect: true, feedback: 'Fatal! Usou DADOS concretos.', damage: 50 },
+          { text: 'Pelo menos está diminuindo.', isCorrect: false, feedback: 'Você caiu na falsa sensação de segurança dele.', damage: 20 }
+        ]
+      },
+      {
+        enemyMessage: 'A maioria dessas denúncias é falsa. Mulheres mentem para conseguir vantagem no divórcio. Todo mundo sabe.',
+        options: [
+          { text: 'É, algumas devem mentir mesmo.', isCorrect: false, feedback: 'Você legitimou um mito.', damage: 30 },
+          { text: 'Não quero debater achismos com você.', isCorrect: false, feedback: 'É preciso combater a mentira com fatos.', damage: 20 },
+          { text: 'As ESTATÍSTICAS oficias mostram que denúncias falsas são raríssimas. A subnotificação do abuso real é o verdadeiro problema!', isCorrect: true, feedback: 'Excelente! Destruiu a fake news com fatos.', damage: 50 }
+        ]
+      }
+    ]
   }
 ];
