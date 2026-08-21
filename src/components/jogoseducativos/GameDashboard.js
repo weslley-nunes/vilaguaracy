@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Map, Trophy, LogOut, User, Volume2, VolumeX } from 'lucide-react';
 import TrailMap from './TrailMap';
+import { obstacles, obstaclesBoys } from './GameData';
 import Scoreboard from './Scoreboard';
 import BattleArena from './BattleArena';
 import GameIntro from './GameIntro';
@@ -14,6 +15,8 @@ export default function GameDashboard({ selectedCharacter, onBackToSelection }) 
   const [gameFinished, setGameFinished] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
+
+  const activeObstacles = selectedCharacter?.gender === 'M' ? obstaclesBoys : obstacles;
 
   const handleSelectStage = (stageIndex) => {
     if (stageIndex === currentStage) {
@@ -141,10 +144,7 @@ export default function GameDashboard({ selectedCharacter, onBackToSelection }) 
 
         {currentView === 'trail' && (
           <div className="w-full h-full flex flex-col items-center justify-center">
-            <TrailMap 
-              currentStage={currentStage} 
-              onSelectStage={handleSelectStage} 
-            />
+            <TrailMap currentStage={currentStage} onSelectStage={handleSelectStage} activeObstacles={activeObstacles} />
           </div>
         )}
 
@@ -164,9 +164,8 @@ export default function GameDashboard({ selectedCharacter, onBackToSelection }) 
               </button>
               {/* Note: BattleArena needs to be updated to receive these props and render correctly in this space */}
               <BattleArena 
-                selectedCharacter={selectedCharacter}
-                obstacleIndex={currentStage}
-                onVictory={handleVictory}
+                obstacle={activeObstacles[currentStage]} 
+                onVictory={handleVictory} 
                 onDefeat={handleDefeat}
                 isModal={true}
               />

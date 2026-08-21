@@ -43,9 +43,9 @@ export default function VictoryScreen({ selectedCharacter, score, onFinish }) {
         <div className="bg-slate-800/80 border-l-4 border-amber-500 p-6 rounded-r-lg mt-6 text-sm md:text-base leading-relaxed text-gray-200 shadow-inner text-left w-full relative">
           <Award className="absolute -top-4 -left-4 w-8 h-8 text-amber-500 bg-slate-900 rounded-full p-1" />
           <p className="italic mb-4">
-            "Parabéns, Heroína! O Sistema ruiu diante da sua força. 
+            "Parabéns, {selectedCharacter?.gender === 'M' ? 'Herói' : 'Heroína'}! O Sistema ruiu diante da sua força. 
             O conhecimento é a sua maior arma contra a violência e a desigualdade. 
-            Lembre-se sempre de que você não está sozinha e que a sua autonomia é inegociável. 
+            Lembre-se sempre de que você não está {selectedCharacter?.gender === 'M' ? 'sozinho' : 'sozinha'} e que a {selectedCharacter?.gender === 'M' ? 'nossa aliança é essencial' : 'sua autonomia é inegociável'}. 
             Continuem mudando o mundo e construindo uma sociedade mais justa!"
           </p>
           <p className="font-bold text-amber-400 text-right text-xs">

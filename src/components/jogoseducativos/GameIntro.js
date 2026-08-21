@@ -5,7 +5,9 @@ export default function GameIntro({ selectedCharacter, onFinishIntro }) {
   const [displayedText, setDisplayedText] = useState('');
   const [showButton, setShowButton] = useState(false);
   
-  const fullText = "Cheguei ao Jalapão para realizar meu grande sonho... Mas sinto uma presença sombria no meu celular. Monstros estão tentando violar meus direitos e me impedir através de mensagens! Preciso enfrentá-los para garantir minha Autonomia, minha Saúde, meu Corpo e minha Proteção. Não vou me calar!";
+  const isMale = selectedCharacter?.gender === 'M';
+
+  const fullText = `Bem-${isMale ? 'vindo, herói' : 'vinda, heroína'}! Você está no Jalapão, Tocantins. Um lugar mágico de belezas naturais incríveis... Mas algo sombrio invadiu o seu celular. Monstros tentam te convencer de que a violência é ${isMale ? 'normal' : 'inevitável'}... A sua missão é usar o conhecimento para ser ${isMale ? 'um aliado' : 'livre'}! Você está preparad${isMale ? 'o' : 'a'} para a Jornada?`;
 
   useEffect(() => {
     let i = 0;

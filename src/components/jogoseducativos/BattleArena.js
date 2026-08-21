@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { obstacles } from './GameData';
 
-export default function BattleArena({ selectedCharacter, obstacleIndex, onVictory, onDefeat, isModal }) {
+export default function BattleArena({ selectedCharacter, obstacle, onVictory, onDefeat, isModal }) {
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
   const [playerHp, setPlayerHp] = useState(100);
   const [accumulatedPoints, setAccumulatedPoints] = useState(0);
@@ -14,7 +14,7 @@ export default function BattleArena({ selectedCharacter, obstacleIndex, onVictor
   
   const chatEndRef = useRef(null);
   
-  const currentObstacle = obstacles[obstacleIndex];
+  const currentObstacle = obstacle;
   const currentDialogue = currentObstacle?.dialogues[currentDialogueIndex];
 
   // Auto-scroll to bottom of chat
@@ -44,7 +44,7 @@ export default function BattleArena({ selectedCharacter, obstacleIndex, onVictor
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [obstacleIndex, currentDialogueIndex, gameOver, stageCleared]);
+  }, [obstacle, currentDialogueIndex, gameOver, stageCleared]);
 
   const handleOptionClick = (option) => {
     setShowOptions(false);

@@ -220,6 +220,162 @@ export const obstacles = [
           { text: 'Eu tenho voz e não estou sozinha!', isCorrect: false, feedback: 'Faltou indicar AÇÃO prática.', damage: 30 },
           { text: 'A central de atendimento LIGUE 180 está disponível 24 horas! Nós temos a lei, a informação e umas às outras. O SEU FIM CHEGOU!', isCorrect: true, feedback: 'GOLPE FINAL! O SISTEMA COLAPSOU!', damage: 150 }
         ]
+  }
+];
+
+export const obstaclesBoys = [
+  {
+    id: 'pressao_amigos',
+    name: 'A Pressão do Grupo',
+    description: 'Amigos incentivando atitudes machistas.',
+    image: '/sprite_assedio.jpg',
+    dialogues: [
+      {
+        enemyMessage: 'Ah, cara! Qual o problema de mandar aquela foto íntima da garota no grupo? Todo mundo faz isso!',
+        options: [
+          { text: 'É, acho que não dá nada...', isCorrect: false, feedback: 'Você cedeu à pressão.', damage: 30 },
+          { text: 'Isso é crime! Espalhar foto íntima sem consentimento destrói a vida da menina.', isCorrect: true, feedback: 'Correto! Você cortou a corrente do mal.', damage: 50 },
+          { text: 'Melhor eu não mandar, mas não vou falar nada.', isCorrect: false, feedback: 'Omitir-se também é permitir.', damage: 20 }
+        ]
+      },
+      {
+        enemyMessage: 'Deixa de ser chato! É só uma piada de mulher no volante. Você não sabe zoar mais?',
+        options: [
+          { text: 'Kkk, foi engraçado vai.', isCorrect: false, feedback: 'Você riu e fortaleceu o preconceito.', damage: 30 },
+          { text: 'Piada que diminui a mulher não tem graça. Isso só reforça estereótipos perigosos.', isCorrect: true, feedback: 'Boa! Não tem espaço para piada machista.', damage: 50 },
+          { text: 'Vou sair do grupo.', isCorrect: false, feedback: 'Sair resolve para você, mas não educa o outro.', damage: 20 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'fantasma_ciume',
+    name: 'Fantasma do Ciúme',
+    description: 'Confunde controle com amor.',
+    image: '/sprite_gaslighting.jpg',
+    dialogues: [
+      {
+        enemyMessage: 'Se ela te ama, ela tem que dar a senha do celular. Quem não deve não teme, não é mesmo?',
+        options: [
+          { text: 'Verdade, vou pedir a senha.', isCorrect: false, feedback: 'Isso é invasão de privacidade e abuso.', damage: 30 },
+          { text: 'Em um relacionamento saudável, a base é a confiança, não o controle. Eu respeito o espaço dela.', isCorrect: true, feedback: 'Perfeito! Amor não é prisão.', damage: 50 },
+          { text: 'Só olho quando ela vai no banheiro.', isCorrect: false, feedback: 'Isso é quebra total de confiança!', damage: 40 }
+        ]
+      },
+      {
+        enemyMessage: 'Olha a roupa que ela vai sair! Você vai deixar ela ir vestida assim? Outros caras vão olhar!',
+        options: [
+          { text: 'Ela se veste como quiser. O corpo é dela e o respeito dos outros não depende da roupa!', isCorrect: true, feedback: 'Isso aí! Você entende a autonomia dela.', damage: 50 },
+          { text: 'Realmente, vou pedir pra ela trocar.', isCorrect: false, feedback: 'Controlar o corpo e as escolhas dela é violência.', damage: 40 },
+          { text: 'É, mas eu vou junto pra proteger.', isCorrect: false, feedback: 'O problema é o pensamento machista dos outros, não a roupa.', damage: 20 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'monstro_consentimento',
+    name: 'Monstro do Consentimento',
+    description: 'Não entende que não é não.',
+    image: '/sprite_luna.jpg',
+    dialogues: [
+      {
+        enemyMessage: 'Ela disse "não" mas deu aquele sorriso... É charme. Insiste que ela cede!',
+        options: [
+          { text: 'Vou tentar de novo, né?', isCorrect: false, feedback: 'Não faça isso! Assédio é crime.', damage: 40 },
+          { text: 'Claro, as mulheres gostam de insistência.', isCorrect: false, feedback: 'Mito perigoso. Isso só gera assédio.', damage: 40 },
+          { text: 'Não é NÃO. Se não for um SIM claro, eu recuo. Respeito acima de tudo!', isCorrect: true, feedback: 'Exato! O consentimento é a única regra.', damage: 50 }
+        ]
+      },
+      {
+        enemyMessage: 'Ela estava bêbada na festa e foi com você pra casa. Você pode fazer o que quiser agora.',
+        options: [
+          { text: 'Se ela veio comigo, é porque quis.', isCorrect: false, feedback: 'Pessoa alcoolizada não pode dar consentimento válido!', damage: 50 },
+          { text: 'Se ela não tem condições de consentir, nada acontece. Vou garantir que ela fique segura.', isCorrect: true, feedback: 'Bela atitude. Você foi um verdadeiro aliado.', damage: 50 },
+          { text: 'Melhor eu não fazer nada para não dar problema.', isCorrect: false, feedback: 'Você fez o certo pelos motivos errados.', damage: 20 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'cumplice_silencio',
+    name: 'O Cúmplice do Silêncio',
+    description: 'Quer que você feche os olhos.',
+    image: '/sprite_silencio.jpg',
+    dialogues: [
+      {
+        enemyMessage: 'Você viu aquele cara assediando a menina no ônibus? Deixa quieto, não se mete. Não é problema seu.',
+        options: [
+          { text: 'Melhor fingir que não vi.', isCorrect: false, feedback: 'Sua omissão ajuda o agressor.', damage: 40 },
+          { text: 'Vou gravar escondido.', isCorrect: false, feedback: 'E a proteção dela no momento, como fica?', damage: 20 },
+          { text: 'Eu tenho que intervir, de forma segura, ou chamar ajuda. Homens precisam ser barreira contra o assédio!', isCorrect: true, feedback: 'Incrível! Ser passivo não é opção.', damage: 50 }
+        ]
+      },
+      {
+        enemyMessage: 'Seu vizinho está gritando com a esposa de novo e quebrando tudo. Em briga de marido e mulher...',
+        options: [
+          { text: 'Não se mete a colher.', isCorrect: false, feedback: 'Ditado ultrapassado que mata mulheres.', damage: 50 },
+          { text: 'Em briga de marido e mulher, SE LIGA 180 ou 190! Eu denuncio para salvar vidas.', isCorrect: true, feedback: 'Corretíssimo. A denúncia salva.', damage: 50 },
+          { text: 'Vou lá bater nele.', isCorrect: false, feedback: 'Violência gera violência, a polícia deve ser acionada.', damage: 30 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'mestre_desrespeito',
+    name: 'Mestre da Desinformação',
+    description: 'Minimiza e interrompe.',
+    image: '/sprite_desinformacao.jpg',
+    dialogues: [
+      {
+        enemyMessage: 'A colega tá falando na reunião de novo. Interrompe ela, você sabe explicar melhor que ela.',
+        options: [
+          { text: 'Vou falar por cima, eu li mais sobre o assunto.', isCorrect: false, feedback: 'Isso é manterrupting. Deixe a mulher falar!', damage: 40 },
+          { text: 'As mulheres ganham espaço se tiverem ajuda dos homens para falar.', isCorrect: false, feedback: 'Elas não precisam de salvação, precisam de respeito à fala.', damage: 30 },
+          { text: 'Eu respeito o turno dela de fala. Mulheres são interrompidas muito mais que homens, não serei um deles.', isCorrect: true, feedback: 'Isso! Saber ouvir é essencial.', damage: 50 }
+        ]
+      },
+      {
+        enemyMessage: 'Ela está reclamando do trabalho e cansaço. Diz para ela que é só tomar um banho que passa.',
+        options: [
+          { text: 'Ela precisa de soluções práticas, vou dar.', isCorrect: false, feedback: 'Isso minimiza a carga mental que as mulheres sofrem.', damage: 30 },
+          { text: 'A dupla jornada das mulheres é pesada. O certo é dividir as tarefas de casa e cuidar juntos.', isCorrect: true, feedback: 'Mandou bem! Tarefa doméstica é dos dois.', damage: 50 },
+          { text: 'Eu ajudo ela sempre que ela me pede.', isCorrect: false, feedback: 'Você não tem que "ajudar", tem que dividir a responsabilidade!', damage: 20 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'superboss_boys',
+    name: 'A Máscara do Machismo',
+    description: 'Exige que você seja agressivo e engula o choro.',
+    image: '/sprite_superboss.jpg',
+    isEpic: true,
+    dialogues: [
+      {
+        enemyMessage: 'OLHE PARA VOCÊ. "HOMEM DE VERDADE" NÃO MOSTRA SENTIMENTOS. O CHORO É FRAQUEZA. A FORÇA É A VIOLÊNCIA!',
+        imageInMessage: '/infografico_violencia.jpg',
+        options: [
+          { text: 'Tem razão, homem tem que ser forte e não chorar.', isCorrect: false, feedback: 'Reprimir sentimentos gera agressividade!', damage: 50 },
+          { text: 'O machismo tóxico machuca os homens também! Sentir e falar sobre emoções nos torna humanos, e não monstros agressivos.', isCorrect: true, feedback: 'GOLPE CRÍTICO! Você quebrou a máscara.', damage: 100 },
+          { text: 'A violência resolve as coisas mais rápido.', isCorrect: false, feedback: 'O ciclo da violência destrói tudo.', damage: 50 }
+        ]
+      },
+      {
+        enemyMessage: 'AS ESTATÍSTICAS NUNCA VÃO MUDAR. SEMPRE FOI ASSIM E SEMPRE SERÁ. A DESIGUALDADE É NATURAL!',
+        imageInMessage: '/infografico_feminicidio.jpg',
+        options: [
+          { text: 'Homens e mulheres são diferentes, não tem como mudar.', isCorrect: false, feedback: 'Diferença não justifica desigualdade e violência!', damage: 50 },
+          { text: 'Isso pode ser mudado com a educação! Se nós homens formos aliados e mudarmos nossos comportamentos, o machismo estrutural vai cair!', isCorrect: true, feedback: 'GOLPE CRÍTICO! A educação é a chave!', damage: 100 },
+          { text: 'As leis já não estão mudando isso?', isCorrect: false, feedback: 'A lei pune, mas a educação previne.', damage: 40 }
+        ]
+      },
+      {
+        enemyMessage: 'VOCÊ VAI TRAIR A SUA PRÓPRIA ESPÉCIE? SEJA COMO NÓS!',
+        options: [
+          { text: 'Melhor seguir o bando pra não ser zoado.', isCorrect: false, feedback: 'Sua submissão é a vitória dele.', damage: 50 },
+          { text: 'Eu sigo o que é certo.', isCorrect: false, feedback: 'Faltou posicionamento firme e ação.', damage: 30 },
+          { text: 'Homem de verdade não agride, não oprime e não silencia! Nós somos a geração de aliados, o seu tempo de impunidade acabou!', isCorrect: true, feedback: 'GOLPE FINAL! O MACHISMO RUIU!', damage: 150 }
+        ]
       }
     ]
   }
