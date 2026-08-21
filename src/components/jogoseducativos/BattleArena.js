@@ -26,15 +26,6 @@ export default function BattleArena({ character, onRestart }) {
     scrollToBottom();
   }, [messages, showOptions]);
 
-  // Initial trigger for the first message of an obstacle
-  useEffect(() => {
-    if (!gameOver && !victory && currentObstacle && currentDialogue) {
-      if (currentDialogueIndex === 0 && messages.length === 0) {
-        triggerEnemyMessage(currentDialogue.enemyMessage);
-      }
-    }
-  }, [currentObstacleIndex, currentDialogueIndex, gameOver, victory]);
-
   const triggerEnemyMessage = (text) => {
     setShowOptions(false);
     
@@ -44,6 +35,16 @@ export default function BattleArena({ character, onRestart }) {
       setShowOptions(true);
     }, 1500);
   };
+
+  // Initial trigger for the first message of an obstacle
+  useEffect(() => {
+    if (!gameOver && !victory && currentObstacle && currentDialogue) {
+      if (currentDialogueIndex === 0 && messages.length === 0) {
+        triggerEnemyMessage(currentDialogue.enemyMessage);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentObstacleIndex, currentDialogueIndex, gameOver, victory]);
 
   const handleOptionClick = (option) => {
     setShowOptions(false);
