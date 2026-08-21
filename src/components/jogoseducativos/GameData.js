@@ -220,6 +220,8 @@ export const obstacles = [
           { text: 'Eu tenho voz e não estou sozinha!', isCorrect: false, feedback: 'Faltou indicar AÇÃO prática.', damage: 30 },
           { text: 'A central de atendimento LIGUE 180 está disponível 24 horas! Nós temos a lei, a informação e umas às outras. O SEU FIM CHEGOU!', isCorrect: true, feedback: 'GOLPE FINAL! O SISTEMA COLAPSOU!', damage: 150 }
         ]
+      }
+    ]
   }
 ];
 
