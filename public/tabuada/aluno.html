@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogando - Batalha de Tabuada</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body class="aluno-body">
+    <div class="container" id="telaAguardando">
+        <h2 id="bemVindoTxt"></h2>
+        <p>Aguardando o professor iniciar a rodada...</p>
+        <div class="loader"></div>
+    </div>
+
+    <div class="container hidden" id="telaJogo">
+        <div class="status-bar">
+            <span id="infoJogador"></span>
+            <span id="meusPontos">Pontos: 0</span>
+        </div>
+        
+        <div class="pergunta-box">
+            <h3>Rodada <span id="numRodada">1</span></h3>
+            <h1 id="textoPergunta">? x ?</h1>
+        </div>
+
+        <div class="alternativas" id="boxAlternativas">
+            <!-- Botões gerados via JS -->
+        </div>
+
+        <div id="feedback" class="hidden"></div>
+    </div>
+
+    <script src="script-aluno.js"></script>
+</body>
+</html>

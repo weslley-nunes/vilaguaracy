@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Professor - Batalha de Tabuada</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body class="prof-body">
+    <div class="prof-container">
+        <header class="prof-header">
+            <h1>Duelo de Equipes ⚔️</h1>
+            <div class="controles">
+                <button id="btnIniciar" class="btn btn-start">Iniciar Novo Jogo</button>
+                <button id="btnProxima" class="btn btn-next hidden">Próxima Pergunta</button>
+                <button id="btnEncerrar" class="btn btn-end hidden">Encerrar Jogo</button>
+            </div>
+        </header>
+
+        <div class="placar-geral">
+            <div class="placar-equipe placar-amarela">
+                <h2>💛 Equipe Amarela</h2>
+                <div class="pontos" id="pontosAmarela">0</div>
+            </div>
+            
+            <div class="painel-central">
+                <div id="statusRodada">Aguardando início...</div>
+                <h1 id="perguntaAtualProf" class="pergunta-destaque"></h1>
+            </div>
+
+            <div class="placar-equipe placar-verde">
+                <h2>💚 Equipe Verde</h2>
+                <div class="pontos" id="pontosVerde">0</div>
+            </div>
+        </div>
+
+        <div class="jogadores-list">
+            <h3>Alunos Conectados</h3>
+            <div id="listaJogadores" class="grid-jogadores"></div>
+        </div>
+    </div>
+
+    <script src="script-professor.js"></script>
+</body>
+</html>

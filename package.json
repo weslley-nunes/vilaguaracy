@@ -6,9 +6,9 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "node server.js",
     "build": "next build",
-    "start": "next start -H 0.0.0.0",
+    "start": "NODE_ENV=production node server.js",
     "lint": "eslint"
   },
   "dependencies": {
@@ -24,7 +24,8 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-to-print": "^3.2.0",
-    "recharts": "^3.7.0"
+    "recharts": "^3.7.0",
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.24",

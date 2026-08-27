@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batalha de Tabuada - Vila Guaracy</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>⚔️ Batalha de Tabuada ⚔️<br><span>Vila Guaracy</span></h1>
+        
+        <div class="login-box">
+            <input type="text" id="nomeAluno" placeholder="Digite seu nome..." autocomplete="off">
+            
+            <p>Escolha sua Equipe:</p>
+            <div class="equipes-btn">
+                <button class="btn btn-amarela" onclick="entrar('amarela')">Equipe Amarela 💛</button>
+                <button class="btn btn-verde" onclick="entrar('verde')">Equipe Verde 💚</button>
+            </div>
+        </div>
+
+        <div style="margin-top: 50px;">
+            <a href="professor.html" class="link-professor">Painel do Professor</a>
+        </div>
+    </div>
+
+    <script>
+        function entrar(equipe) {
+            const nome = document.getElementById('nomeAluno').value.trim();
+            if (!nome) {
+                alert("Por favor, digite seu nome!");
+                return;
+            }
+            // Salvar no localStorage para recuperar na tela de jogo
+            localStorage.setItem('nomeJogador', nome);
+            localStorage.setItem('equipeJogador', equipe);
+            window.location.href = 'aluno.html';
+        }
+    </script>
+</body>
+</html>
