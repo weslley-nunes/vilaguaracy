@@ -4,6 +4,14 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  async rewrites() {
+    return [
+      {
+        source: '/tabuada',
+        destination: '/tabuada/index.html',
+      },
+    ];
+  },
 };
 
 export default nextConfig;
