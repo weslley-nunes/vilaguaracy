@@ -4,11 +4,12 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  async rewrites() {
+  async redirects() {
     return [
       {
         source: '/tabuada',
         destination: '/tabuada/index.html',
+        permanent: false,
       },
     ];
   },
