@@ -358,7 +358,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
             </div>
 
             {/* Questions List Grouped by Blocks */}
-            <div className={spacing}>
+            <div className={`print:break-before-page ${spacing}`}>
                 {(() => {
                     let globalQuestionIndex = 0;
                     return blocks.map((block, blockIdx) => {
