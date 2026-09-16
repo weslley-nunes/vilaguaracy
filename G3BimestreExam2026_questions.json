@@ -1,0 +1,322 @@
+[
+  {
+    "options": [
+      "x = 5",
+      "x = 4",
+      "x = -4",
+      "x = 20"
+    ],
+    "text": "**Resolva** a equação de primeiro grau: 3x - 5 = 7.",
+    "subject": "Matemática",
+    "type": "multiple_choice",
+    "habilidade": "EF07MA18",
+    "points": 1,
+    "correct": "B",
+    "ownerId": "Q2azsUelIzacOChMnMkwDXG4EGZ2",
+    "id": 1789583149654
+  },
+  {
+    "options": [
+      "10",
+      "15",
+      "20",
+      "25"
+    ],
+    "text": "Se a razão entre dois números é 3/4 e o menor deles é 15, qual é o maior?",
+    "subject": "Matemática",
+    "type": "multiple_choice",
+    "habilidade": "EF07MA17",
+    "points": 1,
+    "correct": "C",
+    "ownerId": "Q2azsUelIzacOChMnMkwDXG4EGZ2",
+    "id": 1789583149655
+  },
+  {
+    "options": [
+      "10%",
+      "15%",
+      "20%",
+      "25%"
+    ],
+    "text": "Um produto que custava R$ 200,00 passou a custar R$ 240,00. Qual foi o percentual de aumento?",
+    "subject": "Matemática",
+    "type": "multiple_choice",
+    "habilidade": "EF07MA02",
+    "points": 1,
+    "correct": "C",
+    "ownerId": "Q2azsUelIzacOChMnMkwDXG4EGZ2",
+    "id": 1789583149656
+  },
+  {
+    "options": [
+      "x > 3",
+      "x < 3",
+      "x > -3",
+      "x < -3"
+    ],
+    "text": "Qual é a solução da inequação 2x + 4 > 10?",
+    "subject": "Matemática",
+    "type": "multiple_choice",
+    "habilidade": "EF07MA18",
+    "points": 1,
+    "correct": "A",
+    "ownerId": "Q2azsUelIzacOChMnMkwDXG4EGZ2",
+    "id": 1789583149657
+  },
+  {
+    "options": [
+      "180°",
+      "360°",
+      "90°",
+      "270°"
+    ],
+    "text": "A soma dos ângulos internos de qualquer triângulo é sempre igual a:",
+    "subject": "Matemática",
+    "type": "multiple_choice",
+    "habilidade": "EF07MA24",
+    "points": 1,
+    "correct": "A",
+    "ownerId": "Q2azsUelIzacOChMnMkwDXG4EGZ2",
+    "id": 1789583149658
+  },
+  {
+    "options": [
+      "2",
+      "4",
+      "8",
+      "12"
+    ],
+    "text": "Se 4 torneiras enchem um tanque em 3 horas, em quantas horas 6 torneiras encheriam o mesmo tanque?",
+    "subject": "Matemática",
+    "type": "multiple_choice",
+    "habilidade": "EF07MA17",
+    "points": 1,
+    "correct": "A",
+    "ownerId": "Q2azsUelIzacOChMnMkwDXG4EGZ2",
+    "id": 1789583149659
+  },
+  {
+    "options": [
+      "R$ 60,00",
+      "R$ 600,00",
+      "R$ 660,00",
+      "R$ 120,00"
+    ],
+    "text": "Um capital de R$ 600,00 aplicado a juros simples de 10% ao mês rende quanto de juros em 1 mês?",
+    "subject": "Matemática",
+    "type": "multiple_choice",
+    "habilidade": "EF07MA02",
+    "points": 1,
+    "correct": "A",
+    "ownerId": "Q2azsUelIzacOChMnMkwDXG4EGZ2",
+    "id": 1789583149660
+  },
+  {
+    "options": [
+      "30 cm²",
+      "15 cm²",
+      "60 cm²",
+      "10 cm²"
+    ],
+    "text": "Qual a área de um triângulo com base 10 cm e altura 6 cm?",
+    "subject": "Matemática",
+    "type": "multiple_choice",
+    "habilidade": "EF07MA31",
+    "points": 1,
+    "correct": "A",
+    "ownerId": "Q2azsUelIzacOChMnMkwDXG4EGZ2",
+    "id": 1789583149661
+  },
+  {
+    "options": [
+      "Vértice",
+      "Bissetriz",
+      "Mediatriz",
+      "Hipotenusa"
+    ],
+    "text": "A semirreta que divide um ângulo ao meio é chamada de:",
+    "subject": "Matemática",
+    "type": "multiple_choice",
+    "habilidade": "EF07MA23",
+    "points": 1,
+    "correct": "B",
+    "ownerId": "Q2azsUelIzacOChMnMkwDXG4EGZ2",
+    "id": 1789583149662
+  },
+  {
+    "options": [
+      "6",
+      "8",
+      "12",
+      "16"
+    ],
+    "text": "Qual é o valor de x na proporção 2/x = 4/12?",
+    "subject": "Matemática",
+    "type": "multiple_choice",
+    "habilidade": "EF07MA17",
+    "points": 1,
+    "correct": "A",
+    "ownerId": "Q2azsUelIzacOChMnMkwDXG4EGZ2",
+    "id": 1789583149663
+  },
+  {
+    "options": [
+      "Condução",
+      "Convecção",
+      "Irradiação",
+      "Sublimação"
+    ],
+    "text": "A transferência de calor que ocorre através do vácuo, como a energia do Sol chegando à Terra, é chamada de:",
+    "subject": "Ciências",
+    "type": "multiple_choice",
+    "habilidade": "EF07CI02",
+    "points": 1,
+    "correct": "C",
+    "ownerId": "zX3LfW3q1rUglo4C4vhRUWSOTL83",
+    "id": 1789583149664
+  },
+  {
+    "options": [
+      "Oxigênio",
+      "Nitrogênio",
+      "Gás Carbônico",
+      "Argônio"
+    ],
+    "text": "Qual é o gás mais abundante na atmosfera terrestre?",
+    "subject": "Ciências",
+    "type": "multiple_choice",
+    "habilidade": "EF07CI12",
+    "points": 1,
+    "correct": "B",
+    "ownerId": "zX3LfW3q1rUglo4C4vhRUWSOTL83",
+    "id": 1789583149665
+  },
+  {
+    "options": [
+      "Termômetro",
+      "Barômetro",
+      "Anemômetro",
+      "Higrômetro"
+    ],
+    "text": "Qual instrumento é utilizado para medir a pressão atmosférica?",
+    "subject": "Ciências",
+    "type": "multiple_choice",
+    "habilidade": "EF07CI13",
+    "points": 1,
+    "correct": "B",
+    "ownerId": "zX3LfW3q1rUglo4C4vhRUWSOTL83",
+    "id": 1789583149666
+  },
+  {
+    "options": [
+      "Troposfera",
+      "Estratosfera",
+      "Mesosfera",
+      "Termosfera"
+    ],
+    "text": "Em qual camada da atmosfera ocorrem os principais fenômenos meteorológicos (chuvas, ventos)?",
+    "subject": "Ciências",
+    "type": "multiple_choice",
+    "habilidade": "EF07CI12",
+    "points": 1,
+    "correct": "A",
+    "ownerId": "zX3LfW3q1rUglo4C4vhRUWSOTL83",
+    "id": 1789583149667
+  },
+  {
+    "options": [
+      "Aumento da camada de ozônio",
+      "Diminuição das marés",
+      "Aquecimento Global",
+      "Falta de oxigênio"
+    ],
+    "text": "O aumento excessivo do efeito estufa natural devido à ação humana resulta no:",
+    "subject": "Ciências",
+    "type": "multiple_choice",
+    "habilidade": "EF07CI13",
+    "points": 1,
+    "correct": "C",
+    "ownerId": "zX3LfW3q1rUglo4C4vhRUWSOTL83",
+    "id": 1789583149668
+  },
+  {
+    "options": [
+      "Alavanca interfixa",
+      "Alavanca inter-resistente",
+      "Alavanca interpotente",
+      "Roldana fixa"
+    ],
+    "text": "Uma tesoura é um exemplo de qual tipo de máquina simples?",
+    "subject": "Ciências",
+    "type": "multiple_choice",
+    "habilidade": "EF07CI01",
+    "points": 1,
+    "correct": "A",
+    "ownerId": "zX3LfW3q1rUglo4C4vhRUWSOTL83",
+    "id": 1789583149669
+  },
+  {
+    "options": [
+      "Alavanca",
+      "Plano inclinado",
+      "Roldana móvel",
+      "Cunha"
+    ],
+    "text": "Uma rampa de acesso para cadeirantes é um exemplo de qual máquina simples?",
+    "subject": "Ciências",
+    "type": "multiple_choice",
+    "habilidade": "EF07CI01",
+    "points": 1,
+    "correct": "B",
+    "ownerId": "zX3LfW3q1rUglo4C4vhRUWSOTL83",
+    "id": 1789583149670
+  },
+  {
+    "options": [
+      "Sólidos",
+      "Líquidos",
+      "Gases",
+      "Vácuo"
+    ],
+    "text": "A condução térmica ocorre com maior eficiência em materiais:",
+    "subject": "Ciências",
+    "type": "multiple_choice",
+    "habilidade": "EF07CI02",
+    "points": 1,
+    "correct": "A",
+    "ownerId": "zX3LfW3q1rUglo4C4vhRUWSOTL83",
+    "id": 1789583149671
+  },
+  {
+    "options": [
+      "O ar quente sobe e o ar frio desce",
+      "O ar frio sobe e o ar quente desce",
+      "A temperatura não afeta",
+      "Os dois se misturam instantaneamente"
+    ],
+    "text": "Nas correntes de convecção em fluidos, qual é o princípio básico de movimentação?",
+    "subject": "Ciências",
+    "type": "multiple_choice",
+    "habilidade": "EF07CI02",
+    "points": 1,
+    "correct": "A",
+    "ownerId": "zX3LfW3q1rUglo4C4vhRUWSOTL83",
+    "id": 1789583149672
+  },
+  {
+    "options": [
+      "Terremotos",
+      "Radiação ultravioleta",
+      "Tsunamis",
+      "Furacões"
+    ],
+    "text": "A atmosfera protege a Terra contra o impacto direto de meteoroides e também nos fornece proteção contra:",
+    "subject": "Ciências",
+    "type": "multiple_choice",
+    "habilidade": "EF07CI12",
+    "points": 1,
+    "correct": "B",
+    "ownerId": "zX3LfW3q1rUglo4C4vhRUWSOTL83",
+    "id": 1789583149673
+  }
+]
