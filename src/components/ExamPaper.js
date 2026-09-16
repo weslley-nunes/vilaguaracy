@@ -42,6 +42,34 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
     const lineHeight = isAdapted ? 'leading-relaxed' : '';
 
 
+    const verbDictionary = {
+        'citar': 'Apresente informações sem detalhar.',
+        'completar': 'Preencha lacunas com informações.',
+        'conceituar': 'Dê a definição. Diga o que é.',
+        'definir': 'Dê a definição. Diga o que é.',
+        'diferenciar': 'Mostre características não iguais.',
+        'exemplificar': 'Exemplos que deem forma ao conceito.',
+        'explicar': 'O que é + como funciona + por que.',
+        'justificar': 'Evidências em forma de fatos.',
+        'nomeie': 'Forma cientificamente chamada.',
+        'relacionar': 'Conecte informações pedidas.',
+        'analise': 'Estude detalhadamente.',
+        'compare': 'Examine semelhanças e diferenças.',
+        'identifique': 'Reconheça e indique algo.',
+        'calcule': 'Determine o valor.',
+        'classifique': 'Agrupe de acordo com características.'
+    };
+    const usedVerbs = new Set();
+    const allText = flatQuestions.map(q => (q.text || "").toLowerCase()).join(" ");
+    Object.keys(verbDictionary).forEach(verb => {
+        if (allText.includes(`**${verb}**`) || allText.match(new RegExp(`\\b${verb}\\b`))) {
+            usedVerbs.add(verb);
+        }
+    });
+    const usedVerbsList = Array.from(usedVerbs).sort();
+
+
+
     // 1. Group existing questions by block
     const blocks = [];
     questions.forEach(q => {
@@ -198,13 +226,13 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
             </div>
 
             {/* Split Section: Instructions, Tabelinha & Answer Sheet */}
-            <div className="flex flex-row items-stretch gap-4 mb-6 w-full">
+            <div className="flex flex-row items-stretch gap-6 mb-6 w-full">
                 {/* Left Column: Instructions & Tabelinha */}
-                <div className="flex-1 flex flex-col gap-3">
+                <div className="flex-1 flex flex-col gap-4">
                     {/* Instructions */}
-                    <div className="border border-gray-300 p-3 rounded-lg bg-gray-50 print:bg-transparent print:border-black">
-                        <h3 className="font-bold text-[11px] uppercase mb-1">📝 Orientações Importantes:</h3>
-                        <p className={`text-[10px] ${isAdapted ? 'text-[18px]' : ''} font-medium text-gray-800`}>
+                    <div className="border border-gray-300 p-4 rounded-lg bg-gray-50 print:bg-transparent print:border-black">
+                        <h3 className="font-bold text-[12px] uppercase mb-2">📝 Orientações Importantes:</h3>
+                        <p className={`text-[11px] ${isAdapted ? 'text-[18px]' : ''} font-medium text-gray-800 leading-snug`}>
                             Caneta: Utilize apenas caneta azul ou preta. <br/>
                             Questões: A prova possui {flatQuestions.length} questões com alternativas de A a D. <br/>
                             Resposta: Marque apenas uma alternativa por questão. <br/>
@@ -213,32 +241,31 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                         </p>
                     </div>
 
-                    {/* Tabelinha dos Comandos */}
-                    <div className="w-full">
-                        <table className={`w-full border-collapse border border-black ${isAdapted ? 'text-[12px] border-2' : 'text-[9px]'} text-left print:border-black`}>
-                            <thead>
-                                <tr>
-                                    <th colSpan="2" className="border border-black text-center font-bold uppercase py-0.5 bg-gray-100 print:bg-transparent print:border-black">Tabelinha dos Comandos</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black w-[90px]">Citar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Apresente informações sem detalhar.</td></tr>
-                                <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Completar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Preencha lacunas com informações.</td></tr>
-                                <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Conceituar/Definir</td><td className="border border-black px-1.5 py-0.5 print:border-black">Dê a definição. Diga o que é.</td></tr>
-                                <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Diferenciar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Mostre características não iguais.</td></tr>
-                                <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Exemplificar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Exemplos que deem forma ao conceito.</td></tr>
-                                <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Explicar</td><td className="border border-black px-1.5 py-0.5 print:border-black">O que é + como funciona + por que.</td></tr>
-                                <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Justificar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Evidências em forma de fatos.</td></tr>
-                                <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Nomeie</td><td className="border border-black px-1.5 py-0.5 print:border-black">Forma cientificamente chamada.</td></tr>
-                                <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Relacionar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Conecte informações pedidas.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    {/* Tabelinha dos Comandos - Only render if used */}
+                    {usedVerbsList.length > 0 && (
+                        <div className="w-full">
+                            <table className={`w-full border-collapse border border-black ${isAdapted ? 'text-[12px] border-2' : 'text-[10px]'} text-left print:border-black`}>
+                                <thead>
+                                    <tr>
+                                        <th colSpan="2" className="border border-black text-center font-bold uppercase py-1 bg-gray-100 print:bg-transparent print:border-black">Tabelinha dos Comandos</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {usedVerbsList.map(verb => (
+                                        <tr key={verb}>
+                                            <td className="border border-black px-2 py-1 font-bold print:border-black w-[100px] capitalize">{verb}</td>
+                                            <td className="border border-black px-2 py-1 print:border-black">{verbDictionary[verb]}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
 
                 {/* Right Column: INTEGRATED ANSWER SHEET (Optimized for Vertical Photo) */}
                 {multipleChoiceQuestions.length > 0 && (
-                    <div className="w-[340px] shrink-0 border-[3px] border-black p-4 bg-white print:bg-transparent relative flex flex-col items-center print:break-after-page print:break-inside-avoid">
+                    <div className="w-[420px] shrink-0 border-[3px] border-black p-4 bg-white print:bg-transparent relative flex flex-col items-center print:break-inside-avoid">
                         {/* High-Precision Alignment Markers (24x24px anchor points) */}
                         <div className="absolute top-0 left-0 w-6 h-6 bg-black print:block"></div>
                         <div className="absolute top-0 right-0 w-6 h-6 bg-black print:block"></div>
@@ -266,7 +293,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                         </div>
 
                         {/* Bubbles Grid */}
-                        <div className="w-full flex flex-wrap gap-x-4 gap-y-4 justify-center">
+                        <div className="w-full flex flex-wrap gap-x-6 gap-y-4 justify-center">
                             {(() => {
                                 const columnBlocks = [];
                                 let globalIdx = 1;
@@ -282,7 +309,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                                     let subBlockIdx = 0;
                                     
                                     while (remaining > 0) {
-                                        const currentBatch = Math.min(remaining, 15);
+                                        const currentBatch = Math.min(remaining, 10);
                                         const startIdx = globalIdx;
                                         globalIdx += currentBatch;
                                         
@@ -298,7 +325,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                                 });
                                 
                                 return columnBlocks.map((block, bIdx) => (
-                                    <div key={bIdx} className="w-[145px] border-t-2 border-black pt-1">
+                                    <div key={bIdx} className="w-[155px] border-t-2 border-black pt-1">
                                         <p className={`font-black uppercase mb-3 text-center truncate ${isAdapted ? 'text-[14px]' : 'text-[9px]'}`}>{block.subject}</p>
                                         <div className="space-y-3">
                                             {Array.from({ length: block.count }).map((_, i) => {
