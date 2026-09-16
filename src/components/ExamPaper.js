@@ -197,75 +197,76 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                 </div>
             </div>
 
-            {/* Split Section: Instructions + QR Code */}
-            <div className="flex flex-row items-stretch gap-4 mb-2 w-full">
-                {/* Instructions */}
-                <div className="flex-1 border border-gray-300 p-3 rounded-lg bg-gray-50 print:bg-transparent print:border-black">
-                    <h3 className="font-bold text-[11px] uppercase mb-1">📝 Orientações Importantes:</h3>
-                    <p className={`text-[10px] ${isAdapted ? 'text-[22px]' : ''} font-medium text-gray-800`}>
-                        Caneta: Utilize apenas caneta azul ou preta. <br/>
-                        Questões: A prova possui {flatQuestions.length} questões com alternativas de A a D. <br/>
-                        Resposta: Marque apenas uma alternativa por questão. <br/>
-                        Gabarito: Pinte a bolinha correspondente à sua resposta com muito cuidado e sem ultrapassar as bordas. <br/><br/>
-                        Nossa escola preparou você com muito carinho e dedicação. Acreditamos no seu esforço e confiamos plenamente no seu potencial! Boa avaliação!
-                    </p>
+            {/* Split Section: Instructions, Tabelinha & Answer Sheet */}
+            <div className="flex flex-row items-stretch gap-4 mb-6 w-full">
+                {/* Left Column: Instructions & Tabelinha */}
+                <div className="flex-1 flex flex-col gap-3">
+                    {/* Instructions */}
+                    <div className="border border-gray-300 p-3 rounded-lg bg-gray-50 print:bg-transparent print:border-black">
+                        <h3 className="font-bold text-[11px] uppercase mb-1">📝 Orientações Importantes:</h3>
+                        <p className={`text-[10px] ${isAdapted ? 'text-[18px]' : ''} font-medium text-gray-800`}>
+                            Caneta: Utilize apenas caneta azul ou preta. <br/>
+                            Questões: A prova possui {flatQuestions.length} questões com alternativas de A a D. <br/>
+                            Resposta: Marque apenas uma alternativa por questão. <br/>
+                            Gabarito: Pinte a bolinha correspondente à sua resposta com muito cuidado e sem ultrapassar as bordas. <br/><br/>
+                            Nossa escola preparou você com muito carinho e dedicação. Acreditamos no seu esforço e confiamos plenamente no seu potencial! Boa avaliação!
+                        </p>
+                    </div>
+
+                    {/* Tabelinha dos Comandos */}
+                    <div className="w-full">
+                        <table className={`w-full border-collapse border border-black ${isAdapted ? 'text-[12px] border-2' : 'text-[9px]'} text-left print:border-black`}>
+                            <thead>
+                                <tr>
+                                    <th colSpan="2" className="border border-black text-center font-bold uppercase py-0.5 bg-gray-100 print:bg-transparent print:border-black">Tabelinha dos Comandos</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black w-[90px]">Citar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Apresente informações sem detalhar.</td></tr>
+                                <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Completar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Preencha lacunas com informações.</td></tr>
+                                <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Conceituar/Definir</td><td className="border border-black px-1.5 py-0.5 print:border-black">Dê a definição. Diga o que é.</td></tr>
+                                <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Diferenciar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Mostre características não iguais.</td></tr>
+                                <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Exemplificar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Exemplos que deem forma ao conceito.</td></tr>
+                                <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Explicar</td><td className="border border-black px-1.5 py-0.5 print:border-black">O que é + como funciona + por que.</td></tr>
+                                <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Justificar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Evidências em forma de fatos.</td></tr>
+                                <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Nomeie</td><td className="border border-black px-1.5 py-0.5 print:border-black">Forma cientificamente chamada.</td></tr>
+                                <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Relacionar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Conecte informações pedidas.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
-                {/* QR Code */}
+                {/* Right Column: INTEGRATED ANSWER SHEET (Optimized for Vertical Photo) */}
                 {multipleChoiceQuestions.length > 0 && (
-                    <div className="w-[150px] shrink-0 flex flex-col items-center justify-center p-2 border border-gray-300 print:border-black rounded-lg bg-white">
-                        <QRCodeSVG
-                            value={`${typeof window !== 'undefined' ? window.location.origin : 'https://vilaguaracy.com.br'}/scanner?id=${examId}&s=${encodeURIComponent(studentName)}&ac=${encodeURIComponent(headerConfig?.accessCode || "")}${headerConfig?.classId ? `&c=${encodeURIComponent(headerConfig.classId)}` : ''}`}
-                            size={90}
-                            level="H"
-                        />
-                        <div className="mt-1 flex flex-col items-center w-full px-1 text-center">
-                            <div className="bg-black text-white px-2 py-0.5 rounded text-[10px] font-black tracking-widest mb-1">CÓDIGO: {examId.slice(-6).toUpperCase()}</div>
-                            <span className="text-[8px] uppercase font-bold text-gray-600 leading-tight">
-                                {headerConfig?.accessCode ? `ALUNO: ${headerConfig.accessCode}` : (studentName.slice(0, 25) || "_____________________")}
-                            </span>
-                            <span className="text-[7px] text-gray-400 mt-1">Consulte o gabarito no portal</span>
+                    <div className="w-[340px] shrink-0 border-[3px] border-black p-4 bg-white print:bg-transparent relative flex flex-col items-center print:break-after-page print:break-inside-avoid">
+                        {/* High-Precision Alignment Markers (24x24px anchor points) */}
+                        <div className="absolute top-0 left-0 w-6 h-6 bg-black print:block"></div>
+                        <div className="absolute top-0 right-0 w-6 h-6 bg-black print:block"></div>
+                        <div className="absolute bottom-0 left-0 w-6 h-6 bg-black print:block"></div>
+                        <div className="absolute bottom-0 right-0 w-6 h-6 bg-black print:block"></div>
+
+                        {/* Title and ID block inside answer sheet */}
+                        <div className="flex w-full items-center justify-between mb-3 px-2 mt-2 border-b border-black pb-2">
+                            <div className="flex-1 flex flex-col items-start pr-2">
+                                <p className="text-sm font-bold uppercase tracking-widest w-full">Folha de Respostas</p>
+                                <span className="text-[10px] uppercase font-bold text-gray-800 leading-tight mt-1">
+                                    {headerConfig?.accessCode ? `ALUNO: ${headerConfig.accessCode}` : (studentName.slice(0, 25) || "_____________________")}
+                                </span>
+                            </div>
+                            <div className="shrink-0 flex flex-col items-center bg-gray-50 border border-gray-200 p-1.5 rounded-lg print:border-black">
+                                <QRCodeSVG
+                                    value={`${typeof window !== 'undefined' ? window.location.origin : 'https://vilaguaracy.com.br'}/scanner?id=${examId}&s=${encodeURIComponent(studentName)}&ac=${encodeURIComponent(headerConfig?.accessCode || "")}${headerConfig?.classId ? `&c=${encodeURIComponent(headerConfig.classId)}` : ''}`}
+                                    size={60}
+                                    level="H"
+                                />
+                                <div className="text-black px-1 py-0.5 text-[8px] font-black tracking-widest mt-0.5">
+                                    ID: {examId.slice(-6).toUpperCase()}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                )}
-            </div>
 
-            {/* Tabelinha dos Comandos */}
-            <div className="mb-3 w-full">
-                <table className={`w-full border-collapse border border-black ${isAdapted ? 'text-[16px] border-2' : 'text-[9px]'} text-left print:border-black`}>
-                    <thead>
-                        <tr>
-                            <th colSpan="2" className="border border-black text-center font-bold uppercase py-0.5 bg-gray-100 print:bg-transparent print:border-black">Tabelinha dos Comandos</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td className="border border-black px-1.5 py-0.5 font-bold w-[120px] print:border-black">Citar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Apresente informações sem necessidade de detalhar.</td></tr>
-                        <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Completar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Use palavras ou expressões que preencham lacunas com informações corretas.</td></tr>
-                        <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Conceituar/Definir</td><td className="border border-black px-1.5 py-0.5 print:border-black">Dê a definição. Diga o que é.</td></tr>
-                        <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Diferenciar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Mostre características que façam com que as informações não sejam iguais.</td></tr>
-                        <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Exemplificar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Apresente exemplos que dê forma à ideia ou conceito.</td></tr>
-                        <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Explicar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Dizer o que é + como funciona + por que é assim.</td></tr>
-                        <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Justificar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Apresentar evidências em forma de fatos e não de opiniões.</td></tr>
-                        <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Nomeie</td><td className="border border-black px-1.5 py-0.5 print:border-black">Apresentar o nome, a forma como algo é cientificamente chamado.</td></tr>
-                        <tr><td className="border border-black px-1.5 py-0.5 font-bold print:border-black">Relacionar</td><td className="border border-black px-1.5 py-0.5 print:border-black">Apresente informações e conecte com o que é pedido.</td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            {/* INTEGRATED ANSWER SHEET - Standardized Square for Precise Capture */}
-            {multipleChoiceQuestions.length > 0 && (
-                <div className="print:break-after-page print:break-inside-avoid mb-4 border-2 border-black p-2 bg-white print:bg-transparent relative w-full mx-auto flex flex-col items-center justify-center">
-                    {/* High-Precision Alignment Markers */}
-                    <div className="absolute top-0 left-0 w-4 h-4 bg-black print:block"></div>
-                    <div className="absolute top-0 right-0 w-4 h-4 bg-black print:block"></div>
-                    <div className="absolute bottom-0 left-0 w-4 h-4 bg-black print:block"></div>
-                    <div className="absolute bottom-0 right-0 w-4 h-4 bg-black print:block"></div>
-
-                    <p className="text-center text-sm font-bold uppercase mb-4 tracking-widest border-b border-black pb-2 w-full">Folha de Respostas Oficial</p>
-                    
-                    <div className="w-full px-2 mb-2">
-                        {/* Bubbles Grid Section Grouped by Blocks */}
-                        <div className="w-full flex flex-wrap gap-x-2 gap-y-3 justify-center">
+                        {/* Bubbles Grid */}
+                        <div className="w-full flex flex-wrap gap-x-4 gap-y-4 justify-center">
                             {(() => {
                                 const columnBlocks = [];
                                 let globalIdx = 1;
@@ -281,7 +282,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                                     let subBlockIdx = 0;
                                     
                                     while (remaining > 0) {
-                                        const currentBatch = Math.min(remaining, 5);
+                                        const currentBatch = Math.min(remaining, 15);
                                         const startIdx = globalIdx;
                                         globalIdx += currentBatch;
                                         
@@ -297,17 +298,17 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                                 });
                                 
                                 return columnBlocks.map((block, bIdx) => (
-                                    <div key={bIdx} className="border border-gray-100 p-1.5 rounded bg-gray-50/50 print:bg-transparent print:border-black min-w-[114px]">
-                                        <p className={`font-black uppercase mb-2 border-b border-gray-200 pb-1 print:border-black truncate ${isAdapted ? 'text-[14px]' : 'text-[9px]'}`}>{block.subject}</p>
-                                        <div className="space-y-1.5">
+                                    <div key={bIdx} className="w-[145px] border-t-2 border-black pt-1">
+                                        <p className={`font-black uppercase mb-3 text-center truncate ${isAdapted ? 'text-[14px]' : 'text-[9px]'}`}>{block.subject}</p>
+                                        <div className="space-y-3">
                                             {Array.from({ length: block.count }).map((_, i) => {
                                                 const qNum = block.startNumber + i;
                                                 return (
-                                                    <div key={i} className={`flex items-center ${isAdapted ? 'gap-4 text-[16px]' : 'gap-2 text-[10px]'}`}>
-                                                        <span className={`font-black text-right ${isAdapted ? 'w-8' : 'w-5'}`}>{qNum}.</span>
-                                                        <div className="flex gap-1">
+                                                    <div key={i} className={`flex items-center justify-between ${isAdapted ? 'text-[16px]' : 'text-[11px]'}`}>
+                                                        <span className={`font-black text-right pr-2 ${isAdapted ? 'w-8' : 'w-6'}`}>{qNum}.</span>
+                                                        <div className="flex gap-2">
                                                             {['A', 'B', 'C', 'D'].map((opt) => (
-                                                                <div key={opt} className={`rounded-full border border-black bg-white flex items-center justify-center font-bold ${isAdapted ? 'w-7 h-7 text-[12px]' : 'w-3.5 h-3.5 text-[7px]'}`}>
+                                                                <div key={opt} className={`rounded-full border-[1.5px] border-black bg-white flex items-center justify-center font-bold ${isAdapted ? 'w-8 h-8 text-[14px]' : 'w-5 h-5 text-[10px]'}`}>
                                                                     {opt}
                                                                 </div>
                                                             ))}
@@ -320,13 +321,12 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                                 ));
                             })()}
                         </div>
+                        <div className="mt-4 text-[10px] font-bold uppercase text-gray-500 text-center">
+                            FOTOGRAFE ESTA ÁREA NA VERTICAL
+                        </div>
                     </div>
-                    
-                    <div className="mt-4 text-[10px] font-bold uppercase text-gray-500 text-center">
-                        Mantenha esta área dentro do quadro da câmera para correção automática
-                    </div>
-                </div>
-            )}
+                )}
+            </div>
 
             {/* Questions List Grouped by Blocks */}
             <div className={spacing}>
