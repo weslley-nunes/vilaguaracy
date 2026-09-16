@@ -17,6 +17,7 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 const TEACHERS = {
+    lourenco: { userId: 'vUoy5malhvQe8RLSPBnzR24Vgh72', name: 'LOURENÇO FERREIRA DA SILVA NETTO' },
     danilo: { userId: 'ATrTwaG9mMQDfyO6yncsGtVzvtn2', name: 'DANILO COSTA DA SILVEIRA' },
     romario: { userId: 'hJ0y2Lih2geS3kVzte6LLxwi7nt2', name: 'ROMÁRIO COSME DA SILVA' },
     waldicley: { userId: 'XuzwmWUPvaaVsw8ILwl8KKL0CSu1', name: 'WALDICLEY DA COSTA SILVA' },
@@ -39,7 +40,7 @@ async function getCollaborators(classNum, examType) {
         if (classNum.startsWith('82') || classNum.startsWith('92')) {
             list.push({ ...TEACHERS.danilo, subject: 'Educação Física', quota: 5, current: 0 });
         } else {
-            list.push({ ...TEACHERS.waldicley, subject: 'Educação Física', quota: 5, current: 0 });
+            list.push({ ...TEACHERS.lourenco, subject: 'Educação Física', quota: 5, current: 0 });
         }
         list.push({ ...TEACHERS.lucivania, subject: 'Língua Inglesa', quota: 5, current: 0 });
         if (classNum === '72.01' || classNum === '72.02') {
