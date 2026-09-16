@@ -42,31 +42,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
     const lineHeight = isAdapted ? 'leading-relaxed' : '';
 
 
-    const verbDictionary = {
-        'citar': 'Apresente informações sem detalhar.',
-        'completar': 'Preencha lacunas com informações.',
-        'conceituar': 'Dê a definição. Diga o que é.',
-        'definir': 'Dê a definição. Diga o que é.',
-        'diferenciar': 'Mostre características não iguais.',
-        'exemplificar': 'Exemplos que deem forma ao conceito.',
-        'explicar': 'O que é + como funciona + por que.',
-        'justificar': 'Evidências em forma de fatos.',
-        'nomeie': 'Forma cientificamente chamada.',
-        'relacionar': 'Conecte informações pedidas.',
-        'analise': 'Estude detalhadamente.',
-        'compare': 'Examine semelhanças e diferenças.',
-        'identifique': 'Reconheça e indique algo.',
-        'calcule': 'Determine o valor.',
-        'classifique': 'Agrupe de acordo com características.'
-    };
-    const usedVerbs = new Set();
-    const allText = flatQuestions.map(q => (q.text || "").toLowerCase()).join(" ");
-    Object.keys(verbDictionary).forEach(verb => {
-        if (allText.includes(`**${verb}**`) || allText.match(new RegExp(`\\b${verb}\\b`))) {
-            usedVerbs.add(verb);
-        }
-    });
-    const usedVerbsList = Array.from(usedVerbs).sort();
+    
 
 
 
@@ -161,6 +137,32 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
             gridColumns.push(multipleChoiceQuestions.slice(i, i + questionsPerCol));
         }
     }
+
+    const verbDictionary = {
+        'citar': 'Apresente informações sem detalhar.',
+        'completar': 'Preencha lacunas com informações.',
+        'conceituar': 'Dê a definição. Diga o que é.',
+        'definir': 'Dê a definição. Diga o que é.',
+        'diferenciar': 'Mostre características não iguais.',
+        'exemplificar': 'Exemplos que deem forma ao conceito.',
+        'explicar': 'O que é + como funciona + por que.',
+        'justificar': 'Evidências em forma de fatos.',
+        'nomeie': 'Forma cientificamente chamada.',
+        'relacionar': 'Conecte informações pedidas.',
+        'analise': 'Estude detalhadamente.',
+        'compare': 'Examine semelhanças e diferenças.',
+        'identifique': 'Reconheça e indique algo.',
+        'calcule': 'Determine o valor.',
+        'classifique': 'Agrupe de acordo com características.'
+    };
+    const usedVerbs = new Set();
+    const allText = flatQuestions.map(q => (q.text || "").toLowerCase()).join(" ");
+    Object.keys(verbDictionary).forEach(verb => {
+        if (allText.includes(`**${verb}**`) || allText.match(new RegExp(`\\b${verb}\\b`))) {
+            usedVerbs.add(verb);
+        }
+    });
+    const usedVerbsList = Array.from(usedVerbs).sort();
 
     return (
         <div ref={ref} className={`bg-white p-12 shadow-lg min-h-[1123px] w-[794px] mx-auto text-black print:shadow-none print:w-full relative ${isAdapted ? 'text-[22px]' : ''}`} style={fontStyle}>
