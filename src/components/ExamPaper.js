@@ -12,7 +12,7 @@ const renderFormattedText = (text) => {
     });
 };
 
-const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConfig, showAnswers = false, isAdapted = false, scoringMode = "auto", totalScore = 3, onQuestionChange = null, onQuestionEdit = null, onQuestionDelete = null, printConfig = {} }, ref) => {
+const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConfig, showAnswers = false, isAdapted = false, scoringMode = "auto", totalScore = 3, onQuestionChange = null, onQuestionEdit = null, onQuestionDelete = null, onQuestionExport = null, printConfig = {} }, ref) => {
     // Determine exam ID for QR (fallback to timestamp if not provided in headerConfig)
     const examId = headerConfig?.examId || "PREVIEW";
     const studentName = headerConfig?.studentName || "";

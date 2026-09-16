@@ -19,11 +19,11 @@ const db = admin.firestore();
 const TEACHERS = {
     romario: { userId: 'hJ0y2Lih2geS3kVzte6LLxwi7nt2', name: 'ROMÁRIO COSME DA SILVA' },
     waldicley: { userId: 'XuzwmWUPvaaVsw8ILwl8KKL0CSu1', name: 'WALDICLEY DA COSTA SILVA' },
-    lucivania: { userId: 'lpxciCLQVmeRfThmcQ77aUv7nsI2', name: 'LUCIVANIA CARVALHO BARCELO' },
+    lucivania: { userId: 'o7GslJVHatXTAXm1rjJTDQWOMu13', name: 'WESLANNE DOS SANTOS GOMES SAMPAIO' },
     noemi: { userId: 'QuWkbMK3JjMYBsfK234KfqpIXhY2', name: 'NOEMI RAFAEL RODRIGUES DE SOUSA' },
     barbara: { userId: 'W5MjhYd0daeDjZVOQkjVYnYOr8d2', name: 'BARBARA PEREIRA DE SOUSA' },
     wellington: { userId: 'NSrurLZkH4fVUejkr9m5H7YdJ8q1', name: 'FRANCISCO WELLINGTON DE SOUSA COSTA' },
-    matheus: { userId: 'JyAljDrnFCgDWlqg39GYAwZjP4r2', name: 'MATHEUS TREPTOW DE AMORIM' },
+    matheus: { userId: 'u69b1zQPyGexKeH0yKMkUc1qiqz1', name: 'WALLACY BORGES FERREIRA' },
     pedro: { userId: 'XGAPGkKMsHgDhllbA9YPWhoixT83', name: 'PEDRO LUCAS FERREIRA DE CARVALHO' },
     paulo: { userId: 'Q2azsUelIzacOChMnMkwDXG4EGZ2', name: 'PAULO HENRIQUE LINO DE ARAUJO' },
     weslley: { userId: 'f01buqnyVmNjNQR0CTEmlTL4NP22', name: 'WESLLEY NUNES DA SILVA' },
