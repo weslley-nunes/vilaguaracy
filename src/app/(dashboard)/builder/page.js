@@ -29,6 +29,7 @@ export default function BuilderPage() {
     const [level, setLevel] = useState("Ensino Médio");
     const [year, setYear] = useState("1ª Série"); // Default year for the default level
     const [difficulty, setDifficulty] = useState("Médio");
+    const [isContextualized, setIsContextualized] = useState(true);
     const [isGenerating, setIsGenerating] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [generatedQuestions, setGeneratedQuestions] = useState([]);
@@ -425,7 +426,7 @@ export default function BuilderPage() {
         try {
             const res = await fetch('/api/generate', {
                 method: 'POST',
-                body: JSON.stringify({ topic: `${subject} - ${topic}`, difficulty, level, year }),
+                body: JSON.stringify({ topic: `${subject} - ${topic}`, difficulty, level, year, isContextualized }),
             });
             const data = await res.json();
 
@@ -653,8 +654,20 @@ export default function BuilderPage() {
                             </div>
                         </div>
 
-                        <div className="flex gap-2">
-                            <button type="submit" disabled={isGenerating} className="flex-1 btn btn-primary py-3 flex items-center justify-center gap-2">
+                        <div className="flex items-center gap-2 mb-4 bg-vg-light/30 p-3 rounded-lg border border-vg-light/50">
+                              <input 
+                                  type="checkbox" 
+                                  id="isContextualized" 
+                                  checked={isContextualized} 
+                                  onChange={(e) => setIsContextualized(e.target.checked)} 
+                                  className="w-4 h-4 text-vg-dark bg-white border-gray-300 rounded focus:ring-vg-dark focus:ring-2 cursor-pointer"
+                              />
+                              <label htmlFor="isContextualized" className="text-xs font-bold text-gray-700 dark:text-gray-300 cursor-pointer">
+                                  Gerar questões contextualizadas (situação-problema)
+                              </label>
+                          </div>
+                          <div className="flex gap-2">
+                              <button type="submit" disabled={isGenerating} className="flex-1 btn btn-primary py-3 flex items-center justify-center gap-2">
                                 {isGenerating ? <Loader2 className="animate-spin" size={20} /> : <Sparkles size={20} />}
                                 <span>Gerar</span>
                             </button>

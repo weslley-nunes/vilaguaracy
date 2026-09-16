@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function POST(req) {
     try {
-        const { topic, difficulty = "Médio", level = "Ensino Médio", year = "Geral" } = await req.json();
+        const { topic, difficulty = "Médio", level = "Ensino Médio", year = "Geral", isContextualized = true } = await req.json();
 
         // Lendo diretamente das variáveis de ambiente (sem chaves no código para evitar alertas do Google)
         const apiKey = process.env.GEMINI_API_KEY;
@@ -42,9 +42,14 @@ export async function POST(req) {
                     CADA questão DEVE ter EXATAMENTE 4 alternativas (A, B, C, D).
                     Como especialista, identifique e insira o código da habilidade da BNCC correspondente para CADA questão.
                     
-                    REGRAS PARA O ENUNCIADO:
-                    1. O enunciado de CADA questão DEVE iniciar obrigatoriamente com um verbo de comando da Taxonomia de Bloom (exemplos: **Analise**, **Compare**, **Identifique**, **Calcule**, **Classifique**, **Explique**, **Diferencie**, **Relacione**).
-                    2. Este verbo de comando DEVE estar em destaque (negrito) utilizando exatamente dois asteriscos no início e no fim do verbo, por exemplo: "**Analise** a situação..." ou "**Calcule** o valor...".
+                    ${isContextualized ? `
+                    REGRAS PARA O ENUNCIADO (CONCEITO CONTEXTUALIZADO):
+                    1. Gere enunciados MAIORES e mais ELABORADOS, apresentando sempre uma SITUAÇÃO-PROBLEMA (situação do cotidiano, história, caso prático ou experimento) ANTES da pergunta direta.
+                    2. ATENÇÃO À DIFICULDADE: Se a dificuldade da questão for Fácil, utilize um vocabulário SIMPLES e de fácil compreensão para as crianças/estudantes, evite palavras complexas, mesmo mantendo o texto mais longo.
+                    3. O comando final ou a pergunta direta da questão DEVE iniciar com um verbo da Taxonomia de Bloom em destaque com dois asteriscos (ex: **Analise**, **Identifique**, **Calcule**, **Explique**). Exemplo: "[Contexto longo aqui...] Diante disso, **Identifique** qual..."` : `
+                    REGRAS PARA O ENUNCIADO (DIRETO):
+                    1. O enunciado de CADA questão DEVE ser direto e iniciar obrigatoriamente com um verbo de comando da Taxonomia de Bloom (ex: **Analise**, **Compare**, **Identifique**, **Calcule**).
+                    2. Este verbo de comando DEVE estar em destaque (negrito) utilizando exatamente dois asteriscos no início e no fim do verbo, por exemplo: "**Analise** a situação..." ou "**Calcule** o valor...".`}
                     
                     REGRAS CRÍTICAS DE SAÍDA:
                     1. RETORNE EXCLUSIVAMENTE O JSON ABAIXO.
