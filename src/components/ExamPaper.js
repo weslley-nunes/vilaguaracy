@@ -395,6 +395,12 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                                                 <div className="flex-1">
                                                     <div className="flex justify-between items-start gap-4 mb-2">
                                                         <div className="flex-1">
+                                                            {q.supportText && (
+                                                                <div 
+                                                                    className="mb-3 text-[12px] leading-relaxed break-words"
+                                                                    dangerouslySetInnerHTML={{ __html: q.supportText }}
+                                                                />
+                                                            )}
                                                             <p className={`whitespace-pre-wrap inline ${isAdapted ? 'font-medium' : ''} ${lineHeight}`}>
                                                                 {renderFormattedText(q.text)}
                                                                 {q.habilidade && q.habilidade !== "N/A" && printConfig?.showHabilidades !== false && (
