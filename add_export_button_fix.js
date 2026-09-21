@@ -1,37 +1,72 @@
 const fs = require('fs');
-let code = fs.readFileSync('src/components/ExamPaper.js', 'utf8');
 
-const target = '{onQuestionDelete && (\\s*<button\\s*onClick={() => onQuestionDelete(q.id)}';
-const replacement = `{onQuestionExport && (
-                                                                        <button
-                                                                            onClick={() => onQuestionExport(q)}
-                                                                            className="p-1 rounded text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"
-                                                                            title="Exportar Questão"
-                                                                        >
-                                                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                                                                        </button>
-                                                                    )}
-                                                                    {onQuestionDelete && (
-                                                                        <button
-                                                                            onClick={() => onQuestionDelete(q.id)}`;
+const path = 'src/app/(dashboard)/builder/page.js';
+let code = fs.readFileSync(path, 'utf8');
 
-// I'll use a direct string replacement since it's safer. Let's find exactly how onQuestionDelete looks.
-const exactTarget = `{onQuestionDelete && (
-                                                                          <button
-                                                                              onClick={() => onQuestionDelete(q.id)}`;
+// 1. Add updateDoc to firestore import
+code = code.replace(
+    'import { collection, addDoc, getDocs, limit, query, deleteDoc, doc } from "firebase/firestore";',
+    'import { collection, addDoc, getDocs, limit, query, deleteDoc, doc, updateDoc } from "firebase/firestore";'
+);
 
-if (code.includes(exactTarget)) {
-    code = code.replace(exactTarget, replacement);
-    fs.writeFileSync('src/components/ExamPaper.js', code, 'utf8');
-    console.log("Replaced successfully via exact string match");
+// 2. Fix handleExportQuestion
+const oldFunc = `    const handleExportQuestion = async () => {
+        if (!selectedTargetExam) return;
+        setIsExporting(true);
+        try {
+            const targetExam = await ExamService.getById(selectedTargetExam);
+            if (targetExam) {
+                const newQuestion = { ...exportQuestionTarget, id: Date.now() + Math.random(), ownerId: user.uid };
+                const updatedQuestions = [...(targetExam.questions || []), newQuestion];
+                
+                const { doc, updateDoc } = await import('firebase/firestore');
+                const docRef = doc(db, "exams", targetExam.id);
+                await updateDoc(docRef, { questions: updatedQuestions });
+                
+                alert("Questão exportada com sucesso!");
+                setIsExportModalOpen(false);
+                setSelectedTargetExam("");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Erro ao exportar questão.");
+        } finally {
+            setIsExporting(false);
+        }
+    };`;
+
+const newFunc = `    const handleExportQuestion = async () => {
+        if (!selectedTargetExam) return;
+        setIsExporting(true);
+        try {
+            const targetExam = await ExamService.getById(selectedTargetExam);
+            if (targetExam) {
+                const newQuestion = { ...exportQuestionTarget, id: Date.now() + Math.random(), ownerId: user.uid };
+                const updatedQuestions = [...(targetExam.questions || []), newQuestion];
+                
+                const docRef = doc(db, "exams", targetExam.id);
+                await updateDoc(docRef, { questions: updatedQuestions });
+                
+                alert("Questão transferida com sucesso para a prova de destino!");
+                setIsExportModalOpen(false);
+                setSelectedTargetExam("");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Erro ao exportar questão: " + error.message);
+        } finally {
+            setIsExporting(false);
+        }
+    };`;
+
+if (code.includes(oldFunc)) {
+    code = code.replace(oldFunc, newFunc);
 } else {
-    // try regex
-    const regex = /\{onQuestionDelete && \(\s*<button\s*onClick=\{\(\) => onQuestionDelete\(q\.id\)\}/;
-    if (regex.test(code)) {
-        code = code.replace(regex, replacement);
-        fs.writeFileSync('src/components/ExamPaper.js', code, 'utf8');
-        console.log("Replaced successfully via regex");
-    } else {
-        console.log("Could not find target in ExamPaper.js");
-    }
+    // try replacing dynamically
+    code = code.replace("const { doc, updateDoc } = await import('firebase/firestore');", "");
+    code = code.replace("alert(\"Questo exportada com sucesso!\");", "alert(\"Questão transferida com sucesso para a prova de destino!\");");
+    code = code.replace("alert(\"Erro ao exportar questo.\");", "alert(\"Erro ao exportar questão: \" + error.message);");
 }
+
+fs.writeFileSync(path, code, 'utf8');
+console.log('Fixed export function');

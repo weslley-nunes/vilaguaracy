@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/services/firebase";
-import { collection, addDoc, getDocs, limit, query, deleteDoc, doc } from "firebase/firestore";
+import { collection, addDoc, getDocs, limit, query, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { ExamService } from "@/services/examService";
 import { getClassesByUser } from "@/services/classesService";
 import { UserService } from "@/services/userService";
@@ -536,17 +536,16 @@ export default function BuilderPage() {
                 const newQuestion = { ...exportQuestionTarget, id: Date.now() + Math.random(), ownerId: user.uid };
                 const updatedQuestions = [...(targetExam.questions || []), newQuestion];
                 
-                const { doc, updateDoc } = await import('firebase/firestore');
                 const docRef = doc(db, "exams", targetExam.id);
                 await updateDoc(docRef, { questions: updatedQuestions });
                 
-                alert("Questão exportada com sucesso!");
+                alert("Questão transferida com sucesso para a prova de destino!");
                 setIsExportModalOpen(false);
                 setSelectedTargetExam("");
             }
         } catch (error) {
             console.error(error);
-            alert("Erro ao exportar questão.");
+            alert("Erro ao exportar questão: " + error.message);
         } finally {
             setIsExporting(false);
         }
