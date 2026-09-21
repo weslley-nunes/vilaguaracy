@@ -15,7 +15,7 @@ import {
     TrendingUp, 
     FileSearch, 
     PlusSquare, 
-    ClipboardList 
+    ClipboardList, Archive 
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -33,6 +33,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
             { href: "/dashboard", label: "Painel Geral", icon: LayoutDashboard },
             { href: "/builder", label: "Criar Avaliação Base", icon: PlusSquare },
             { href: "/exams", label: "Todas as Provas", icon: ClipboardList },
+            { href: "/arquivos", label: "Provas Anteriores", icon: Archive },
             { href: "/scanner", label: "Scanner de Correção", icon: Sparkles },
             { href: "/resultados", label: "Resultados Analíticos", icon: BarChart2 },
             { href: "/coordenacao", label: "Progresso de Provas", icon: Activity },
@@ -47,6 +48,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
             { href: "/resultados", label: "Resultados Analíticos", icon: BarChart2 },
             { href: "/coordenacao", label: "Progresso de Provas", icon: Activity },
             { href: "/exams", label: "Acompanhamento", icon: FileSearch },
+            { href: "/arquivos", label: "Provas Anteriores", icon: Archive },
             { href: "/habilidades", label: "Habilidades", icon: TrendingUp },
             { href: "/tutorial", label: "Tutoriais", icon: BookOpen },
         ];
@@ -55,6 +57,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
             { href: "/dashboard", label: "Início", icon: LayoutDashboard },
             { href: "/builder", label: "Adicionar Questões", icon: PlusSquare },
             { href: "/exams", label: "Minhas Avaliações", icon: ClipboardList },
+            { href: "/arquivos", label: "Provas Anteriores", icon: Archive },
             { href: "/scanner", label: "Scanner de Correção", icon: Sparkles },
             { href: "/resultados", label: "Resultados Analíticos", icon: BarChart2 },
             { href: "/habilidades", label: "Habilidades", icon: TrendingUp },
