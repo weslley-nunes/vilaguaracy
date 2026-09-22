@@ -2,13 +2,14 @@ import React from 'react';
 import { Check, Lock, Play, Skull } from 'lucide-react';
 import { obstacles } from './GameData';
 
-export default function TrailMap({ currentStage, onSelectStage }) {
+export default function TrailMap({ currentStage, onSelectStage, activeObstacles }) {
   const nodes = [
     { top: '80%', left: '15%' },
     { top: '55%', left: '35%' },
     { top: '75%', left: '60%' },
     { top: '45%', left: '80%' },
     { top: '20%', left: '55%' },
+    { top: '35%', left: '30%' },
     { top: '10%', left: '20%' } // Boss Node
   ];
 
@@ -23,7 +24,7 @@ export default function TrailMap({ currentStage, onSelectStage }) {
       {/* Overlay for better contrast */}
       <div className="absolute inset-0 bg-black/20" />
 
-      {obstacles.map((obstacle, index) => {
+      {(activeObstacles || obstacles).map((obstacle, index) => {
         const isCompleted = index < currentStage;
         const isCurrent = index === currentStage;
         const isLocked = index > currentStage;

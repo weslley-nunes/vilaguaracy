@@ -189,6 +189,13 @@ export const obstacles = [
     ]
   },
   {
+    id: 'sr_seboso',
+    name: 'Fuga do Sr. Seboso',
+    description: 'Corra pela sua vida e desvie das armadilhas.',
+    image: '/sprite_seboso.png',
+    type: 'runner'
+  },
+  {
     id: 'superboss',
     name: 'O Sistema (Patriarcado)',
     description: 'A raiz da desigualdade. Use o conhecimento máximo.',
@@ -345,6 +352,13 @@ export const obstaclesBoys = [
         ]
       }
     ]
+  },
+  {
+    id: 'sr_seboso_boys',
+    name: 'Fuga do Sr. Seboso',
+    description: 'Corra pela sua vida e desvie das armadilhas.',
+    image: '/sprite_seboso.png',
+    type: 'runner'
   },
   {
     id: 'superboss_boys',

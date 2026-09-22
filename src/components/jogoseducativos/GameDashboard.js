@@ -4,6 +4,7 @@ import TrailMap from './TrailMap';
 import { obstacles, obstaclesBoys } from './GameData';
 import Scoreboard from './Scoreboard';
 import BattleArena from './BattleArena';
+import RunnerGame from './RunnerGame';
 import GameIntro from './GameIntro';
 import VictoryScreen from './VictoryScreen';
 
@@ -32,8 +33,8 @@ export default function GameDashboard({ selectedCharacter, onBackToSelection }) 
     const nextStage = currentStage + 1;
     setCurrentStage(nextStage);
 
-    // If all 6 stages are cleared
-    if (nextStage >= 6) {
+    // If all 7 stages are cleared
+    if (nextStage >= 7) {
       setGameFinished(true);
       saveScore(newScore);
     }
@@ -162,13 +163,23 @@ export default function GameDashboard({ selectedCharacter, onBackToSelection }) 
               >
                 FECHAR [X]
               </button>
-              {/* Note: BattleArena needs to be updated to receive these props and render correctly in this space */}
-              <BattleArena 
-                obstacle={activeObstacles[currentStage]} 
-                onVictory={handleVictory} 
-                onDefeat={handleDefeat}
-                isModal={true}
-              />
+              {/* Conditionally render RunnerGame or BattleArena based on obstacle type */}
+              {activeObstacles[currentStage]?.type === 'runner' ? (
+                <RunnerGame 
+                  selectedCharacter={selectedCharacter}
+                  obstacle={activeObstacles[currentStage]} 
+                  onVictory={handleVictory} 
+                  onDefeat={handleDefeat}
+                />
+              ) : (
+                <BattleArena 
+                  selectedCharacter={selectedCharacter}
+                  obstacle={activeObstacles[currentStage]} 
+                  onVictory={handleVictory} 
+                  onDefeat={handleDefeat}
+                  isModal={true}
+                />
+              )}
             </div>
           </div>
         )}
