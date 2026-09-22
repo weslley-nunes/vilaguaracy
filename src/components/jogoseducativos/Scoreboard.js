@@ -1,14 +1,46 @@
 import React, { useEffect, useState } from 'react';
-import { Trophy, Medal, Award } from 'lucide-react';
+import { Trophy, Medal, Award, Loader } from 'lucide-react';
+import { db } from '@/services/firebase';
+import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 
 export default function Scoreboard() {
   const [scores, setScores] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedScores = JSON.parse(localStorage.getItem('jornada_ranking') || '[]');
-    // Sort by score descending
-    savedScores.sort((a, b) => b.score - a.score);
-    setScores(savedScores);
+    const fetchScores = async () => {
+      try {
+        const q = query(
+          collection(db, 'jogos_educativos_ranking'), 
+          orderBy('score', 'desc'),
+          limit(20)
+        );
+        const querySnapshot = await getDocs(q);
+        const fetchedScores = [];
+        querySnapshot.forEach((doc) => {
+          fetchedScores.push(doc.data());
+        });
+        
+        if (fetchedScores.length > 0) {
+          setScores(fetchedScores);
+        } else {
+          // Fallback
+          const savedScores = JSON.parse(localStorage.getItem('jornada_ranking') || '[]');
+          savedScores.sort((a, b) => b.score - a.score);
+          setScores(savedScores);
+        }
+      } catch (e) {
+        console.error("Erro ao buscar ranking:", e);
+        // Fallback
+        const savedScores = JSON.parse(localStorage.getItem('jornada_ranking') || '[]');
+        savedScores.sort((a, b) => b.score - a.score);
+        setScores(savedScores);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchScores();
   }, []);
 
   const getRankIcon = (index) => {
@@ -24,7 +56,11 @@ export default function Scoreboard() {
     <div className="w-full max-w-2xl mx-auto bg-gray-900/80 p-6 rounded-xl border-4 border-amber-900/50 text-white shadow-2xl">
       <h2 className="text-2xl font-pixel text-center mb-6 text-amber-400">Ranking das Heroínas</h2>
       
-      {scores.length === 0 ? (
+      {loading ? (
+        <div className="flex justify-center items-center py-10">
+          <Loader className="w-8 h-8 text-amber-500 animate-spin" />
+        </div>
+      ) : scores.length === 0 ? (
         <p className="text-center font-pixel text-gray-400 text-sm">Ainda não há heroínas no ranking. Seja a primeira!</p>
       ) : (
         <div className="space-y-4">

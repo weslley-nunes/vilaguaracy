@@ -7,8 +7,10 @@ import BattleArena from './BattleArena';
 import RunnerGame from './RunnerGame';
 import GameIntro from './GameIntro';
 import VictoryScreen from './VictoryScreen';
+import { db } from '@/services/firebase';
+import { collection, addDoc } from 'firebase/firestore';
 
-export default function GameDashboard({ selectedCharacter, onBackToSelection }) {
+export default function GameDashboard({ playerName, selectedCharacter, onBackToSelection }) {
   const [currentView, setCurrentView] = useState('trail');
   const [currentStage, setCurrentStage] = useState(0);
   const [score, setScore] = useState(0);
@@ -46,15 +48,27 @@ export default function GameDashboard({ selectedCharacter, onBackToSelection }) 
     // Real punishment logic can be added later.
   };
 
-  const saveScore = (finalScore) => {
+  const saveScore = async (finalScore) => {
     const savedScores = JSON.parse(localStorage.getItem('jornada_ranking') || '[]');
     savedScores.push({
-      playerName: 'Heroína', // Could be dynamic
+      playerName: playerName || 'Anônimo',
       characterName: selectedCharacter.name,
       score: finalScore,
       date: new Date().toISOString()
     });
     localStorage.setItem('jornada_ranking', JSON.stringify(savedScores));
+
+    try {
+      await addDoc(collection(db, 'jogos_educativos_ranking'), {
+        playerName: playerName || 'Anônimo',
+        characterName: selectedCharacter.name,
+        score: finalScore,
+        date: new Date().toISOString(),
+        gender: selectedCharacter.gender || 'F'
+      });
+    } catch (e) {
+      console.error("Erro ao salvar no banco permanente:", e);
+    }
   };
 
   const menuItems = [
