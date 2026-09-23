@@ -282,7 +282,7 @@ export const obstaclesBoys = [
     id: 'pressao_amigos',
     name: 'A Pressão do Grupo',
     description: 'Amigos incentivando atitudes machistas.',
-    image: '/sprite_assedio.jpg',
+    image: '/sprite_pressao.jpg',
     dialogues: [
       {
         enemyMessage: 'Ah, cara! Qual o problema de mandar aquela foto íntima da garota no grupo? Todo mundo faz isso!',
@@ -306,7 +306,7 @@ export const obstaclesBoys = [
     id: 'fantasma_ciume',
     name: 'Fantasma do Ciúme',
     description: 'Confunde controle com amor.',
-    image: '/sprite_gaslighting.jpg',
+    image: '/sprite_ciume.jpg',
     dialogues: [
       {
         enemyMessage: 'Se ela te ama, ela tem que dar a senha do celular. Quem não deve não teme, não é mesmo?',
@@ -330,7 +330,7 @@ export const obstaclesBoys = [
     id: 'monstro_consentimento',
     name: 'Monstro do Consentimento',
     description: 'Não entende que não é não.',
-    image: '/sprite_luna.jpg',
+    image: '/sprite_consentimento.jpg',
     dialogues: [
       {
         enemyMessage: 'Ela disse "não" mas deu aquele sorriso... É charme. Insiste que ela cede!',
