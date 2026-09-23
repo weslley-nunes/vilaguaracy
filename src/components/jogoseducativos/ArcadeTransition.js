@@ -68,23 +68,27 @@ export default function ArcadeTransition({ selectedCharacter, onWin, onLose }) {
     setIsPlaying(true);
     gameState.current.hp = 100;
     gameState.current.score = 0;
-    
-    // Timer
+    gameState.current.enemies = [];
+    gameState.current.items = [];
+    setTimeLeft(15);
+  };
+
+  useEffect(() => {
+    if (!isPlaying) return;
+
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
           setIsPlaying(false);
-          onWin(gameState.current.score); // pass score to parent
+          onWin(gameState.current.score);
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
-    
-    // Entity Spawners
+
     const spawner = setInterval(() => {
-      if (!isPlaying) return;
       const isEnemy = Math.random() > 0.4;
       if (isEnemy) {
         gameState.current.enemies.push({
@@ -107,7 +111,7 @@ export default function ArcadeTransition({ selectedCharacter, onWin, onLose }) {
       clearInterval(timer);
       clearInterval(spawner);
     };
-  };
+  }, [isPlaying, onWin]);
 
   useEffect(() => {
     if (isPlaying) {
