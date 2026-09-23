@@ -6,6 +6,7 @@ import Scoreboard from './Scoreboard';
 import BattleArena from './BattleArena';
 import RunnerGame from './RunnerGame';
 import GameIntro from './GameIntro';
+import DataTutorial from './DataTutorial';
 import VictoryScreen from './VictoryScreen';
 import { db } from '@/services/firebase';
 import { collection, addDoc } from 'firebase/firestore';
@@ -17,6 +18,7 @@ export default function GameDashboard({ playerName, selectedCharacter, onBackToS
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [gameFinished, setGameFinished] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
+  const [showTutorial, setShowTutorial] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
 
   const activeObstacles = selectedCharacter?.gender === 'M' ? obstaclesBoys : obstacles;
@@ -78,6 +80,10 @@ export default function GameDashboard({ playerName, selectedCharacter, onBackToS
 
   if (showIntro) {
     return <GameIntro selectedCharacter={selectedCharacter} onFinishIntro={() => setShowIntro(false)} />;
+  }
+
+  if (showTutorial) {
+    return <DataTutorial onFinish={() => setShowTutorial(false)} />;
   }
 
   if (gameFinished && currentView !== 'ranking') {
