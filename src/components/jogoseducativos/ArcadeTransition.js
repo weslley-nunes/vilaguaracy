@@ -18,14 +18,35 @@ export default function ArcadeTransition({ selectedCharacter, onWin, onLose }) {
   });
 
   const playerImgRef = useRef(null);
+  const bgImgRef = useRef(null);
+  const goodImgRef = useRef(null);
+  const badImgRef = useRef(null);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
 
   // Initialize images
   useEffect(() => {
-    const img = new Image();
-    img.src = selectedCharacter.image;
-    img.onload = () => {
-      playerImgRef.current = img;
+    let loadedCount = 0;
+    const totalImages = 4;
+    const checkAllLoaded = () => {
+      loadedCount++;
+      if (loadedCount === totalImages) setImagesLoaded(true);
     };
+
+    const pImg = new Image();
+    pImg.src = selectedCharacter.image;
+    pImg.onload = () => { playerImgRef.current = pImg; checkAllLoaded(); };
+
+    const bImg = new Image();
+    bImg.src = '/arcade_bg.jpg';
+    bImg.onload = () => { bgImgRef.current = bImg; checkAllLoaded(); };
+
+    const gImg = new Image();
+    gImg.src = '/arcade_item_good.png';
+    gImg.onload = () => { goodImgRef.current = gImg; checkAllLoaded(); };
+
+    const bdImg = new Image();
+    bdImg.src = '/arcade_item_bad.png';
+    bdImg.onload = () => { badImgRef.current = bdImg; checkAllLoaded(); };
   }, [selectedCharacter]);
 
   useEffect(() => {
@@ -93,13 +114,24 @@ export default function ArcadeTransition({ selectedCharacter, onWin, onLose }) {
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
       let animationFrameId;
+      
+      let bgOffsetY = 0;
 
       const render = (time) => {
         const state = gameState.current;
         
-        // Clear canvas
-        ctx.fillStyle = '#1e293b'; // slate-800
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Draw scrolling background
+        if (bgImgRef.current) {
+          bgOffsetY += 1;
+          if (bgOffsetY >= canvas.height) bgOffsetY = 0;
+          
+          // Draw two copies for seamless loop
+          ctx.drawImage(bgImgRef.current, 0, bgOffsetY, canvas.width, canvas.height);
+          ctx.drawImage(bgImgRef.current, 0, bgOffsetY - canvas.height, canvas.width, canvas.height);
+        } else {
+          ctx.fillStyle = '#1e293b';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
 
         // Update player
         if (state.keys['ArrowLeft'] && state.player.x > 0) state.player.x -= state.player.speed;
@@ -115,12 +147,17 @@ export default function ArcadeTransition({ selectedCharacter, onWin, onLose }) {
           ctx.fillRect(state.player.x, state.player.y, state.player.size, state.player.size);
         }
 
-        // Draw and update Enemies
-        ctx.fillStyle = 'red';
+        // Draw and update Enemies (Bad items)
         for (let i = state.enemies.length - 1; i >= 0; i--) {
           let e = state.enemies[i];
           e.y += e.speed;
-          ctx.fillRect(e.x, e.y, e.size, e.size);
+          
+          if (badImgRef.current) {
+            ctx.drawImage(badImgRef.current, e.x, e.y, e.size + 15, e.size + 15);
+          } else {
+            ctx.fillStyle = 'red';
+            ctx.fillRect(e.x, e.y, e.size, e.size);
+          }
           
           // Collision
           if (e.x < state.player.x + state.player.size &&
@@ -138,15 +175,19 @@ export default function ArcadeTransition({ selectedCharacter, onWin, onLose }) {
           }
         }
 
-        // Draw and update Items
-        ctx.fillStyle = 'yellow';
+        // Draw and update Items (Good items)
         for (let i = state.items.length - 1; i >= 0; i--) {
           let item = state.items[i];
           item.y += item.speed;
-          // draw circle for item
-          ctx.beginPath();
-          ctx.arc(item.x + item.size/2, item.y + item.size/2, item.size/2, 0, 2*Math.PI);
-          ctx.fill();
+          
+          if (goodImgRef.current) {
+            ctx.drawImage(goodImgRef.current, item.x, item.y, item.size + 10, item.size + 10);
+          } else {
+            ctx.fillStyle = 'yellow';
+            ctx.beginPath();
+            ctx.arc(item.x + item.size/2, item.y + item.size/2, item.size/2, 0, 2*Math.PI);
+            ctx.fill();
+          }
 
           // Collision
           if (item.x < state.player.x + state.player.size &&
