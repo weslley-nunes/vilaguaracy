@@ -1,14 +1,20 @@
 import React from 'react';
 import { characters } from './GameData';
 
-export default function CharacterSelection({ onSelect }) {
+export default function CharacterSelection({ characters, onSelect, pathType }) {
+  const isFemale = pathType === 'F';
+  
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 p-6 font-pixel">
       <div className="max-w-6xl w-full">
         <div className="text-center mb-12 border-4 border-white bg-black p-6 shadow-[8px_8px_0_0_rgba(255,255,255,0.2)]">
-          <h1 className="text-2xl md:text-4xl text-yellow-400 mb-6 leading-loose">JORNADA DA AUTONOMIA</h1>
+          <h1 className="text-2xl md:text-4xl text-yellow-400 mb-6 leading-loose">
+            {isFemale ? 'JORNADA DA AUTONOMIA' : 'JORNADA DOS ALIADOS'}
+          </h1>
           <p className="text-xs md:text-sm text-white max-w-3xl mx-auto leading-loose">
-            ESCOLHA SUA HEROINA. CADA UMA POSSUI HABILIDADES UNICAS PARA COMBATER VIOLENCIAS E FORTALECER A AUTONOMIA FEMININA.
+            {isFemale 
+              ? 'ESCOLHA SUA HEROINA. CADA UMA POSSUI HABILIDADES UNICAS PARA COMBATER VIOLENCIAS E FORTALECER A AUTONOMIA FEMININA.' 
+              : 'ESCOLHA SEU PERSONAGEM. CADA UM POSSUI HABILIDADES UNICAS PARA COMBATER O MACHISMO E PROTEGER AS MULHERES.'}
           </p>
         </div>
 
@@ -33,18 +39,37 @@ export default function CharacterSelection({ onSelect }) {
                 <p className="text-[10px] text-slate-300 mb-6 flex-grow leading-loose">{char.description.toUpperCase()}</p>
                 
                 <div className="w-full space-y-4 mb-6">
-                  <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-white">AUTOESTIMA</span>
-                    <div className="w-1/2 bg-slate-800 h-3 border-2 border-slate-600">
-                      <div className={`h-full ${char.color}`} style={{ width: `${char.stats.autoestima}%` }}></div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-white">SABEDORIA</span>
-                    <div className="w-1/2 bg-slate-800 h-3 border-2 border-slate-600">
-                      <div className={`h-full ${char.color}`} style={{ width: `${char.stats.conhecimento}%` }}></div>
-                    </div>
-                  </div>
+                  {isFemale ? (
+                    <>
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-white">AUTOESTIMA</span>
+                        <div className="w-1/2 bg-slate-800 h-3 border-2 border-slate-600">
+                          <div className={`h-full ${char.color}`} style={{ width: `${char.stats.autoestima}%` }}></div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-white">SABEDORIA</span>
+                        <div className="w-1/2 bg-slate-800 h-3 border-2 border-slate-600">
+                          <div className={`h-full ${char.color}`} style={{ width: `${char.stats.conhecimento}%` }}></div>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-white">CORAGEM</span>
+                        <div className="w-1/2 bg-slate-800 h-3 border-2 border-slate-600">
+                          <div className={`h-full ${char.color}`} style={{ width: `${char.stats.coragem}%` }}></div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-white">RESPEITO</span>
+                        <div className="w-1/2 bg-slate-800 h-3 border-2 border-slate-600">
+                          <div className={`h-full ${char.color}`} style={{ width: `${char.stats.respeito}%` }}></div>
+                        </div>
+                      </div>
+                    </>
+                  )}
                   <div className="flex items-center justify-between text-[10px]">
                     <span className="text-white">EMPATIA</span>
                     <div className="w-1/2 bg-slate-800 h-3 border-2 border-slate-600">

@@ -2,8 +2,8 @@ import React from 'react';
 import { Check, Lock, Play, Skull } from 'lucide-react';
 import { obstacles } from './GameData';
 
-export default function TrailMap({ currentStage, onSelectStage, activeObstacles }) {
-  const nodes = [
+export default function TrailMap({ currentStage, onSelectStage, activeObstacles, isMale }) {
+  const femaleNodes = [
     { top: '80%', left: '15%' },
     { top: '55%', left: '35%' },
     { top: '75%', left: '60%' },
@@ -13,11 +13,24 @@ export default function TrailMap({ currentStage, onSelectStage, activeObstacles 
     { top: '10%', left: '20%' } // Boss Node
   ];
 
+  const maleNodes = [
+    { top: '70%', left: '15%' },
+    { top: '50%', left: '30%' },
+    { top: '75%', left: '45%' },
+    { top: '60%', left: '60%' },
+    { top: '60%', left: '80%' },
+    { top: '40%', left: '85%' },
+    { top: '25%', left: '90%' } // Boss Node
+  ];
+
+  const nodes = isMale ? maleNodes : femaleNodes;
+  const mapImage = isMale ? "/mapa_aliados.jpg" : "/mapa_tocantins.jpg";
+
   return (
     <div className="relative w-full h-[600px] max-w-4xl mx-auto rounded-xl overflow-hidden border-4 border-amber-900/50 shadow-2xl">
       <img 
-        src="/mapa_tocantins.jpg" 
-        alt="Mapa Trilha Tocantins" 
+        src={mapImage} 
+        alt={isMale ? "Mapa dos Aliados" : "Mapa Trilha Tocantins"} 
         className="absolute inset-0 w-full h-full object-cover"
       />
       

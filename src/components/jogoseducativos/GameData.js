@@ -1,8 +1,9 @@
-export const characters = [
+export const femaleCharacters = [
   {
     id: 'dandara',
     name: 'Dandara',
     description: 'Força e empoderamento físico.',
+    gender: 'F',
     color: 'bg-purple-600',
     hoverColor: 'hover:bg-purple-700',
     bgColor: 'bg-purple-100',
@@ -14,6 +15,7 @@ export const characters = [
     id: 'sofia_loira',
     name: 'Sofia',
     description: 'Direitos, leis e proteção sistêmica.',
+    gender: 'F',
     color: 'bg-teal-600',
     hoverColor: 'hover:bg-teal-700',
     bgColor: 'bg-teal-100',
@@ -25,6 +27,7 @@ export const characters = [
     id: 'luna',
     name: 'Luna',
     description: 'Redes de apoio e acolhimento.',
+    gender: 'F',
     color: 'bg-amber-500',
     hoverColor: 'hover:bg-amber-600',
     bgColor: 'bg-amber-100',
@@ -36,6 +39,7 @@ export const characters = [
     id: 'maya',
     name: 'Maya',
     description: 'Independência financeira e autonomia.',
+    gender: 'F',
     color: 'bg-blue-600',
     hoverColor: 'hover:bg-blue-700',
     bgColor: 'bg-blue-100',
@@ -47,6 +51,7 @@ export const characters = [
     id: 'tereza',
     name: 'Tereza',
     description: 'Liderança e voz ativa da comunidade.',
+    gender: 'F',
     color: 'bg-orange-600',
     hoverColor: 'hover:bg-orange-700',
     bgColor: 'bg-orange-100',
@@ -58,12 +63,52 @@ export const characters = [
     id: 'maria',
     name: 'Maria',
     description: 'Expressão corporal e saúde mental.',
+    gender: 'F',
     color: 'bg-emerald-600',
     hoverColor: 'hover:bg-emerald-700',
     bgColor: 'bg-emerald-100',
     borderColor: 'border-emerald-600',
     image: '/jogoseducativos/sprites/sprite_clara_1787256389770.jpg',
     stats: { autoestima: 85, conhecimento: 75, empatia: 90 }
+  }
+];
+
+export const maleCharacters = [
+  {
+    id: 'zeca',
+    name: 'Zeca',
+    description: 'Sempre pronto para defender quem precisa e combater atitudes machistas.',
+    gender: 'M',
+    color: 'bg-blue-600',
+    hoverColor: 'hover:bg-blue-700',
+    bgColor: 'bg-blue-100',
+    borderColor: 'border-blue-600',
+    image: '/sprite_zeca.png',
+    stats: { coragem: 90, respeito: 85, empatia: 80 }
+  },
+  {
+    id: 'joao',
+    name: 'João',
+    description: 'Comunicação assertiva e influência positiva nos grupos de amigos.',
+    gender: 'M',
+    color: 'bg-emerald-600',
+    hoverColor: 'hover:bg-emerald-700',
+    bgColor: 'bg-emerald-100',
+    borderColor: 'border-emerald-600',
+    image: '/sprite_joao.jpg',
+    stats: { coragem: 80, respeito: 95, empatia: 75 }
+  },
+  {
+    id: 'pedro',
+    name: 'Pedro',
+    description: 'Compreensão, acolhimento e quebra de estereótipos tóxicos.',
+    gender: 'M',
+    color: 'bg-amber-600',
+    hoverColor: 'hover:bg-amber-700',
+    bgColor: 'bg-amber-100',
+    borderColor: 'border-amber-600',
+    image: '/sprite_pedro.jpg',
+    stats: { coragem: 75, respeito: 80, empatia: 95 }
   }
 ];
 

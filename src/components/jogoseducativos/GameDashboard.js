@@ -148,7 +148,9 @@ export default function GameDashboard({ playerName, selectedCharacter, onBackToS
       <main className="flex-1 p-8 relative overflow-y-auto">
         <header className="mb-8 flex justify-between items-center">
           <h1 className="text-2xl text-amber-500">
-            {currentView === 'trail' ? 'Trilha da Autonomia' : 'Ranking das Heroínas'}
+            {currentView === 'trail' 
+              ? (selectedCharacter.gender === 'M' ? 'Trilha dos Aliados' : 'Trilha da Autonomia') 
+              : 'Ranking'}
           </h1>
           {gameFinished && currentView === 'trail' && (
             <div className="bg-green-600 px-4 py-2 rounded border-2 border-green-400 text-xs animate-bounce">
@@ -159,7 +161,12 @@ export default function GameDashboard({ playerName, selectedCharacter, onBackToS
 
         {currentView === 'trail' && (
           <div className="w-full h-full flex flex-col items-center justify-center">
-            <TrailMap currentStage={currentStage} onSelectStage={handleSelectStage} activeObstacles={activeObstacles} />
+            <TrailMap 
+              currentStage={currentStage} 
+              onSelectStage={handleSelectStage} 
+              activeObstacles={activeObstacles}
+              isMale={selectedCharacter.gender === 'M'} 
+            />
           </div>
         )}
 
