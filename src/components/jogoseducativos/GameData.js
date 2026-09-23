@@ -60,15 +60,15 @@ export const femaleCharacters = [
     stats: { autoestima: 95, conhecimento: 85, empatia: 85 }
   },
   {
-    id: 'maria',
-    name: 'Maria',
-    description: 'Expressão corporal e saúde mental.',
+    id: 'rosa',
+    name: 'Rosa',
+    description: 'Empatia, diálogo e compreensão.',
     gender: 'F',
-    color: 'bg-emerald-600',
-    hoverColor: 'hover:bg-emerald-700',
-    bgColor: 'bg-emerald-100',
-    borderColor: 'border-emerald-600',
-    image: '/jogoseducativos/sprites/sprite_clara_1787256389770.jpg',
+    color: 'bg-pink-600',
+    hoverColor: 'hover:bg-pink-700',
+    bgColor: 'bg-pink-100',
+    borderColor: 'border-pink-600',
+    image: '/sprite_rosa.png',
     stats: { autoestima: 85, conhecimento: 75, empatia: 90 }
   }
 ];

@@ -5,11 +5,12 @@ import { obstacles, obstaclesBoys } from './GameData';
 import Scoreboard from './Scoreboard';
 import BattleArena from './BattleArena';
 import RunnerGame from './RunnerGame';
+import ArcadeTransition from './ArcadeTransition';
 import GameIntro from './GameIntro';
 import DataTutorial from './DataTutorial';
 import VictoryScreen from './VictoryScreen';
 import { db } from '@/services/firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
 
 export default function GameDashboard({ playerName, selectedCharacter, onBackToSelection }) {
   const [currentView, setCurrentView] = useState('trail');
@@ -20,18 +21,91 @@ export default function GameDashboard({ playerName, selectedCharacter, onBackToS
   const [showIntro, setShowIntro] = useState(true);
   const [showTutorial, setShowTutorial] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
+  
+  // New States for continuous progression
+  const [rankingDocId, setRankingDocId] = useState(null);
+  const [currentStats, setCurrentStats] = useState({
+    autoestima: selectedCharacter.stats.autoestima || 50,
+    conhecimento: selectedCharacter.stats.conhecimento || 50,
+    empatia: selectedCharacter.stats.empatia || 50,
+    coragem: selectedCharacter.stats.coragem || 50,
+    respeito: selectedCharacter.stats.respeito || 50
+  });
+  const [phaseState, setPhaseState] = useState('map'); // 'map', 'arcade', 'battle'
 
   const activeObstacles = selectedCharacter?.gender === 'M' ? obstaclesBoys : obstacles;
 
+  React.useEffect(() => {
+    const initRanking = async () => {
+      if (!rankingDocId && playerName && selectedCharacter) {
+        try {
+          const docRef = await addDoc(collection(db, 'jogos_educativos_ranking'), {
+            playerName: playerName || 'Anônimo',
+            characterName: selectedCharacter.name,
+            score: 0,
+            date: new Date().toISOString(),
+            gender: selectedCharacter.gender || 'F'
+          });
+          setRankingDocId(docRef.id);
+        } catch (e) {
+          console.error("Erro ao inicializar ranking:", e);
+        }
+      }
+    };
+    initRanking();
+  }, [playerName, selectedCharacter, rankingDocId]);
+
+  const updateRanking = async (newScore) => {
+    if (rankingDocId) {
+      try {
+        const docRef = doc(db, 'jogos_educativos_ranking', rankingDocId);
+        await updateDoc(docRef, { 
+          score: newScore,
+          date: new Date().toISOString()
+        });
+      } catch (e) {
+        console.error("Erro ao atualizar ranking:", e);
+      }
+    }
+    // Update local storage to keep sync
+    const savedScores = JSON.parse(localStorage.getItem('jornada_ranking') || '[]');
+    const existingIndex = savedScores.findIndex(s => s.docId === rankingDocId);
+    const scoreObj = {
+      docId: rankingDocId,
+      playerName: playerName || 'Anônimo',
+      characterName: selectedCharacter.name,
+      score: newScore,
+      date: new Date().toISOString()
+    };
+    if (existingIndex >= 0) {
+      savedScores[existingIndex] = scoreObj;
+    } else {
+      savedScores.push(scoreObj);
+    }
+    localStorage.setItem('jornada_ranking', JSON.stringify(savedScores));
+  };
+
   const handleSelectStage = (stageIndex) => {
     if (stageIndex === currentStage) {
+      setPhaseState('arcade');
       setIsModalOpen(true);
     }
   };
 
-  const handleVictory = (pointsGained) => {
+  const handleVictory = (pointsGained, statBoosts = {}) => {
     const newScore = score + pointsGained;
     setScore(newScore);
+    
+    // Process Stat Boosts
+    setCurrentStats(prev => ({
+      autoestima: Math.min(100, prev.autoestima + (statBoosts.autoestima || 0)),
+      conhecimento: Math.min(100, prev.conhecimento + (statBoosts.conhecimento || 0)),
+      empatia: Math.min(100, prev.empatia + (statBoosts.empatia || 0)),
+      coragem: Math.min(100, prev.coragem + (statBoosts.coragem || 0)),
+      respeito: Math.min(100, prev.respeito + (statBoosts.respeito || 0))
+    }));
+
+    updateRanking(newScore);
     setIsModalOpen(false);
     
     const nextStage = currentStage + 1;
@@ -40,37 +114,11 @@ export default function GameDashboard({ playerName, selectedCharacter, onBackToS
     // If all 7 stages are cleared
     if (nextStage >= 7) {
       setGameFinished(true);
-      saveScore(newScore);
     }
   };
 
   const handleDefeat = () => {
     setIsModalOpen(false);
-    // On defeat, can retry the stage or lose points. Let's just close modal for now.
-    // Real punishment logic can be added later.
-  };
-
-  const saveScore = async (finalScore) => {
-    const savedScores = JSON.parse(localStorage.getItem('jornada_ranking') || '[]');
-    savedScores.push({
-      playerName: playerName || 'Anônimo',
-      characterName: selectedCharacter.name,
-      score: finalScore,
-      date: new Date().toISOString()
-    });
-    localStorage.setItem('jornada_ranking', JSON.stringify(savedScores));
-
-    try {
-      await addDoc(collection(db, 'jogos_educativos_ranking'), {
-        playerName: playerName || 'Anônimo',
-        characterName: selectedCharacter.name,
-        score: finalScore,
-        date: new Date().toISOString(),
-        gender: selectedCharacter.gender || 'F'
-      });
-    } catch (e) {
-      console.error("Erro ao salvar no banco permanente:", e);
-    }
   };
 
   const menuItems = [
@@ -116,9 +164,40 @@ export default function GameDashboard({ playerName, selectedCharacter, onBackToS
           <h3 className="text-sm font-bold mb-1">{selectedCharacter.name}</h3>
           <p className="text-[10px] text-gray-300 text-center mb-3 leading-tight">{selectedCharacter.description}</p>
           
-          <div className="w-full bg-gray-900 rounded px-3 py-2 flex justify-between items-center border border-gray-600">
+          <div className="w-full bg-gray-900 rounded px-3 py-2 flex justify-between items-center border border-gray-600 mb-3">
             <span className="text-[10px] text-amber-400">PONTOS</span>
-            <span className="text-sm">{score}</span>
+            <span className="text-sm font-bold">{score}</span>
+          </div>
+
+          {/* Dynamic Stats */}
+          <div className="w-full space-y-2 mt-2">
+            {selectedCharacter.gender === 'F' ? (
+              <>
+                <div className="flex flex-col">
+                  <div className="flex justify-between text-[8px] mb-1"><span className="text-white">AUTOESTIMA</span><span>{currentStats.autoestima}%</span></div>
+                  <div className="w-full bg-gray-900 h-2 rounded"><div className="bg-pink-400 h-full rounded transition-all" style={{width: `${currentStats.autoestima}%`}}></div></div>
+                </div>
+                <div className="flex flex-col">
+                  <div className="flex justify-between text-[8px] mb-1"><span className="text-white">SABEDORIA</span><span>{currentStats.conhecimento}%</span></div>
+                  <div className="w-full bg-gray-900 h-2 rounded"><div className="bg-blue-400 h-full rounded transition-all" style={{width: `${currentStats.conhecimento}%`}}></div></div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex flex-col">
+                  <div className="flex justify-between text-[8px] mb-1"><span className="text-white">CORAGEM</span><span>{currentStats.coragem}%</span></div>
+                  <div className="w-full bg-gray-900 h-2 rounded"><div className="bg-orange-400 h-full rounded transition-all" style={{width: `${currentStats.coragem}%`}}></div></div>
+                </div>
+                <div className="flex flex-col">
+                  <div className="flex justify-between text-[8px] mb-1"><span className="text-white">RESPEITO</span><span>{currentStats.respeito}%</span></div>
+                  <div className="w-full bg-gray-900 h-2 rounded"><div className="bg-purple-400 h-full rounded transition-all" style={{width: `${currentStats.respeito}%`}}></div></div>
+                </div>
+              </>
+            )}
+            <div className="flex flex-col">
+              <div className="flex justify-between text-[8px] mb-1"><span className="text-white">EMPATIA</span><span>{currentStats.empatia}%</span></div>
+              <div className="w-full bg-gray-900 h-2 rounded"><div className="bg-green-400 h-full rounded transition-all" style={{width: `${currentStats.empatia}%`}}></div></div>
+            </div>
           </div>
         </div>
 
@@ -190,8 +269,17 @@ export default function GameDashboard({ playerName, selectedCharacter, onBackToS
               >
                 FECHAR [X]
               </button>
-              {/* Conditionally render RunnerGame or BattleArena based on obstacle type */}
-              {activeObstacles[currentStage]?.type === 'runner' ? (
+              
+              {phaseState === 'arcade' ? (
+                <ArcadeTransition 
+                  selectedCharacter={selectedCharacter}
+                  onWin={(points) => {
+                     setScore(prev => prev + points);
+                     setPhaseState('battle');
+                  }}
+                  onLose={() => setIsModalOpen(false)}
+                />
+              ) : activeObstacles[currentStage]?.type === 'runner' ? (
                 <RunnerGame 
                   selectedCharacter={selectedCharacter}
                   obstacle={activeObstacles[currentStage]} 

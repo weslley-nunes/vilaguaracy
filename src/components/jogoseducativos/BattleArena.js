@@ -5,6 +5,7 @@ export default function BattleArena({ selectedCharacter, obstacle, onVictory, on
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
   const [playerHp, setPlayerHp] = useState(100);
   const [accumulatedPoints, setAccumulatedPoints] = useState(0);
+  const [accumulatedStats, setAccumulatedStats] = useState({ autoestima: 0, conhecimento: 0, empatia: 0, coragem: 0, respeito: 0 });
   
   // Start with empty chat, the enemy sends the first message in useEffect
   const [messages, setMessages] = useState([]);
@@ -57,6 +58,15 @@ export default function BattleArena({ selectedCharacter, obstacle, onVictory, on
       if (option.isCorrect) {
         setMessages(prev => [...prev, { text: `[SISTEMA]: ${option.feedback}`, sender: 'system_success' }]);
         setAccumulatedPoints(prev => prev + option.damage); // Using damage as points for simplicity
+        
+        // Boost stats dynamically
+        setAccumulatedStats(prev => ({
+          autoestima: prev.autoestima + (selectedCharacter.gender === 'F' ? 5 : 0),
+          conhecimento: prev.conhecimento + (selectedCharacter.gender === 'F' ? 10 : 0),
+          empatia: prev.empatia + 5,
+          coragem: prev.coragem + (selectedCharacter.gender === 'M' ? 10 : 0),
+          respeito: prev.respeito + (selectedCharacter.gender === 'M' ? 10 : 0)
+        }));
       } else {
         setMessages(prev => [...prev, { text: `[SISTEMA]: ${option.feedback}`, sender: 'system_error' }]);
         const newHp = Math.max(0, playerHp - option.damage);
@@ -88,7 +98,7 @@ export default function BattleArena({ selectedCharacter, obstacle, onVictory, on
   const handleFinishStage = () => {
     if (onVictory) {
       // Add bonus points based on remaining HP
-      onVictory(accumulatedPoints + playerHp);
+      onVictory(accumulatedPoints + playerHp, accumulatedStats);
     }
   };
 
