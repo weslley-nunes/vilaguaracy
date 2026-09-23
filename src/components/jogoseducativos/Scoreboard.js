@@ -1,46 +1,44 @@
 import React, { useEffect, useState } from 'react';
 import { Trophy, Medal, Award, Loader } from 'lucide-react';
 import { db } from '@/services/firebase';
-import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
 
 export default function Scoreboard() {
   const [scores, setScores] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchScores = async () => {
-      try {
-        const q = query(
-          collection(db, 'jogos_educativos_ranking'), 
-          orderBy('score', 'desc'),
-          limit(20)
-        );
-        const querySnapshot = await getDocs(q);
-        const fetchedScores = [];
-        querySnapshot.forEach((doc) => {
-          fetchedScores.push(doc.data());
-        });
-        
-        if (fetchedScores.length > 0) {
-          setScores(fetchedScores);
-        } else {
-          // Fallback
-          const savedScores = JSON.parse(localStorage.getItem('jornada_ranking') || '[]');
-          savedScores.sort((a, b) => b.score - a.score);
-          setScores(savedScores);
-        }
-      } catch (e) {
-        console.error("Erro ao buscar ranking:", e);
+    const q = query(
+      collection(db, 'jogos_educativos_ranking'), 
+      orderBy('score', 'desc'),
+      limit(20)
+    );
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const fetchedScores = [];
+      querySnapshot.forEach((doc) => {
+        fetchedScores.push(doc.data());
+      });
+      
+      if (fetchedScores.length > 0) {
+        setScores(fetchedScores);
+      } else {
         // Fallback
         const savedScores = JSON.parse(localStorage.getItem('jornada_ranking') || '[]');
         savedScores.sort((a, b) => b.score - a.score);
         setScores(savedScores);
-      } finally {
-        setLoading(false);
       }
-    };
-    
-    fetchScores();
+      setLoading(false);
+    }, (error) => {
+      console.error("Erro ao buscar ranking:", error);
+      // Fallback
+      const savedScores = JSON.parse(localStorage.getItem('jornada_ranking') || '[]');
+      savedScores.sort((a, b) => b.score - a.score);
+      setScores(savedScores);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const getRankIcon = (index) => {

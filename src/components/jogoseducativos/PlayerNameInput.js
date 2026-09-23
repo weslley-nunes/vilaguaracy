@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function PlayerNameInput({ onNameSubmit }) {
+export default function PlayerNameInput({ onNameSubmit, onShowRanking }) {
   const [name, setName] = useState('');
 
   const handleSubmit = (e) => {
@@ -35,6 +35,17 @@ export default function PlayerNameInput({ onNameSubmit }) {
             INICIAR
           </button>
         </form>
+
+        <div className="mt-8 pt-6 border-t-2 border-slate-700">
+          <p className="text-[10px] text-slate-400 mb-4 uppercase">Portal do Professor</p>
+          <button 
+            type="button"
+            onClick={onShowRanking}
+            className="w-full bg-slate-800 text-amber-400 py-3 border-2 border-amber-600 hover:bg-slate-700 active:translate-y-1 transition-all text-[10px]"
+          >
+            ACOMPANHAR RANKING AO VIVO
+          </button>
+        </div>
       </div>
     </div>
   );
