@@ -15,7 +15,7 @@ import {
     TrendingUp, 
     FileSearch, 
     PlusSquare, 
-    ClipboardList, Archive 
+    ClipboardList, Archive, Database 
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -38,6 +38,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
             { href: "/resultados", label: "Resultados Analíticos", icon: BarChart2 },
             { href: "/coordenacao", label: "Progresso de Provas", icon: Activity },
             { href: "/habilidades", label: "Habilidades & Gráficos", icon: TrendingUp },
+            { href: "/backup", label: "Backup & Restauração", icon: Database },
             { href: "/tutorial", label: "Ajuda & Tutoriais", icon: BookOpen },
         ];
     } else if (role === 'coordenador') {
