@@ -12,8 +12,8 @@ export async function POST(request) {
         const backupId = `bkp_${Date.now()}`;
 
         
-        const bkpSnap = await getDocs(collection(db, 'backups'));
-        let backupsList = bkpSnap.docs.map(d => d.data());
+        const bkpSnap2 = await getDocs(collection(db, 'backups'));
+        let backupsList2 = bkpSnap2.docs.map(d => d.data());
         
         if (type === 'Daily' && backupsList.some(b => b.name.startsWith(`Backup_Daily_${timestamp.split('T')[0]}`))) {
             return NextResponse.json({ success: true, message: "Already backed up today" });
@@ -63,10 +63,10 @@ export async function POST(request) {
         // Delete older backups (Keep max 5)
         const bkpSnap = await getDocs(collection(db, 'backups'));
         let backupsList = bkpSnap.docs.map(d => d.data());
-        backupsList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        backupsList2.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-        if (backupsList.length > 5) {
-            const toDelete = backupsList.slice(5);
+        if (backupsList2.length > 5) {
+            const toDelete = backupsList2.slice(5);
             for (const bkp of toDelete) {
                 // Delete chunks
                 for (let i = 0; i < bkp.chunksCount; i++) {

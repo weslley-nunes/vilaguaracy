@@ -121,7 +121,7 @@ export default function BackupPage() {
             </div>
 
             {message && (
-                <div className={`p-4 rounded-xl mb-6 flex items-center gap-3 font-bold ${message.type === 'error' ? 'bg-red-100 text-red-700' : message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}}>
+                <div className={`p-4 rounded-xl mb-6 flex items-center gap-3 font-bold ${message.type === 'error' ? 'bg-red-100 text-red-700' : message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
                     {message.type === 'error' ? <AlertTriangle size={20} /> : message.type === 'success' ? <CheckCircle size={20} /> : <Loader2 size={20} className="animate-spin" />}
                     {message.text}
                 </div>
@@ -159,7 +159,7 @@ export default function BackupPage() {
                                         {bkp.name}
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 rounded-md text-xs font-bold ${bkp.type === 'Auto' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}}>
+                                        <span className={`px-2 py-1 rounded-md text-xs font-bold ${bkp.type === 'Auto' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
                                             {bkp.type}
                                         </span>
                                     </td>
