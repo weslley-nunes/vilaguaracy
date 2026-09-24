@@ -507,7 +507,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                                                         <div className={`pl-4 ${isAdapted ? 'space-y-3' : 'space-y-1'}`}>
                                                             {q.options.map((opt, i) => {
                                                                 const optStr = typeof opt === 'string' ? opt : String(opt || "");
-                                                                const cleanOpt = optStr.replace(/^[a-zA-Z\d]+[).:-]\s*/, "");
+                                                                const cleanOpt = optStr.replace(/^([a-eA-E]|[ivxlcdmIVXLCDM]{1,4}|\d{1,2})\s*[).:-](?:\s+|$)/, "");
                                                                 const correctStr = String(q.correct || "");
                                                                 const optionLetter = String.fromCharCode(65 + i); // A, B, C...
                                                                 
