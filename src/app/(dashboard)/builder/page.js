@@ -508,6 +508,7 @@ export default function BuilderPage() {
         setEditingQuestionId(question.id);
         setManualQuestion({
             text: question.text || "",
+            supportText: question.supportText || "",
             type: question.type || "multiple_choice",
             options: Array.isArray(question.options) ? [...question.options] : ["", "", "", ""],
             correct: question.correct || "",
@@ -585,7 +586,7 @@ export default function BuilderPage() {
 
     const openManualModal = () => {
         setEditingQuestionId(null);
-        setManualQuestion({ text: "", imageUrl: "", imageSize: "medium", type: "multiple_choice", options: ["", "", "", ""], correct: "" });
+        setManualQuestion({ text: "", supportText: "", imageUrl: "", imageSize: "medium", type: "multiple_choice", options: ["", "", "", ""], correct: "" });
         setIsManualModalOpen(true);
     };
     const handleManualSave = () => {
