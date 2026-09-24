@@ -148,7 +148,8 @@ export default function BuilderPage() {
         copies: 1,
         adaptedCopies: 0, // New: Copies with large font/accessibility
         showOMR: true,
-        showHabilidades: true // Toggle for showing tags on the printed paper
+        showHabilidades: true, // Toggle for showing tags on the printed paper
+        insertBlankPage: false
     });
 
     // shuffling helper
@@ -867,8 +868,27 @@ export default function BuilderPage() {
                                 isAdapted={v.isAdapted}
                                 scoringMode={scoringMode}
                                 totalScore={Number(totalScore) || 10}
-                                printConfig={printConfig}
+                                                                printConfig={printConfig}
                             />
+                            {printConfig.insertBlankPage && (
+                                <div style={{ 
+                                    pageBreakBefore: 'always',
+                                    height: '98vh', 
+                                    display: 'flex', 
+                                    flexDirection: 'column',
+                                    alignItems: 'center', 
+                                    justifyContent: 'center',
+                                    border: '1px dashed #ccc',
+                                    margin: '10px'
+                                }}>
+                                    <div style={{ color: '#ccc', fontSize: '24px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '4px' }}>
+                                        Página de Rascunho
+                                    </div>
+                                    <div style={{ color: '#ccc', fontSize: '12px', marginTop: '10px' }}>
+                                        Deixada em branco intencionalmente para alinhamento frente/verso.
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     ))}
                     {/* Fallback */}
@@ -1034,6 +1054,19 @@ export default function BuilderPage() {
                                                 <Shuffle size={14} /> Embaralhar Alternativas
                                             </div>
                                             <p className="text-xs text-gray-500">Muda a ordem das opções (A, B, C...) em cada questão.</p>
+                                        </div>
+                                    </label>
+
+                                    <label className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-white/10 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                                        <div className={`w-5 h-5 rounded flex items-center justify-center border ${printConfig.insertBlankPage ? 'bg-vg-dark border-vg-dark text-white' : 'border-gray-300'}`}>
+                                            {printConfig.insertBlankPage && <Check size={14} />}
+                                        </div>
+                                        <input type="checkbox" className="hidden" checked={printConfig.insertBlankPage} onChange={(e) => setPrintConfig({ ...printConfig, insertBlankPage: e.target.checked })} />
+                                        <div className="flex-1">
+                                            <div className="font-bold text-sm text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                                                <FileText size={14} /> Página de Rascunho (Par)
+                                            </div>
+                                            <p className="text-xs text-gray-500">Insere página em branco no final p/ não colar na próxima prova (frente/verso).</p>
                                         </div>
                                     </label>
 
