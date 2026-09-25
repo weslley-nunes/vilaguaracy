@@ -12,6 +12,24 @@ export default function DashboardLayout({ children }) {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
     useEffect(() => {
+        // Auto-collapse sidebar on mobile devices
+        const handleResize = () => {
+            if (window.innerWidth < 1024) {
+                setIsSidebarCollapsed(true);
+            } else {
+                setIsSidebarCollapsed(false);
+            }
+        };
+        
+        // Initial check on mount
+        handleResize();
+        
+        // Listen to resize events
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
         if (!loading && !user) {
             router.push("/");
         }
@@ -72,7 +90,7 @@ export default function DashboardLayout({ children }) {
     return (
         <div className="min-h-screen bg-[var(--background)] flex transition-colors duration-500 print:block print:min-h-0 print:h-auto print:bg-white">
             <Sidebar isCollapsed={isSidebarCollapsed} setIsCollapsed={setIsSidebarCollapsed} />
-            <main className={`flex-1 transition-all duration-300 ${isSidebarCollapsed ? 'ml-20' : 'ml-72'} p-8 relative print:ml-0 print:p-0 print:block print:w-full print:bg-white`}>
+            <main className={`flex-1 transition-all duration-300 ${isSidebarCollapsed ? 'ml-20' : 'ml-72'} p-4 md:p-8 relative print:ml-0 print:p-0 print:block print:w-full print:bg-white`}>
                 <div className="absolute top-6 right-8 z-50 print:hidden">
                     <ThemeToggle />
                 </div>
