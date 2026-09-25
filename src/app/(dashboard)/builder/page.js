@@ -1217,13 +1217,7 @@ export default function BuilderPage() {
                                 <label className="block text-sm font-bold text-gray-700 mb-1">Imagem da Questão (Opcional)</label>
                                 <div className="flex items-center gap-4">
                                     <input type="file" accept="image/*" onChange={handleImageUpload} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-vg-light file:text-vg-dark hover:file:bg-gray-100 cursor-pointer" />
-                                    {manualQuestion.imageUrl && (
-                                        <select value={manualQuestion.imageSize || 'medium'} onChange={(e) => setManualQuestion({...manualQuestion, imageSize: e.target.value})} className="p-2 border border-gray-300 rounded-lg text-sm bg-white focus:border-vg-dark outline-none">
-                                            <option value="small">Pequena</option>
-                                            <option value="medium">Média</option>
-                                            <option value="large">Grande</option>
-                                        </select>
-                                    )}
+                                    
                                 </div>
                                 {manualQuestion.imageUrl && (
                                     <div className="mt-3 relative inline-block">
@@ -1233,6 +1227,16 @@ export default function BuilderPage() {
                                     </div>
                                 )}
                             </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Tamanho das Imagens da Questão</label>
+                                <select value={manualQuestion.imageSize || 'medium'} onChange={(e) => setManualQuestion({...manualQuestion, imageSize: e.target.value})} className="w-full p-3 border border-gray-300 rounded-lg text-sm bg-white focus:border-vg-dark outline-none">
+                                    <option value="small">Pequena</option>
+                                    <option value="medium">Média</option>
+                                    <option value="large">Grande</option>
+                                </select>
+                                <p className="text-xs text-gray-500 mt-1 mb-4">Aplica-se à imagem anexada e a todas as imagens coladas no texto de apoio.</p>
+                            </div>
+                            
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-1">Habilidade / BNCC (Opcional)</label>
                                 <input type="text" value={manualQuestion.habilidade || ""} onChange={(e) => setManualQuestion({ ...manualQuestion, habilidade: e.target.value })} className="w-full p-3 rounded-lg border border-gray-300 focus:border-vg-dark outline-none" placeholder="Ex: EF06HI02..." />

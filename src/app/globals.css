@@ -180,3 +180,30 @@
     overflow: visible !important;
   }
 }
+/* Image resizing for RichTextEditor contents in questions */
+.rich-text-content img {
+    border: 1px solid #d1d5db; /* border-gray-300 */
+    border-radius: 0.5rem; /* rounded-lg */
+    background-color: rgba(249, 250, 251, 0.3); /* bg-gray-50/30 */
+    object-fit: contain;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.rich-text-content.image-small img {
+    max-height: 8rem; /* max-h-32 */
+    width: 33.333333%; /* w-1/3 */
+}
+
+.rich-text-content.image-medium img {
+    max-height: 14rem; /* max-h-56 */
+    width: 75%; /* w-3/4 */
+}
+
+.rich-text-content.image-large img {
+    max-height: 20rem; /* max-h-80 */
+    width: 100%; /* w-full */
+}

@@ -433,7 +433,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                                                         <div className="flex-1">
                                                             {q.supportText && (
                                                                 <div 
-                                                                    className="mb-3 text-[12px] leading-relaxed break-words"
+                                                                    className={`mb-3 text-[12px] leading-relaxed break-words rich-text-content image-${q.imageSize || 'medium'}`}
                                                                     dangerouslySetInnerHTML={{ __html: q.supportText }}
                                                                 />
                                                             )}
