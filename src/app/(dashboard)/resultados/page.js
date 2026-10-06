@@ -27,19 +27,13 @@ export default function ResultadosPage() {
     const loadData = async () => {
         setIsLoading(true);
         try {
-            // Check if user is coordinator or gestao
-            const isCoordinator = user?.role === "gestao" || user?.role === "coordenador";
-            
-            // Load exams and classes
+            // Load all exams and classes for everyone
             const [examList, classList] = await Promise.all([
-                isCoordinator ? ExamService.listAll() : ExamService.listByTeacher(user?.uid),
+                ExamService.listAll(),
                 getClassesByUser()
             ]);
             
-            // Filter classes client-side: coordinators see all, teachers only see their own
-            const filteredClassList = isCoordinator
-                ? classList
-                : classList.filter(cls => cls.userId === user?.uid);
+            const filteredClassList = classList; // Todos os professores podem ver todas as turmas
 
             setExams(examList);
             setClasses(filteredClassList);
