@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Map, Trophy, LogOut, User, Volume2, VolumeX } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Map, Trophy, LogOut, User, Volume2, VolumeX, Menu, X, ChevronLeft } from 'lucide-react';
 import TrailMap from './TrailMap';
 import { obstacles, obstaclesBoys } from './GameData';
 import Scoreboard from './Scoreboard';
@@ -21,6 +21,8 @@ export default function GameDashboard({ playerName, selectedCharacter, onBackToS
   const [showIntro, setShowIntro] = useState(true);
   const [showTutorial, setShowTutorial] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   
   // New States for continuous progression
   const [rankingDocId, setRankingDocId] = useState(null);
@@ -34,6 +36,21 @@ export default function GameDashboard({ playerName, selectedCharacter, onBackToS
   const [phaseState, setPhaseState] = useState('map'); // 'map', 'arcade', 'battle'
 
   const activeObstacles = selectedCharacter?.gender === 'M' ? obstaclesBoys : obstacles;
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768 || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      setIsMobile(mobile);
+      if (mobile) {
+        setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+      }
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   React.useEffect(() => {
     const initRanking = async () => {
@@ -139,18 +156,58 @@ export default function GameDashboard({ playerName, selectedCharacter, onBackToS
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex text-white font-pixel selection:bg-amber-500 selection:text-white">
+    <div className="min-h-screen bg-gray-900 flex text-white font-pixel selection:bg-amber-500 selection:text-white relative overflow-x-hidden">
       {/* Background Audio */}
       <audio autoPlay loop muted={isMuted} src="/suspense.mp3" />
+
+      {/* Mobile Backdrop when sidebar is open */}
+      {isMobile && isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-30 backdrop-blur-xs transition-opacity"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Discreet button to expand sidebar when collapsed */}
+      {!isSidebarOpen && (
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          title="Expandir menu"
+          aria-label="Expandir menu"
+          className="fixed top-4 left-3 z-30 bg-gray-800/85 hover:bg-gray-700 text-amber-400 border border-amber-500/40 p-2 rounded-lg shadow-lg backdrop-blur-xs transition-all hover:scale-105 flex items-center justify-center"
+        >
+          <Menu size={18} />
+        </button>
+      )}
       
       {/* Sidebar */}
-      <aside className="w-64 bg-gray-800 border-r-4 border-amber-900/50 p-6 flex flex-col relative">
-        <button 
-          onClick={() => setIsMuted(!isMuted)}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
-        >
-          {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-        </button>
+      <aside 
+        className={`${
+          isSidebarOpen 
+            ? 'w-64 translate-x-0 p-6 border-r-4 border-amber-900/50' 
+            : 'w-0 -translate-x-full p-0 border-r-0 overflow-hidden'
+        } ${
+          isMobile ? 'fixed inset-y-0 left-0 z-40 shadow-2xl' : 'relative'
+        } bg-gray-800 flex flex-col transition-all duration-300 ease-in-out shrink-0`}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <button 
+            onClick={() => setIsMuted(!isMuted)}
+            title={isMuted ? "Ativar som" : "Silenciar"}
+            className="text-gray-400 hover:text-white transition-colors p-1"
+          >
+            {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+          </button>
+
+          <button 
+            onClick={() => setIsSidebarOpen(false)}
+            title="Recolher menu"
+            aria-label="Recolher menu"
+            className="text-gray-400 hover:text-amber-400 transition-colors p-1 rounded hover:bg-gray-700/60"
+          >
+            {isMobile ? <X size={18} /> : <ChevronLeft size={18} />}
+          </button>
+        </div>
 
         {/* Profile Card */}
         <div className="bg-gray-700 rounded-xl p-4 mb-8 border-2 border-gray-600 flex flex-col items-center">
@@ -206,7 +263,10 @@ export default function GameDashboard({ playerName, selectedCharacter, onBackToS
           {menuItems.map(item => (
             <button
               key={item.id}
-              onClick={() => setCurrentView(item.id)}
+              onClick={() => {
+                setCurrentView(item.id);
+                if (isMobile) setIsSidebarOpen(false);
+              }}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors text-sm
                 ${currentView === item.id 
                   ? 'bg-amber-600 text-white' 
@@ -230,9 +290,9 @@ export default function GameDashboard({ playerName, selectedCharacter, onBackToS
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-8 relative overflow-y-auto">
-        <header className="mb-8 flex justify-between items-center">
-          <h1 className="text-2xl text-amber-500">
+      <main className="flex-1 p-4 md:p-8 relative overflow-y-auto">
+        <header className={`mb-6 md:mb-8 flex justify-between items-center ${!isSidebarOpen ? 'pl-11' : ''}`}>
+          <h1 className="text-base md:text-2xl text-amber-500">
             {currentView === 'trail' 
               ? (selectedCharacter.gender === 'M' ? 'Trilha dos Aliados' : 'Trilha da Autonomia') 
               : 'Ranking'}
