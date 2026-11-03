@@ -148,17 +148,17 @@ export default function Dashboard() {
                     </div>
                 </div>
             )}
-            {/* Minhas Avaliações (2º Bimestre) */}
+            {/* Minhas Avaliações (4º Bimestre) */}
             {!isLoading && (
                 <div className="mb-10 animate-fade-in">
                     <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
-                        {activeRole === 'gestao' || activeRole === 'coordenador' ? 'Avaliações do 2º Bimestre' : 'Minhas Avaliações (2º Bimestre)'}
+                        {activeRole === 'gestao' || activeRole === 'coordenador' ? 'Avaliações do 4º Bimestre' : 'Minhas Avaliações (4º Bimestre)'}
                     </h2>
                     {exams.length === 0 ? (
                         <div className="text-center py-10 bg-white dark:bg-white/5 rounded-xl border border-dashed border-gray-200 dark:border-white/10">
                             <FileText className="mx-auto text-gray-300 mb-2" size={40} />
-                            <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Nenhuma avaliação do 2º Bimestre encontrada</h3>
-                            <p className="text-xs text-gray-500 mb-4 font-medium">Crie sua primeira prova do 2º Bimestre.</p>
+                            <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Nenhuma avaliação do 4º Bimestre encontrada</h3>
+                            <p className="text-xs text-gray-500 mb-4 font-medium">Crie sua primeira prova do 4º Bimestre.</p>
                             <Link href="/builder" className="btn btn-primary py-1.5 px-4 text-xs">Criar Agora</Link>
                         </div>
                     ) : (

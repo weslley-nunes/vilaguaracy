@@ -45,7 +45,7 @@ export default function BuilderPage() {
     const [staffMembers, setStaffMembers] = useState([]);
     const [isCollaboratorModalOpen, setIsCollaboratorModalOpen] = useState(false);
     const [editingCollaborator, setEditingCollaborator] = useState(null); // { userId, name, subject, quota }
-    const [selectedBimester, setSelectedBimester] = useState("2º Bimestre");
+    const [selectedBimester, setSelectedBimester] = useState("4º Bimestre");
     const [selectedTemplate, setSelectedTemplate] = useState("");
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const [exportQuestionTarget, setExportQuestionTarget] = useState(null);

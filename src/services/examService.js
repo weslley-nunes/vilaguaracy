@@ -22,6 +22,13 @@ export const ExamService = {
             studentCount: 0
         }));
 
+        if (cleanData.id) {
+            delete cleanData.status;
+            delete cleanData.teacherId;
+            delete cleanData.teacherName;
+            delete cleanData.studentCount;
+        }
+
         // Restore Date objects
         cleanData.createdAt = new Date();
         cleanData.updatedAt = new Date();
@@ -92,6 +99,24 @@ export const ExamService = {
             });
         } catch (e) {
             console.error("Error listing archived exams", e);
+            return [];
+        }
+    },
+
+    // List All Exams Including Archived (For Historical Analytics)
+    listAllIncludingArchived: async () => {
+        try {
+            const q = query(collection(db, "exams"));
+            const snapshot = await getDocs(q);
+            const exams = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            return exams.sort((a, b) => {
+                const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : (a.createdAt?.seconds ? new Date(a.createdAt.seconds * 1000) : new Date(a.createdAt || 0));
+                const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : (b.createdAt?.seconds ? new Date(b.createdAt.seconds * 1000) : new Date(b.createdAt || 0));
+                return dateB - dateA;
+            });
+        } catch (e) {
+            console.error("Critical Error in ExamService.listAllIncludingArchived:", e);
             return [];
         }
     },

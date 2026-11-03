@@ -289,7 +289,7 @@ const ExamPaper = forwardRef(({ questions, title, collaborators = [], headerConf
                             {/* Row 2 */}
                             <div className="flex justify-between w-[95%]">
                                 <p>Gurupi, _____ / _____ / 2026</p>
-                                <p>{headerConfig?.bimester || "2º Bimestre"}</p>
+                                <p>{headerConfig?.bimester || "4º Bimestre"}</p>
                                 <p>Turma: {finalClassName}</p>
                             </div>
 

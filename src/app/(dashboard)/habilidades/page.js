@@ -40,7 +40,7 @@ export default function HabilidadesPage() {
             try {
                 const [corrs, exms, clss, stf] = await Promise.all([
                     ExamService.listAllCorrections(),
-                    ExamService.listAll(),
+                    ExamService.listAllIncludingArchived(),
                     getClassesByUser(),
                     UserService.listStaff()
                 ]);
