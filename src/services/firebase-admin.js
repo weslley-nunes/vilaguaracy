@@ -3,16 +3,21 @@ import admin from "firebase-admin";
 
 const initFirebaseAdmin = () => {
     if (!admin.apps.length) {
-        if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
+        const projectId = (process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "vila-guaracy").trim();
+        const clientEmail = (process.env.FIREBASE_CLIENT_EMAIL || "").trim().replace(/^["']|["']$/g, "");
+        const rawKey = (process.env.FIREBASE_PRIVATE_KEY || "").trim().replace(/^["']|["']$/g, "");
+        const privateKey = rawKey.replace(/\\n/g, "\n");
+
+        if (!clientEmail || !privateKey) {
             console.warn("Skipping Firebase Admin initialization (missing env vars).");
             return admin;
         }
         try {
             admin.initializeApp({
                 credential: admin.credential.cert({
-                    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-                    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-                    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+                    projectId,
+                    clientEmail,
+                    privateKey,
                 }),
             });
             console.log("Firebase Admin Initialized successfully.");
@@ -25,10 +30,16 @@ const initFirebaseAdmin = () => {
 
 export const getDb = () => {
     initFirebaseAdmin();
+    if (!admin.apps.length) {
+        return null;
+    }
     return admin.firestore();
 };
 
 export const getAuth = () => {
     initFirebaseAdmin();
+    if (!admin.apps.length) {
+        return null;
+    }
     return admin.auth();
 };

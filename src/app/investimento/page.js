@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/services/firebase";
-import { doc, collection, onSnapshot, setDoc, getDocs, deleteDoc } from "firebase/firestore";
+import { doc, collection, onSnapshot } from "firebase/firestore";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -42,7 +42,6 @@ import {
   INITIAL_CASH,
   DEFAULT_DURATION_SECONDS,
   NEWS_CHANNELS,
-  MARKET_SCENARIOS,
   GLOSSARY_ITEMS,
   AVATARS,
 } from "@/components/investimento/marketData";
@@ -73,6 +72,7 @@ function createLocalInitialMarketState() {
   });
 
   return {
+    resetId: 0,
     status: "pregao_aberto",
     durationSeconds: DEFAULT_DURATION_SECONDS,
     elapsedSeconds: 0,
@@ -98,7 +98,7 @@ function createLocalInitialMarketState() {
     ],
     orderTape: [],
     dividendEvents: [],
-    updatedAt: Date.now(),
+    updatedAt: 0,
   };
 }
 
@@ -120,7 +120,7 @@ export default function InvestimentoPage() {
   const [adminPassword, setAdminPassword] = useState("");
   const [adminError, setAdminError] = useState("");
 
-  // Estado Global do Mercado e Jogadores Online (Inicia imediatamente com estado válido!)
+  // Estado Global do Mercado e Jogadores Online
   const [marketState, setMarketState] = useState(() => createLocalInitialMarketState());
   const [players, setPlayers] = useState([]);
   const [selectedTicker, setSelectedTicker] = useState("PETV4");
@@ -133,7 +133,7 @@ export default function InvestimentoPage() {
 
   const lastSeenNewsIdRef = useRef("abertura_bolsa");
   const lastDividendTimestampRef = useRef(0);
-  const usedScenarioIdsRef = useRef(new Set());
+  const lastResetIdRef = useRef(null);
 
   const showToastMsg = useCallback((type, title, subtitle) => {
     setToast({ type, title, subtitle, id: Date.now() });
@@ -152,7 +152,19 @@ export default function InvestimentoPage() {
       if (savedPlayer) {
         const parsed = JSON.parse(savedPlayer);
         if (parsed && parsed.id && parsed.name) {
-          setPlayer(parsed);
+          setPlayer({
+            ...parsed,
+            cash: typeof parsed.cash === "number" ? parsed.cash : INITIAL_CASH,
+            holdings: parsed.holdings || {},
+            tradesCount: parsed.tradesCount || 0,
+            tradeHistory: parsed.tradeHistory || [],
+          });
+          if (parsed.lastDividendTimestamp) {
+            lastDividendTimestampRef.current = parsed.lastDividendTimestamp;
+          }
+          if (parsed.resetId) {
+            lastResetIdRef.current = parsed.resetId;
+          }
         }
       }
       const savedAdmin = localStorage.getItem("bv_invest_admin");
@@ -160,9 +172,7 @@ export default function InvestimentoPage() {
         setIsAdmin(true);
         setShowAdminPanel(true);
       }
-    } catch (e) {
-      // ignore
-    }
+    } catch (e) {}
   }, []);
 
   // Se o professor já estiver autenticado no Portal Vila Guaracy, libera botão Admin
@@ -177,49 +187,21 @@ export default function InvestimentoPage() {
     }
   }, [authUser]);
 
-  // Função auxiliar para persistir mercado no Firestore cliente + API servidor
-  const persistMarketPatch = useCallback(async (patch) => {
-    try {
-      await setDoc(
-        doc(db, "investimento_sala", "mercado_principal"),
-        { ...patch, updatedAt: Date.now() },
-        { merge: true }
-      ).catch(() => {});
-    } catch (e) {}
-
-    fetch("/api/investimento", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "adminUpdateMarket",
-        marketPatch: patch,
-      }),
-    }).catch(() => {});
-  }, []);
-
-  // Buscar estado via API
+  // Sincronização Centralizada com o Servidor (/api/investimento)
   const fetchMarketViaApi = useCallback(async () => {
     try {
       const res = await fetch("/api/investimento", { cache: "no-store" });
       if (!res.ok) return;
       const data = await res.json();
       if (data.marketState && data.marketState.stocks) {
-        setMarketState((prev) => {
-          if ((data.marketState.updatedAt || 0) >= (prev?.updatedAt || 0)) {
-            return data.marketState;
-          }
-          return prev;
-        });
+        setMarketState(data.marketState);
       }
-      if (Array.isArray(data.players) && data.players.length > 0) {
+      if (Array.isArray(data.players)) {
         setPlayers(data.players);
       }
-    } catch (e) {
-      // Silencioso
-    }
+    } catch (e) {}
   }, []);
 
-  // Sincronização Híbrida: Firestore onSnapshot + API Polling
   useEffect(() => {
     fetchMarketViaApi();
 
@@ -253,7 +235,8 @@ export default function InvestimentoPage() {
       );
     } catch (e) {}
 
-    const pollInterval = setInterval(fetchMarketViaApi, 3000);
+    // O polling a cada 2.5s também aciona o tick centralizado no servidor para todos os alunos!
+    const pollInterval = setInterval(fetchMarketViaApi, 2500);
 
     return () => {
       if (unsubMarket) unsubMarket();
@@ -279,55 +262,72 @@ export default function InvestimentoPage() {
     }
   }, [marketState?.newsFeed]);
 
-  // Sincronizar dados do jogador caso o Professor resete a partida ou pague dividendos
+  // Detectar EXCLUSIVAMENTE quando o Professor clica em "Resetar Dia" (mudança real de marketState.resetId)
   useEffect(() => {
-    if (!player?.id || players.length === 0) return;
-    const remoteMe = players.find((p) => p.id === player.id);
-    if (!remoteMe) return;
+    const serverResetId = marketState?.resetId;
+    if (!serverResetId || !player?.id) return;
 
-    if (
-      remoteMe.lastDividend?.timestamp &&
-      remoteMe.lastDividend.timestamp > lastDividendTimestampRef.current
-    ) {
-      lastDividendTimestampRef.current = remoteMe.lastDividend.timestamp;
-      setPlayer((prev) => {
-        const updated = {
-          ...prev,
-          cash: remoteMe.cash,
-          holdings: remoteMe.holdings || prev.holdings,
-        };
-        localStorage.setItem("bv_invest_player", JSON.stringify(updated));
-        return updated;
-      });
-      soundFX.playBuy();
-      showToastMsg(
-        "success",
-        `💰 Dividendos Recebidos: +R$ ${Number(remoteMe.lastDividend.amount).toFixed(2)}`,
-        "O valor já caiu direto no seu saldo da Conta Banco Vila!"
-      );
+    if (lastResetIdRef.current === null) {
+      lastResetIdRef.current = serverResetId;
+      return;
     }
 
-    if (
-      remoteMe.tradesCount === 0 &&
-      (player.tradesCount || 0) > 0 &&
-      remoteMe.cash === INITIAL_CASH
-    ) {
+    if (serverResetId !== lastResetIdRef.current) {
+      lastResetIdRef.current = serverResetId;
       const resetP = {
         ...player,
+        resetId: serverResetId,
         cash: INITIAL_CASH,
         holdings: {},
         tradesCount: 0,
         tradeHistory: [],
       };
       setPlayer(resetP);
-      localStorage.setItem("bv_invest_player", JSON.stringify(resetP));
+      try {
+        localStorage.setItem("bv_invest_player", JSON.stringify(resetP));
+      } catch (e) {}
       showToastMsg(
         "info",
-        "🔄 Novo Dia de Pregão Iniciado!",
+        "🔄 Novo Dia de Pregão Iniciado pelo Professor!",
         "Sua conta foi reiniciada com R$ 10.000,00."
       );
     }
-  }, [players, player, showToastMsg]);
+  }, [marketState?.resetId, player, showToastMsg]);
+
+  // Detectar pagamento de Dividendos pelo Professor
+  useEffect(() => {
+    if (!player?.id || players.length === 0) return;
+    const remoteMe = players.find((p) => p.id === player.id);
+    if (!remoteMe?.lastDividend?.timestamp) return;
+
+    if (remoteMe.lastDividend.timestamp > lastDividendTimestampRef.current) {
+      const divTs = remoteMe.lastDividend.timestamp;
+      const divAmount = Number(remoteMe.lastDividend.amount || 0);
+      lastDividendTimestampRef.current = divTs;
+
+      if (divAmount > 0) {
+        setPlayer((prev) => {
+          if (!prev) return prev;
+          const newCash = Number((Number(prev.cash || 0) + divAmount).toFixed(2));
+          const updated = {
+            ...prev,
+            cash: newCash,
+            lastDividendTimestamp: divTs,
+          };
+          try {
+            localStorage.setItem("bv_invest_player", JSON.stringify(updated));
+          } catch (e) {}
+          return updated;
+        });
+        soundFX.playBuy();
+        showToastMsg(
+          "success",
+          `💰 Dividendos Recebidos: +R$ ${divAmount.toFixed(2)}`,
+          "O valor já foi somado ao seu Saldo Livre no Banco Vila!"
+        );
+      }
+    }
+  }, [players, player?.id, showToastMsg]);
 
   // Cálculo em tempo real do Patrimônio do Aluno com base nos preços atuais da Bolsa
   const portfolioMetrics = useMemo(() => {
@@ -346,9 +346,9 @@ export default function InvestimentoPage() {
       const currentPrice = Number(stocksMap[info.ticker]?.price ?? info.initialPrice);
 
       if (qty > 0) {
-        const marketVal = qty * currentPrice;
-        const costVal = qty * avgPrice;
-        const profitVal = marketVal - costVal;
+        const marketVal = Number((qty * currentPrice).toFixed(2));
+        const costVal = Number((qty * avgPrice).toFixed(2));
+        const profitVal = Number((marketVal - costVal).toFixed(2));
         const profitPct = costVal > 0 ? (profitVal / costVal) * 100 : 0;
 
         investedMarketValue += marketVal;
@@ -381,7 +381,7 @@ export default function InvestimentoPage() {
     };
   }, [player, marketState?.stocks]);
 
-  // Garantir que o jogador atual sempre apareça na lista local de jogadores online
+  // Garantir que o jogador atual sempre apareça com seu saldo exato na lista de jogadores
   const allPlayersWithMe = useMemo(() => {
     if (!player?.id) return players;
     const myLiveEntry = {
@@ -395,10 +395,10 @@ export default function InvestimentoPage() {
     return [myLiveEntry, ...others];
   }, [players, player, portfolioMetrics]);
 
-  // Atualizar netWorth do jogador no Firestore + API quando os preços mudarem
+  // Sincronizar carteira do aluno com o servidor periodicamente (para o ranking de todos ficar atualizado)
   useEffect(() => {
-    if (!player?.id || !marketState?.stocks) return;
-    const playerPayload = {
+    if (!player?.id) return;
+    const payload = {
       id: player.id,
       name: player.name,
       turma: player.turma,
@@ -409,24 +409,20 @@ export default function InvestimentoPage() {
       profit: portfolioMetrics.totalProfit,
       profitPct: portfolioMetrics.totalProfitPct,
       tradesCount: player.tradesCount || 0,
-      lastSeen: Date.now(),
-      online: true,
+      tradeHistory: player.tradeHistory || [],
     };
 
     const timer = setTimeout(() => {
-      setDoc(doc(db, "investimento_jogadores", player.id), playerPayload, { merge: true }).catch(
-        () => {}
-      );
       fetch("/api/investimento", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "syncPlayer",
           playerId: player.id,
-          playerData: playerPayload,
+          playerData: payload,
         }),
       }).catch(() => {});
-    }, 900);
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, [
@@ -436,16 +432,13 @@ export default function InvestimentoPage() {
     player?.avatar,
     player?.holdings,
     player?.tradesCount,
+    player?.tradeHistory,
     portfolioMetrics.cash,
     portfolioMetrics.netWorth,
     portfolioMetrics.totalProfit,
     portfolioMetrics.totalProfitPct,
-    marketState?.updatedAt,
   ]);
 
-  // ============================================================================
-  // MOTOR DE SIMULAÇÃO DO MERCADO (Roda continuamente quando Pregão Aberto)
-  // ============================================================================
   const formatSimulatedClock = (elapsed, duration) => {
     const ratio = Math.min(1, Math.max(0, elapsed / (duration || DEFAULT_DURATION_SECONDS)));
     const totalSimMinutes = Math.floor(ratio * 420);
@@ -454,136 +447,8 @@ export default function InvestimentoPage() {
     return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
   };
 
-  useEffect(() => {
-    if (!marketState || marketState.status !== "pregao_aberto") return;
-
-    const tickInterval = setInterval(() => {
-      setMarketState((prevMarket) => {
-        if (!prevMarket || prevMarket.status !== "pregao_aberto") return prevMarket;
-
-        const now = Date.now();
-        const speed = prevMarket.speed || 1;
-        const stepSeconds = 3 * speed;
-        const duration = prevMarket.durationSeconds || DEFAULT_DURATION_SECONDS;
-        const nextElapsed = Math.min(duration, (prevMarket.elapsedSeconds || 0) + stepSeconds);
-        const simClock = formatSimulatedClock(nextElapsed, duration);
-
-        const nextStocks = {};
-        const historyPoint = {
-          step: (prevMarket.priceHistory?.length || 0) + 1,
-          timeLabel: simClock,
-        };
-
-        INITIAL_STOCKS.forEach((info) => {
-          const cur = prevMarket.stocks?.[info.ticker] || {
-            ticker: info.ticker,
-            price: info.initialPrice,
-            openPrice: info.initialPrice,
-            prevPrice: info.initialPrice,
-            highPrice: info.initialPrice,
-            lowPrice: info.initialPrice,
-            changePct: 0,
-            momentum: 0,
-          };
-
-          const currentMomentum = Number(cur.momentum || 0);
-          const momentumStep = currentMomentum * 0.35;
-          const remainingMomentum = Number((currentMomentum * 0.65).toFixed(4));
-
-          const randomShock =
-            (Math.random() - 0.492) * 2 * info.volatility * (0.7 + 0.3 * speed);
-          const pctMove = momentumStep + randomShock;
-
-          const rawNextPrice = cur.price * (1 + pctMove);
-          const nextPrice = Math.max(1.5, Number(rawNextPrice.toFixed(2)));
-          const openPrice = cur.openPrice || info.initialPrice;
-          const changePct = Number((((nextPrice - openPrice) / openPrice) * 100).toFixed(2));
-
-          nextStocks[info.ticker] = {
-            ...cur,
-            prevPrice: cur.price,
-            price: nextPrice,
-            highPrice: Math.max(cur.highPrice || nextPrice, nextPrice),
-            lowPrice: Math.min(cur.lowPrice || nextPrice, nextPrice),
-            changePct,
-            lastTickDelta: Number((nextPrice - cur.price).toFixed(2)),
-            momentum: Math.abs(remainingMomentum) < 0.001 ? 0 : remainingMomentum,
-          };
-
-          historyPoint[info.ticker] = nextPrice;
-        });
-
-        const nextHistory = [...(prevMarket.priceHistory || []), historyPoint].slice(-80);
-        let nextNewsFeed = [...(prevMarket.newsFeed || [])];
-
-        if (prevMarket.autoNews && nextElapsed < duration - 15) {
-          const lastNewsTime = nextNewsFeed[0]?.timestamp || 0;
-          const cooldownMs = Math.max(25000, Math.floor(60000 / speed));
-          if (now - lastNewsTime > cooldownMs) {
-            const available = MARKET_SCENARIOS.filter(
-              (s) => !usedScenarioIdsRef.current.has(s.id)
-            );
-            const pool = available.length > 0 ? available : MARKET_SCENARIOS;
-            const randomScen = pool[Math.floor(Math.random() * pool.length)];
-            if (randomScen) {
-              usedScenarioIdsRef.current.add(randomScen.id);
-              const newsItem = {
-                id: `${randomScen.id}_${now}`,
-                channel: randomScen.channel,
-                title: randomScen.title,
-                summary: randomScen.summary,
-                educationalNote: randomScen.educationalNote,
-                impacts: randomScen.impacts,
-                timestamp: now,
-                marketTime: simClock,
-              };
-              nextNewsFeed = [newsItem, ...nextNewsFeed].slice(0, 30);
-
-              Object.entries(randomScen.impacts).forEach(([tk, impactPct]) => {
-                if (nextStocks[tk]) {
-                  const st = nextStocks[tk];
-                  const immediatePrice = Math.max(
-                    1.5,
-                    Number((st.price * (1 + impactPct * 0.45)).toFixed(2))
-                  );
-                  st.price = immediatePrice;
-                  st.highPrice = Math.max(st.highPrice, immediatePrice);
-                  st.lowPrice = Math.min(st.lowPrice, immediatePrice);
-                  st.changePct = Number(
-                    (((immediatePrice - st.openPrice) / st.openPrice) * 100).toFixed(2)
-                  );
-                  st.momentum = Number(((st.momentum || 0) + impactPct * 0.55).toFixed(4));
-                  historyPoint[tk] = immediatePrice;
-                }
-              });
-            }
-          }
-        }
-
-        const nextStatus = nextElapsed >= duration ? "encerrado" : "pregao_aberto";
-        if (nextStatus === "encerrado") {
-          soundFX.playBell();
-        }
-
-        const patch = {
-          status: nextStatus,
-          elapsedSeconds: nextElapsed,
-          stocks: nextStocks,
-          priceHistory: nextHistory,
-          newsFeed: nextNewsFeed,
-          updatedAt: now,
-        };
-
-        persistMarketPatch(patch);
-        return { ...prevMarket, ...patch };
-      });
-    }, 3000);
-
-    return () => clearInterval(tickInterval);
-  }, [marketState?.status, persistMarketPatch]);
-
   // ============================================================================
-  // AÇÕES DO JOGADOR (ENTRAR INSTANTANEAMENTE, COMPRAR E VENDER AÇÕES)
+  // AÇÕES DO JOGADOR (ENTRAR, COMPRAR E VENDER AÇÕES COM ATUALIZAÇÃO GARANTIDA)
   // ============================================================================
   const handleJoinAsStudent = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
@@ -592,8 +457,12 @@ export default function InvestimentoPage() {
     const existingId =
       player?.id || `inv_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
+    const currentResetId = marketState?.resetId || Date.now();
+    lastResetIdRef.current = currentResetId;
+
     const newPlayer = {
       id: existingId,
+      resetId: currentResetId,
       name: cleanName,
       turma: inputTurma || "7º Ano",
       avatar: inputAvatar || "🐂",
@@ -609,7 +478,6 @@ export default function InvestimentoPage() {
       createdAt: Date.now(),
     };
 
-    // 1. Entrada IMEDIATA na tela (0ms de espera, nunca trava!)
     setPlayer(newPlayer);
     try {
       localStorage.setItem("bv_invest_player", JSON.stringify(newPlayer));
@@ -622,10 +490,6 @@ export default function InvestimentoPage() {
       "Você recebeu R$ 10.000,00 para investir na Bolsa B3V."
     );
 
-    // 2. Sincroniza em segundo plano com o Firestore e a API
-    setDoc(doc(db, "investimento_jogadores", existingId), newPlayer, { merge: true }).catch(
-      () => {}
-    );
     fetch("/api/investimento", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -636,7 +500,14 @@ export default function InvestimentoPage() {
         turma: inputTurma,
         avatar: inputAvatar,
       }),
-    }).catch(() => {});
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.marketState?.resetId) {
+          lastResetIdRef.current = data.marketState.resetId;
+        }
+      })
+      .catch(() => {});
   };
 
   const handleLoginAdmin = (e) => {
@@ -658,6 +529,7 @@ export default function InvestimentoPage() {
       if (!player) {
         const profPlayer = {
           id: "prof_admin_vila",
+          resetId: marketState?.resetId || Date.now(),
           name: "Prof. Administrador",
           turma: "Mesa Diretora",
           avatar: "👑",
@@ -666,6 +538,7 @@ export default function InvestimentoPage() {
           tradesCount: 0,
           tradeHistory: [],
         };
+        lastResetIdRef.current = profPlayer.resetId;
         setPlayer(profPlayer);
         try {
           localStorage.setItem("bv_invest_player", JSON.stringify(profPlayer));
@@ -705,8 +578,10 @@ export default function InvestimentoPage() {
   }, [player?.holdings, selectedTicker]);
 
   const maxAffordableQty = useMemo(() => {
-    if (!selectedStockLive?.price || selectedStockLive.price <= 0) return 0;
-    return Math.floor((player?.cash ?? INITIAL_CASH) / selectedStockLive.price);
+    const price = Number(selectedStockLive?.price || 0);
+    const availableCash = Number(player?.cash ?? INITIAL_CASH);
+    if (price <= 0) return 0;
+    return Math.floor((availableCash + 0.0001) / price);
   }, [player?.cash, selectedStockLive?.price]);
 
   const handleExecuteTrade = async (type) => {
@@ -716,34 +591,39 @@ export default function InvestimentoPage() {
       return;
     }
 
-    const qty = Math.max(1, Math.floor(Number(tradeQty) || 0));
+    const rawQty = Math.max(1, Math.floor(Number(tradeQty) || 1));
     const price = Number(selectedStockLive.price);
-    const totalCost = Number((qty * price).toFixed(2));
-
     const currentCash = Number(player.cash ?? INITIAL_CASH);
     const holdings = { ...(player.holdings || {}) };
     const pos = holdings[selectedTicker] || { qty: 0, avgPrice: 0 };
 
     if (type === "BUY") {
-      if (totalCost > currentCash + 0.001) {
+      // Se o aluno digitou mais ações do que o saldo permite, ajusta ou avisa claramente
+      if (maxAffordableQty <= 0) {
         showToastMsg(
           "error",
           "Saldo Insuficiente no Banco Vila!",
-          `Você precisa de R$ ${totalCost.toFixed(2)}, mas tem R$ ${currentCash.toFixed(2)} em caixa.`
+          `Seu saldo livre é R$ ${currentCash.toFixed(2)} e 1 ação de ${selectedTicker} custa R$ ${price.toFixed(2)}.`
         );
         return;
       }
 
-      const newQty = pos.qty + qty;
-      const newAvgPrice = Number(((pos.qty * pos.avgPrice + totalCost) / newQty).toFixed(2));
+      const qtyToBuy = rawQty > maxAffordableQty ? maxAffordableQty : rawQty;
+      const totalCost = Number((qtyToBuy * price).toFixed(2));
+
+      const oldQty = Number(pos.qty || 0);
+      const oldAvg = Number(pos.avgPrice || 0);
+      const newQty = oldQty + qtyToBuy;
+      const newAvgPrice = Number(((oldQty * oldAvg + totalCost) / newQty).toFixed(2));
+
       holdings[selectedTicker] = { qty: newQty, avgPrice: newAvgPrice };
-      const newCash = Number((currentCash - totalCost).toFixed(2));
+      const newCash = Math.max(0, Number((currentCash - totalCost).toFixed(2)));
 
       const tradeRecord = {
         id: Date.now(),
         type: "BUY",
         ticker: selectedTicker,
-        qty,
+        qty: qtyToBuy,
         price,
         total: totalCost,
         time:
@@ -754,7 +634,7 @@ export default function InvestimentoPage() {
         ...player,
         cash: newCash,
         holdings,
-        tradesCount: (player.tradesCount || 0) + 1,
+        tradesCount: Number(player.tradesCount || 0) + 1,
         tradeHistory: [tradeRecord, ...(player.tradeHistory || [])].slice(0, 30),
       };
 
@@ -762,52 +642,58 @@ export default function InvestimentoPage() {
       try {
         localStorage.setItem("bv_invest_player", JSON.stringify(updatedPlayer));
       } catch (e) {}
+
       soundFX.playBuy();
       showToastMsg(
         "success",
-        `✅ Compra Executada: ${qty}x ${selectedTicker}`,
-        `Total investido: R$ ${totalCost.toFixed(2)} ( R$ ${price.toFixed(2)} / ação )`
+        `✅ Compra Confirmada: +${qtyToBuy}x ${selectedTicker}`,
+        `Investido: R$ ${totalCost.toFixed(2)} • Novo Saldo Livre: R$ ${newCash.toFixed(2)}`
       );
 
-      setDoc(doc(db, "investimento_jogadores", updatedPlayer.id), updatedPlayer, {
-        merge: true,
-      }).catch(() => {});
-      fetch("/api/investimento", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "syncPlayer",
-          playerId: updatedPlayer.id,
-          playerData: updatedPlayer,
-          tradeOrder: tradeRecord,
-        }),
-      }).catch(() => {});
+      try {
+        const res = await fetch("/api/investimento", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "syncPlayer",
+            playerId: updatedPlayer.id,
+            playerData: updatedPlayer,
+            tradeOrder: tradeRecord,
+          }),
+        });
+        const data = await res.json();
+        if (data?.marketState) setMarketState(data.marketState);
+      } catch (e) {}
     } else if (type === "SELL") {
-      if (qty > pos.qty) {
+      const ownedQty = Number(pos.qty || 0);
+      if (ownedQty <= 0) {
         showToastMsg(
           "error",
-          "Quantidade Indisponível na Carteira!",
-          `Você possui apenas ${pos.qty} ações de ${selectedTicker} para vender.`
+          "Você não possui esta ação!",
+          `Compre ações de ${selectedTicker} antes de vender.`
         );
         return;
       }
 
-      const profitOnSale = Number(((price - pos.avgPrice) * qty).toFixed(2));
-      const newQty = pos.qty - qty;
+      const qtyToSell = rawQty > ownedQty ? ownedQty : rawQty;
+      const totalSaleValue = Number((qtyToSell * price).toFixed(2));
+      const profitOnSale = Number(((price - Number(pos.avgPrice || price)) * qtyToSell).toFixed(2));
+      const newQty = ownedQty - qtyToSell;
+
       if (newQty <= 0) {
         delete holdings[selectedTicker];
       } else {
         holdings[selectedTicker] = { qty: newQty, avgPrice: pos.avgPrice };
       }
 
-      const newCash = Number((currentCash + totalCost).toFixed(2));
+      const newCash = Number((currentCash + totalSaleValue).toFixed(2));
       const tradeRecord = {
         id: Date.now(),
         type: "SELL",
         ticker: selectedTicker,
-        qty,
+        qty: qtyToSell,
         price,
-        total: totalCost,
+        total: totalSaleValue,
         profitOnSale,
         time:
           marketState?.priceHistory?.[marketState.priceHistory.length - 1]?.timeLabel || "Agora",
@@ -817,7 +703,7 @@ export default function InvestimentoPage() {
         ...player,
         cash: newCash,
         holdings,
-        tradesCount: (player.tradesCount || 0) + 1,
+        tradesCount: Number(player.tradesCount || 0) + 1,
         tradeHistory: [tradeRecord, ...(player.tradeHistory || [])].slice(0, 30),
       };
 
@@ -825,91 +711,108 @@ export default function InvestimentoPage() {
       try {
         localStorage.setItem("bv_invest_player", JSON.stringify(updatedPlayer));
       } catch (e) {}
+
       soundFX.playSell();
       showToastMsg(
         profitOnSale >= 0 ? "success" : "info",
-        `💰 Venda Executada: ${qty}x ${selectedTicker} (+R$ ${totalCost.toFixed(2)})`,
-        profitOnSale >= 0
-          ? `Lucro realizado nesta operação: +R$ ${profitOnSale.toFixed(2)}! 🚀`
-          : `Resultado nesta operação: R$ ${profitOnSale.toFixed(2)}`
+        `💰 Venda Confirmada: -${qtyToSell}x ${selectedTicker} (+R$ ${totalSaleValue.toFixed(2)})`,
+        `Novo Saldo Livre: R$ ${newCash.toFixed(2)} (${
+          profitOnSale >= 0 ? `Lucro: +R$ ${profitOnSale.toFixed(2)}` : `Resultado: R$ ${profitOnSale.toFixed(2)}`
+        })`
       );
 
-      setDoc(doc(db, "investimento_jogadores", updatedPlayer.id), updatedPlayer, {
-        merge: true,
-      }).catch(() => {});
-      fetch("/api/investimento", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "syncPlayer",
-          playerId: updatedPlayer.id,
-          playerData: updatedPlayer,
-          tradeOrder: tradeRecord,
-        }),
-      }).catch(() => {});
+      try {
+        const res = await fetch("/api/investimento", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "syncPlayer",
+            playerId: updatedPlayer.id,
+            playerData: updatedPlayer,
+            tradeOrder: tradeRecord,
+          }),
+        });
+        const data = await res.json();
+        if (data?.marketState) setMarketState(data.marketState);
+      } catch (e) {}
     }
   };
 
   // ============================================================================
-  // FUNÇÕES ADMINISTRATIVAS DO PROFESSOR (COM ATUALIZAÇÃO IMEDIATA)
+  // FUNÇÕES ADMINISTRATIVAS DO PROFESSOR (SINCRONIZADAS NO SERVIDOR)
   // ============================================================================
+  const sendAdminPatch = async (patch) => {
+    setMarketState((prev) => ({ ...prev, ...patch, updatedAt: Date.now() }));
+    try {
+      const res = await fetch("/api/investimento", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "adminUpdateMarket",
+          marketPatch: patch,
+        }),
+      });
+      const data = await res.json();
+      if (data?.marketState) setMarketState(data.marketState);
+    } catch (e) {}
+  };
+
   const handleAdminStartMarket = async () => {
     soundFX.playBell();
-    setMarketState((prev) => ({ ...prev, status: "pregao_aberto", updatedAt: Date.now() }));
-    await persistMarketPatch({ status: "pregao_aberto" });
+    await sendAdminPatch({ status: "pregao_aberto", lastTickAt: Date.now() });
     showToastMsg(
       "success",
       "🔔 Pregão Iniciado!",
-      "O relógio de 30 minutos e os gráficos estão rodando."
+      "O relógio de 30 minutos e os gráficos estão rodando para toda a turma."
     );
   };
 
   const handleAdminPauseMarket = async () => {
-    setMarketState((prev) => ({ ...prev, status: "pausado", updatedAt: Date.now() }));
-    await persistMarketPatch({ status: "pausado" });
+    await sendAdminPatch({ status: "pausado" });
     showToastMsg("info", "⏸️ Pregão Pausado", "As cotações estão temporariamente congeladas.");
   };
 
   const handleAdminEndMarket = async () => {
     soundFX.playBell();
-    setMarketState((prev) => ({ ...prev, status: "encerrado", updatedAt: Date.now() }));
-    await persistMarketPatch({ status: "encerrado" });
+    await sendAdminPatch({ status: "encerrado" });
   };
 
   const handleAdminResetMarket = async (clearPlayers = false) => {
-    usedScenarioIdsRef.current.clear();
-    const fresh = createLocalInitialMarketState();
-    setMarketState(fresh);
-    await persistMarketPatch(fresh);
-
-    if (player) {
-      const resetP = {
-        ...player,
-        cash: INITIAL_CASH,
-        holdings: {},
-        tradesCount: 0,
-        tradeHistory: [],
-      };
-      setPlayer(resetP);
-      try {
-        localStorage.setItem("bv_invest_player", JSON.stringify(resetP));
-      } catch (e) {}
-    }
-
-    fetch("/api/investimento", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "adminResetGame",
-        clearPlayers,
-      }),
-    }).catch(() => {});
-
-    showToastMsg(
-      "success",
-      "🔄 Mercado Reiniciado!",
-      "Todos os alunos voltaram para R$ 10.000,00."
-    );
+    try {
+      const res = await fetch("/api/investimento", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "adminResetGame",
+          clearPlayers,
+        }),
+      });
+      const data = await res.json();
+      if (data?.marketState) {
+        setMarketState(data.marketState);
+        lastResetIdRef.current = data.marketState.resetId;
+      }
+      if (player) {
+        const resetP = {
+          ...player,
+          resetId: data?.marketState?.resetId || Date.now(),
+          cash: INITIAL_CASH,
+          holdings: {},
+          tradesCount: 0,
+          tradeHistory: [],
+        };
+        setPlayer(resetP);
+        try {
+          localStorage.setItem("bv_invest_player", JSON.stringify(resetP));
+        } catch (e) {}
+      }
+      fetchMarketViaApi();
+      showToastMsg(
+        "success",
+        "🔄 Mercado Reiniciado!",
+        "Todos os alunos voltaram para R$ 10.000,00."
+      );
+    } catch (e) {}
   };
 
   const handleAdminTriggerScenario = async (scenario) => {
@@ -958,16 +861,12 @@ export default function InvestimentoPage() {
     const nextHistory = [...(marketState?.priceHistory || []), latestPoint].slice(-80);
     const nextNewsFeed = [newsItem, ...(marketState?.newsFeed || [])].slice(0, 30);
 
-    const patch = {
+    await sendAdminPatch({
       stocks: nextStocks,
       priceHistory: nextHistory,
       newsFeed: nextNewsFeed,
-      updatedAt: now,
-    };
-
-    setMarketState((prev) => ({ ...prev, ...patch }));
-    await persistMarketPatch(patch);
-    showToastMsg("success", "📢 Plantão Disparado!", scenario.title);
+    });
+    showToastMsg("success", "📢 Plantão Disparado para a Turma!", scenario.title);
   };
 
   const handleAdminAdjustStock = async (ticker, pctDelta) => {
@@ -994,49 +893,35 @@ export default function InvestimentoPage() {
       [ticker]: newPrice,
     };
 
-    const patch = {
+    await sendAdminPatch({
       stocks: nextStocks,
       priceHistory: [...(marketState.priceHistory || []), latestPoint].slice(-80),
-      updatedAt: Date.now(),
-    };
-
-    setMarketState((prev) => ({ ...prev, ...patch }));
-    await persistMarketPatch(patch);
+    });
   };
 
   const handleAdminPayDividends = async (yieldPct = 0.03) => {
-    // Paga imediatamente para o usuário atual se tiver ações
-    if (player && portfolioMetrics.investedMarketValue > 0) {
-      const divAmount = Number((portfolioMetrics.investedMarketValue * yieldPct).toFixed(2));
-      const updatedP = {
-        ...player,
-        cash: Number((player.cash + divAmount).toFixed(2)),
-      };
-      setPlayer(updatedP);
-      try {
-        localStorage.setItem("bv_invest_player", JSON.stringify(updatedP));
-      } catch (e) {}
-    }
-
-    await fetch("/api/investimento", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "adminPayDividends",
-        yieldPct,
-      }),
-    }).catch(() => {});
-
-    showToastMsg(
-      "success",
-      "💰 Dividendos Distribuídos!",
-      "Todos os investidores com ações na carteira receberam +3% em dinheiro!"
-    );
+    try {
+      const res = await fetch("/api/investimento", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "adminPayDividends",
+          yieldPct,
+        }),
+      });
+      const data = await res.json();
+      if (data?.marketState) setMarketState(data.marketState);
+      fetchMarketViaApi();
+      showToastMsg(
+        "success",
+        "💰 Dividendos Distribuídos!",
+        `${data?.totalPaidPlayers || 0} investidor(es) com ações na carteira receberam +3% em dinheiro!`
+      );
+    } catch (e) {}
   };
 
   const handleAdminUpdateSettings = async (patch) => {
-    setMarketState((prev) => ({ ...prev, ...patch, updatedAt: Date.now() }));
-    await persistMarketPatch(patch);
+    await sendAdminPatch(patch);
   };
 
   const formatBRL = (val) =>
