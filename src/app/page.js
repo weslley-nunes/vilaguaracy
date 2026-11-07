@@ -3,7 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle2, Shield, QrCode, ArrowRight, Eye, EyeOff, Gamepad2 } from "lucide-react";
+import { CheckCircle2, Shield, QrCode, ArrowRight, Eye, EyeOff, Gamepad2, TrendingUp } from "lucide-react";
 
 export default function Home() {
   const { user, googleLogin, emailLogin, emailRegister, loading } = useAuth();
@@ -54,7 +54,7 @@ export default function Home() {
             Gere provas personalizadas em segundos, gerencie turmas e automatize correções. O futuro da educação, hoje.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+          <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
             <button
               onClick={googleLogin}
               className="btn btn-primary"
@@ -72,6 +72,13 @@ export default function Home() {
             >
               <Gamepad2 size={20} />
               Jornada da Autonomia
+            </Link>
+            <Link
+              href="/investimento"
+              className="px-6 py-3 rounded-xl bg-emerald-600/25 border border-emerald-400/50 text-emerald-200 font-bold hover:bg-emerald-600/45 hover:text-white transition-all flex items-center justify-center gap-2 backdrop-blur-sm"
+            >
+              <TrendingUp size={20} />
+              Banco Vila • Bolsa de Valores
             </Link>
           </div>
 

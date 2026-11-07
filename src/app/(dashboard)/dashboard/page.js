@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
-import { FileText, Users, Plus, Loader2, AlertCircle, Search, CheckCircle, Calendar, ArrowRight } from "lucide-react";
+import { FileText, Users, Plus, Loader2, AlertCircle, Search, CheckCircle, Calendar, ArrowRight, TrendingUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getClassesByUser } from "@/services/classesService";
 import { ExamService } from "@/services/examService";
@@ -106,6 +106,18 @@ export default function Dashboard() {
                         </p>
                     </div>
                 </div>
+
+                <Link href="/investimento" className="card flex items-center gap-4 border-l-4 border-emerald-500 bg-emerald-950/10 dark:bg-emerald-500/10 hover:bg-emerald-500/20 p-4 rounded-lg shadow-sm transition-all">
+                    <div className="p-3 bg-emerald-500 text-slate-950 rounded-full shadow">
+                        <TrendingUp size={24} />
+                    </div>
+                    <div>
+                        <p className="text-sm text-emerald-700 dark:text-emerald-400 font-bold">Banco Vila • Ações</p>
+                        <p className="text-base font-black text-gray-900 dark:text-white flex items-center gap-1">
+                            Abrir Corretora <ArrowRight size={16} />
+                        </p>
+                    </div>
+                </Link>
             </div>
 
             {/* Pending Collaborative Blocks for Teachers */}
@@ -148,6 +160,7 @@ export default function Dashboard() {
                     </div>
                 </div>
             )}
+
             {/* Minhas Avaliações (4º Bimestre) */}
             {!isLoading && (
                 <div className="mb-10 animate-fade-in">
@@ -200,7 +213,15 @@ export default function Dashboard() {
             )}
 
             <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Acesso Rápido</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Link href="/investimento" className="group p-6 bg-gradient-to-br from-emerald-900 to-slate-900 text-white border border-emerald-500/40 rounded-xl hover:shadow-lg hover:shadow-emerald-500/20 transition-all hover:border-emerald-400 flex flex-col items-center text-center">
+                    <div className="w-12 h-12 bg-emerald-500 text-slate-950 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-md">
+                        <TrendingUp size={24} />
+                    </div>
+                    <h3 className="font-bold text-white mb-1">Banco Vila • Ações</h3>
+                    <p className="text-sm text-emerald-200/80">Simulador da Bolsa de Valores (R$ 10 mil)</p>
+                </Link>
+
                 <Link href="/builder" className="group p-6 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:shadow-md transition-all hover:border-vg-navy dark:hover:border-vg-dark flex flex-col items-center text-center">
                     <div className="w-12 h-12 bg-vg-light dark:bg-vg-dark/20 text-vg-dark dark:text-vg-navy rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                         <Plus size={24} />

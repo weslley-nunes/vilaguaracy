@@ -15,7 +15,7 @@ import {
     TrendingUp, 
     FileSearch, 
     PlusSquare, 
-    ClipboardList, Archive, Database 
+    ClipboardList, Archive, Database, Landmark 
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -31,6 +31,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
     if (role === 'gestao') {
         links = [
             { href: "/dashboard", label: "Painel Geral", icon: LayoutDashboard },
+            { href: "/investimento", label: "Banco Vila • Ações", icon: Landmark },
             { href: "/builder", label: "Criar Avaliação Base", icon: PlusSquare },
             { href: "/exams", label: "Todas as Provas", icon: ClipboardList },
             { href: "/arquivos", label: "Avaliações Anteriores", icon: Archive },
@@ -44,6 +45,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
     } else if (role === 'coordenador') {
         links = [
             { href: "/dashboard", label: "Painel Coord.", icon: LayoutDashboard },
+            { href: "/investimento", label: "Banco Vila • Ações", icon: Landmark },
             { href: "/classes", label: "Minhas Turmas", icon: GraduationCap },
             { href: "/scanner", label: "Scanner de Correção", icon: Sparkles },
             { href: "/resultados", label: "Resultados Analíticos", icon: BarChart2 },
@@ -56,6 +58,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
     } else {
         links = [
             { href: "/dashboard", label: "Início", icon: LayoutDashboard },
+            { href: "/investimento", label: "Banco Vila • Ações", icon: Landmark },
             { href: "/builder", label: "Adicionar Questões", icon: PlusSquare },
             { href: "/exams", label: "Minhas Avaliações", icon: ClipboardList },
             { href: "/arquivos", label: "Avaliações Anteriores", icon: Archive },
