@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/services/firebase";
-import { doc, collection, onSnapshot } from "firebase/firestore";
+import { doc, collection, onSnapshot, setDoc, getDocs, deleteDoc } from "firebase/firestore";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -20,30 +20,21 @@ import {
   TrendingDown,
   Wallet,
   Newspaper,
-  Users,
   Trophy,
   Clock,
   Volume2,
   VolumeX,
   BookOpen,
-  ShieldCheck,
   Briefcase,
   ArrowUpRight,
   ArrowDownRight,
-  Bell,
   Sparkles,
-  Play,
-  Pause,
   Sliders,
   LogOut,
   CheckCircle2,
-  AlertCircle,
   Activity,
   Building2,
-  HelpCircle,
   X,
-  ChevronRight,
-  Coins,
 } from "lucide-react";
 
 import {
@@ -59,6 +50,58 @@ import { soundFX } from "@/components/investimento/soundEffects";
 import AdminPanel from "@/components/investimento/AdminPanel";
 import FinalRankingModal from "@/components/investimento/FinalRankingModal";
 
+function createLocalInitialMarketState() {
+  const stocksMap = {};
+  const firstPoint = {
+    step: 0,
+    timeLabel: "10:00",
+  };
+
+  INITIAL_STOCKS.forEach((s) => {
+    stocksMap[s.ticker] = {
+      ticker: s.ticker,
+      price: s.initialPrice,
+      openPrice: s.initialPrice,
+      prevPrice: s.initialPrice,
+      highPrice: s.initialPrice,
+      lowPrice: s.initialPrice,
+      changePct: 0,
+      lastTickDelta: 0,
+      momentum: 0,
+    };
+    firstPoint[s.ticker] = s.initialPrice;
+  });
+
+  return {
+    status: "pregao_aberto",
+    durationSeconds: DEFAULT_DURATION_SECONDS,
+    elapsedSeconds: 0,
+    speed: 1,
+    autoNews: true,
+    showTips: true,
+    sessionCode: "VILA-B3",
+    stocks: stocksMap,
+    priceHistory: [firstPoint],
+    newsFeed: [
+      {
+        id: "abertura_bolsa",
+        channel: "INFOGRANA",
+        title: "🔔 SINO DE ABERTURA: Bolsa de Valores do Banco Vila (B3V) aberta para negociações!",
+        summary:
+          "Cada investidor inicia com R$ 10.000,00 na conta da Corretora Banco Vila. Analise os gráficos, leia as notícias em tempo real e monte sua carteira de ações!",
+        educationalNote:
+          "💡 DICA INICIAL: Diversifique sua carteira comprando empresas de setores diferentes e deixe uma reserva em caixa para aproveitar notícias urgentes!",
+        impacts: {},
+        timestamp: Date.now(),
+        marketTime: "10:00",
+      },
+    ],
+    orderTape: [],
+    dividendEvents: [],
+    updatedAt: Date.now(),
+  };
+}
+
 export default function InvestimentoPage() {
   const { user: authUser } = useAuth();
 
@@ -70,15 +113,15 @@ export default function InvestimentoPage() {
 
   // Formulário de Entrada do Aluno
   const [inputName, setInputName] = useState("");
-  const [inputTurma, setInputTurma] = useState("9º Ano");
-  const [inputAvatar, setInputAvatar] = useState("🦈");
+  const [inputTurma, setInputTurma] = useState("7º Ano");
+  const [inputAvatar, setInputAvatar] = useState("🐂");
 
   // Formulário de Entrada do Professor Admin
   const [adminPassword, setAdminPassword] = useState("");
   const [adminError, setAdminError] = useState("");
 
-  // Estado Global do Mercado e Jogadores Online
-  const [marketState, setMarketState] = useState(null);
+  // Estado Global do Mercado e Jogadores Online (Inicia imediatamente com estado válido!)
+  const [marketState, setMarketState] = useState(() => createLocalInitialMarketState());
   const [players, setPlayers] = useState([]);
   const [selectedTicker, setSelectedTicker] = useState("PETV4");
   const [tradeQty, setTradeQty] = useState(10);
@@ -88,7 +131,7 @@ export default function InvestimentoPage() {
   const [toast, setToast] = useState(null);
   const [breakingBanner, setBreakingBanner] = useState(null);
 
-  const lastSeenNewsIdRef = useRef(null);
+  const lastSeenNewsIdRef = useRef("abertura_bolsa");
   const lastDividendTimestampRef = useRef(0);
   const usedScenarioIdsRef = useRef(new Set());
 
@@ -122,32 +165,61 @@ export default function InvestimentoPage() {
     }
   }, []);
 
-  // Se o professor já estiver autenticado no Portal Vila Guaracy, habilita acesso Admin automático se desejar
+  // Se o professor já estiver autenticado no Portal Vila Guaracy, libera botão Admin
   useEffect(() => {
-    if (authUser && (authUser.role === "gestao" || authUser.role === "coordenador" || authUser.role === "professor")) {
-      // Não força saída da visão de aluno, mas libera o botão de Admin
+    if (
+      authUser &&
+      (authUser.role === "gestao" ||
+        authUser.role === "coordenador" ||
+        authUser.role === "professor")
+    ) {
       setIsAdmin(true);
     }
   }, [authUser]);
 
-  // Função para buscar estado via API (Funciona sempre via Firebase Admin no servidor!)
+  // Função auxiliar para persistir mercado no Firestore cliente + API servidor
+  const persistMarketPatch = useCallback(async (patch) => {
+    try {
+      await setDoc(
+        doc(db, "investimento_sala", "mercado_principal"),
+        { ...patch, updatedAt: Date.now() },
+        { merge: true }
+      ).catch(() => {});
+    } catch (e) {}
+
+    fetch("/api/investimento", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "adminUpdateMarket",
+        marketPatch: patch,
+      }),
+    }).catch(() => {});
+  }, []);
+
+  // Buscar estado via API
   const fetchMarketViaApi = useCallback(async () => {
     try {
       const res = await fetch("/api/investimento", { cache: "no-store" });
       if (!res.ok) return;
       const data = await res.json();
-      if (data.marketState) {
-        setMarketState(data.marketState);
+      if (data.marketState && data.marketState.stocks) {
+        setMarketState((prev) => {
+          if ((data.marketState.updatedAt || 0) >= (prev?.updatedAt || 0)) {
+            return data.marketState;
+          }
+          return prev;
+        });
       }
-      if (Array.isArray(data.players)) {
+      if (Array.isArray(data.players) && data.players.length > 0) {
         setPlayers(data.players);
       }
     } catch (e) {
-      console.error("Erro ao sincronizar /api/investimento:", e);
+      // Silencioso
     }
   }, []);
 
-  // Sincronização Híbrida: Firestore onSnapshot (tempo real) + Polling leve na API (fallback garantido)
+  // Sincronização Híbrida: Firestore onSnapshot + API Polling
   useEffect(() => {
     fetchMarketViaApi();
 
@@ -159,12 +231,13 @@ export default function InvestimentoPage() {
         doc(db, "investimento_sala", "mercado_principal"),
         (docSnap) => {
           if (docSnap.exists()) {
-            setMarketState(docSnap.data());
+            const remoteData = docSnap.data();
+            if (remoteData && remoteData.stocks) {
+              setMarketState(remoteData);
+            }
           }
         },
-        () => {
-          // Se as regras do Firestore bloquearem leitura direta no cliente, o polling da API mantém tudo funcionando!
-        }
+        () => {}
       );
 
       unsubPlayers = onSnapshot(
@@ -172,15 +245,15 @@ export default function InvestimentoPage() {
         (querySnap) => {
           const list = [];
           querySnap.forEach((d) => list.push({ id: d.id, ...d.data() }));
-          setPlayers(list);
+          if (list.length > 0) {
+            setPlayers(list);
+          }
         },
         () => {}
       );
-    } catch (e) {
-      // Fallback silencioso para API
-    }
+    } catch (e) {}
 
-    const pollInterval = setInterval(fetchMarketViaApi, 2500);
+    const pollInterval = setInterval(fetchMarketViaApi, 3000);
 
     return () => {
       if (unsubMarket) unsubMarket();
@@ -194,7 +267,7 @@ export default function InvestimentoPage() {
     const latestNews = marketState?.newsFeed?.[0];
     if (!latestNews) return;
 
-    if (lastSeenNewsIdRef.current === null) {
+    if (!lastSeenNewsIdRef.current) {
       lastSeenNewsIdRef.current = latestNews.id;
       return;
     }
@@ -212,7 +285,6 @@ export default function InvestimentoPage() {
     const remoteMe = players.find((p) => p.id === player.id);
     if (!remoteMe) return;
 
-    // Se houve pagamento de dividendos para este aluno
     if (
       remoteMe.lastDividend?.timestamp &&
       remoteMe.lastDividend.timestamp > lastDividendTimestampRef.current
@@ -235,8 +307,11 @@ export default function InvestimentoPage() {
       );
     }
 
-    // Se o professor resetou o jogo (tradesCount remoto zerou enquanto local > 0)
-    if (remoteMe.tradesCount === 0 && (player.tradesCount || 0) > 0 && remoteMe.cash === INITIAL_CASH) {
+    if (
+      remoteMe.tradesCount === 0 &&
+      (player.tradesCount || 0) > 0 &&
+      remoteMe.cash === INITIAL_CASH
+    ) {
       const resetP = {
         ...player,
         cash: INITIAL_CASH,
@@ -246,7 +321,11 @@ export default function InvestimentoPage() {
       };
       setPlayer(resetP);
       localStorage.setItem("bv_invest_player", JSON.stringify(resetP));
-      showToastMsg("info", "🔄 Novo Dia de Pregão Iniciado!", "Sua conta foi reiniciada com R$ 10.000,00.");
+      showToastMsg(
+        "info",
+        "🔄 Novo Dia de Pregão Iniciado!",
+        "Sua conta foi reiniciada com R$ 10.000,00."
+      );
     }
   }, [players, player, showToastMsg]);
 
@@ -302,31 +381,52 @@ export default function InvestimentoPage() {
     };
   }, [player, marketState?.stocks]);
 
-  // Atualizar netWorth do jogador no servidor quando os preços mudarem
+  // Garantir que o jogador atual sempre apareça na lista local de jogadores online
+  const allPlayersWithMe = useMemo(() => {
+    if (!player?.id) return players;
+    const myLiveEntry = {
+      ...player,
+      cash: portfolioMetrics.cash,
+      netWorth: portfolioMetrics.netWorth,
+      profit: portfolioMetrics.totalProfit,
+      profitPct: portfolioMetrics.totalProfitPct,
+    };
+    const others = players.filter((p) => p.id !== player.id);
+    return [myLiveEntry, ...others];
+  }, [players, player, portfolioMetrics]);
+
+  // Atualizar netWorth do jogador no Firestore + API quando os preços mudarem
   useEffect(() => {
     if (!player?.id || !marketState?.stocks) return;
+    const playerPayload = {
+      id: player.id,
+      name: player.name,
+      turma: player.turma,
+      avatar: player.avatar,
+      cash: portfolioMetrics.cash,
+      holdings: player.holdings || {},
+      netWorth: portfolioMetrics.netWorth,
+      profit: portfolioMetrics.totalProfit,
+      profitPct: portfolioMetrics.totalProfitPct,
+      tradesCount: player.tradesCount || 0,
+      lastSeen: Date.now(),
+      online: true,
+    };
+
     const timer = setTimeout(() => {
+      setDoc(doc(db, "investimento_jogadores", player.id), playerPayload, { merge: true }).catch(
+        () => {}
+      );
       fetch("/api/investimento", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "syncPlayer",
           playerId: player.id,
-          playerData: {
-            id: player.id,
-            name: player.name,
-            turma: player.turma,
-            avatar: player.avatar,
-            cash: portfolioMetrics.cash,
-            holdings: player.holdings || {},
-            netWorth: portfolioMetrics.netWorth,
-            profit: portfolioMetrics.totalProfit,
-            profitPct: portfolioMetrics.totalProfitPct,
-            tradesCount: player.tradesCount || 0,
-          },
+          playerData: playerPayload,
         }),
       }).catch(() => {});
-    }, 800);
+    }, 900);
 
     return () => clearTimeout(timer);
   }, [
@@ -344,10 +444,9 @@ export default function InvestimentoPage() {
   ]);
 
   // ============================================================================
-  // MOTOR DE SIMULAÇÃO DO MERCADO (Executado pelo Admin ou Líder quando Pregão Aberto)
+  // MOTOR DE SIMULAÇÃO DO MERCADO (Roda continuamente quando Pregão Aberto)
   // ============================================================================
   const formatSimulatedClock = (elapsed, duration) => {
-    // Mapeia 0..duration para 10:00..17:00 (7 horas de pregão = 420 minutos simulados)
     const ratio = Math.min(1, Math.max(0, elapsed / (duration || DEFAULT_DURATION_SECONDS)));
     const totalSimMinutes = Math.floor(ratio * 420);
     const hours = 10 + Math.floor(totalSimMinutes / 60);
@@ -358,177 +457,190 @@ export default function InvestimentoPage() {
   useEffect(() => {
     if (!marketState || marketState.status !== "pregao_aberto") return;
 
-    // Se o usuário é Admin (ou se não houver outro admin, qualquer cliente após 5s sem update assume o tick)
-    const tickInterval = setInterval(async () => {
-      const now = Date.now();
-      const timeSinceLastUpdate = now - (marketState.updatedAt || 0);
-      const shouldRunTick = isAdmin || timeSinceLastUpdate > 4500;
-      if (!shouldRunTick) return;
+    const tickInterval = setInterval(() => {
+      setMarketState((prevMarket) => {
+        if (!prevMarket || prevMarket.status !== "pregao_aberto") return prevMarket;
 
-      const speed = marketState.speed || 1;
-      const stepSeconds = 3 * speed;
-      const duration = marketState.durationSeconds || DEFAULT_DURATION_SECONDS;
-      const nextElapsed = Math.min(duration, (marketState.elapsedSeconds || 0) + stepSeconds);
-      const simClock = formatSimulatedClock(nextElapsed, duration);
+        const now = Date.now();
+        const speed = prevMarket.speed || 1;
+        const stepSeconds = 3 * speed;
+        const duration = prevMarket.durationSeconds || DEFAULT_DURATION_SECONDS;
+        const nextElapsed = Math.min(duration, (prevMarket.elapsedSeconds || 0) + stepSeconds);
+        const simClock = formatSimulatedClock(nextElapsed, duration);
 
-      const nextStocks = {};
-      const historyPoint = {
-        step: (marketState.priceHistory?.length || 0) + 1,
-        timeLabel: simClock,
-      };
-
-      INITIAL_STOCKS.forEach((info) => {
-        const cur = marketState.stocks?.[info.ticker] || {
-          ticker: info.ticker,
-          price: info.initialPrice,
-          openPrice: info.initialPrice,
-          prevPrice: info.initialPrice,
-          highPrice: info.initialPrice,
-          lowPrice: info.initialPrice,
-          changePct: 0,
-          momentum: 0,
+        const nextStocks = {};
+        const historyPoint = {
+          step: (prevMarket.priceHistory?.length || 0) + 1,
+          timeLabel: simClock,
         };
 
-        // 1. Impulso de notícia recente (momentum) + oscilação natural do mercado
-        const currentMomentum = Number(cur.momentum || 0);
-        const momentumStep = currentMomentum * 0.35; // Aplica 35% do impacto restante neste tick
-        const remainingMomentum = Number((currentMomentum * 0.65).toFixed(4));
+        INITIAL_STOCKS.forEach((info) => {
+          const cur = prevMarket.stocks?.[info.ticker] || {
+            ticker: info.ticker,
+            price: info.initialPrice,
+            openPrice: info.initialPrice,
+            prevPrice: info.initialPrice,
+            highPrice: info.initialPrice,
+            lowPrice: info.initialPrice,
+            changePct: 0,
+            momentum: 0,
+          };
 
-        // Ruído estocástico realista proporcional à volatilidade da empresa
-        const randomShock = (Math.random() - 0.492) * 2 * info.volatility * (0.7 + 0.3 * speed);
-        const pctMove = momentumStep + randomShock;
+          const currentMomentum = Number(cur.momentum || 0);
+          const momentumStep = currentMomentum * 0.35;
+          const remainingMomentum = Number((currentMomentum * 0.65).toFixed(4));
 
-        const rawNextPrice = cur.price * (1 + pctMove);
-        const nextPrice = Math.max(1.5, Number(rawNextPrice.toFixed(2)));
-        const openPrice = cur.openPrice || info.initialPrice;
-        const changePct = Number((((nextPrice - openPrice) / openPrice) * 100).toFixed(2));
+          const randomShock =
+            (Math.random() - 0.492) * 2 * info.volatility * (0.7 + 0.3 * speed);
+          const pctMove = momentumStep + randomShock;
 
-        nextStocks[info.ticker] = {
-          ...cur,
-          prevPrice: cur.price,
-          price: nextPrice,
-          highPrice: Math.max(cur.highPrice || nextPrice, nextPrice),
-          lowPrice: Math.min(cur.lowPrice || nextPrice, nextPrice),
-          changePct,
-          lastTickDelta: Number((nextPrice - cur.price).toFixed(2)),
-          momentum: Math.abs(remainingMomentum) < 0.001 ? 0 : remainingMomentum,
-        };
+          const rawNextPrice = cur.price * (1 + pctMove);
+          const nextPrice = Math.max(1.5, Number(rawNextPrice.toFixed(2)));
+          const openPrice = cur.openPrice || info.initialPrice;
+          const changePct = Number((((nextPrice - openPrice) / openPrice) * 100).toFixed(2));
 
-        historyPoint[info.ticker] = nextPrice;
-      });
+          nextStocks[info.ticker] = {
+            ...cur,
+            prevPrice: cur.price,
+            price: nextPrice,
+            highPrice: Math.max(cur.highPrice || nextPrice, nextPrice),
+            lowPrice: Math.min(cur.lowPrice || nextPrice, nextPrice),
+            changePct,
+            lastTickDelta: Number((nextPrice - cur.price).toFixed(2)),
+            momentum: Math.abs(remainingMomentum) < 0.001 ? 0 : remainingMomentum,
+          };
 
-      const nextHistory = [...(marketState.priceHistory || []), historyPoint].slice(-80);
-      let nextNewsFeed = [...(marketState.newsFeed || [])];
+          historyPoint[info.ticker] = nextPrice;
+        });
 
-      // Verificar se deve disparar notícia automática (a cada ~60s simulados quando autoNews = true)
-      if (marketState.autoNews && nextElapsed < duration - 15) {
-        const lastNewsTime = nextNewsFeed[0]?.timestamp || 0;
-        const cooldownMs = Math.max(25000, Math.floor(65000 / speed));
-        if (now - lastNewsTime > cooldownMs) {
-          const available = MARKET_SCENARIOS.filter((s) => !usedScenarioIdsRef.current.has(s.id));
-          const pool = available.length > 0 ? available : MARKET_SCENARIOS;
-          const randomScen = pool[Math.floor(Math.random() * pool.length)];
-          if (randomScen) {
-            usedScenarioIdsRef.current.add(randomScen.id);
-            const newsItem = {
-              id: `${randomScen.id}_${now}`,
-              channel: randomScen.channel,
-              title: randomScen.title,
-              summary: randomScen.summary,
-              educationalNote: randomScen.educationalNote,
-              impacts: randomScen.impacts,
-              timestamp: now,
-              marketTime: simClock,
-            };
-            nextNewsFeed = [newsItem, ...nextNewsFeed].slice(0, 30);
+        const nextHistory = [...(prevMarket.priceHistory || []), historyPoint].slice(-80);
+        let nextNewsFeed = [...(prevMarket.newsFeed || [])];
 
-            // Aplica 45% do impacto imediatamente e 55% no momentum dos próximos ticks
-            Object.entries(randomScen.impacts).forEach(([tk, impactPct]) => {
-              if (nextStocks[tk]) {
-                const st = nextStocks[tk];
-                const immediatePrice = Math.max(
-                  1.5,
-                  Number((st.price * (1 + impactPct * 0.45)).toFixed(2))
-                );
-                st.price = immediatePrice;
-                st.highPrice = Math.max(st.highPrice, immediatePrice);
-                st.lowPrice = Math.min(st.lowPrice, immediatePrice);
-                st.changePct = Number(
-                  (((immediatePrice - st.openPrice) / st.openPrice) * 100).toFixed(2)
-                );
-                st.momentum = Number(((st.momentum || 0) + impactPct * 0.55).toFixed(4));
-                historyPoint[tk] = immediatePrice;
-              }
-            });
+        if (prevMarket.autoNews && nextElapsed < duration - 15) {
+          const lastNewsTime = nextNewsFeed[0]?.timestamp || 0;
+          const cooldownMs = Math.max(25000, Math.floor(60000 / speed));
+          if (now - lastNewsTime > cooldownMs) {
+            const available = MARKET_SCENARIOS.filter(
+              (s) => !usedScenarioIdsRef.current.has(s.id)
+            );
+            const pool = available.length > 0 ? available : MARKET_SCENARIOS;
+            const randomScen = pool[Math.floor(Math.random() * pool.length)];
+            if (randomScen) {
+              usedScenarioIdsRef.current.add(randomScen.id);
+              const newsItem = {
+                id: `${randomScen.id}_${now}`,
+                channel: randomScen.channel,
+                title: randomScen.title,
+                summary: randomScen.summary,
+                educationalNote: randomScen.educationalNote,
+                impacts: randomScen.impacts,
+                timestamp: now,
+                marketTime: simClock,
+              };
+              nextNewsFeed = [newsItem, ...nextNewsFeed].slice(0, 30);
+
+              Object.entries(randomScen.impacts).forEach(([tk, impactPct]) => {
+                if (nextStocks[tk]) {
+                  const st = nextStocks[tk];
+                  const immediatePrice = Math.max(
+                    1.5,
+                    Number((st.price * (1 + impactPct * 0.45)).toFixed(2))
+                  );
+                  st.price = immediatePrice;
+                  st.highPrice = Math.max(st.highPrice, immediatePrice);
+                  st.lowPrice = Math.min(st.lowPrice, immediatePrice);
+                  st.changePct = Number(
+                    (((immediatePrice - st.openPrice) / st.openPrice) * 100).toFixed(2)
+                  );
+                  st.momentum = Number(((st.momentum || 0) + impactPct * 0.55).toFixed(4));
+                  historyPoint[tk] = immediatePrice;
+                }
+              });
+            }
           }
         }
-      }
 
-      const nextStatus = nextElapsed >= duration ? "encerrado" : "pregao_aberto";
-      if (nextStatus === "encerrado") {
-        soundFX.playBell();
-      }
+        const nextStatus = nextElapsed >= duration ? "encerrado" : "pregao_aberto";
+        if (nextStatus === "encerrado") {
+          soundFX.playBell();
+        }
 
-      await fetch("/api/investimento", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "adminUpdateMarket",
-          marketPatch: {
-            status: nextStatus,
-            elapsedSeconds: nextElapsed,
-            stocks: nextStocks,
-            priceHistory: nextHistory,
-            newsFeed: nextNewsFeed,
-          },
-        }),
-      }).catch(() => {});
+        const patch = {
+          status: nextStatus,
+          elapsedSeconds: nextElapsed,
+          stocks: nextStocks,
+          priceHistory: nextHistory,
+          newsFeed: nextNewsFeed,
+          updatedAt: now,
+        };
+
+        persistMarketPatch(patch);
+        return { ...prevMarket, ...patch };
+      });
     }, 3000);
 
     return () => clearInterval(tickInterval);
-  }, [marketState, isAdmin]);
+  }, [marketState?.status, persistMarketPatch]);
 
   // ============================================================================
-  // AÇÕES DO JOGADOR (ENTRAR, COMPRAR E VENDER AÇÕES NA CORRETORA BANCO VILA)
+  // AÇÕES DO JOGADOR (ENTRAR INSTANTANEAMENTE, COMPRAR E VENDER AÇÕES)
   // ============================================================================
   const handleJoinAsStudent = async (e) => {
-    e.preventDefault();
-    const cleanName = inputName.trim();
-    if (!cleanName) return;
+    if (e && e.preventDefault) e.preventDefault();
+    const cleanName = (inputName || "").trim() || "Investidor";
 
     const existingId =
       player?.id || `inv_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
+    const newPlayer = {
+      id: existingId,
+      name: cleanName,
+      turma: inputTurma || "7º Ano",
+      avatar: inputAvatar || "🐂",
+      cash: INITIAL_CASH,
+      holdings: {},
+      netWorth: INITIAL_CASH,
+      profit: 0,
+      profitPct: 0,
+      tradesCount: 0,
+      tradeHistory: [],
+      lastSeen: Date.now(),
+      online: true,
+      createdAt: Date.now(),
+    };
+
+    // 1. Entrada IMEDIATA na tela (0ms de espera, nunca trava!)
+    setPlayer(newPlayer);
     try {
-      const res = await fetch("/api/investimento", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "joinPlayer",
-          playerId: existingId,
-          name: cleanName,
-          turma: inputTurma,
-          avatar: inputAvatar,
-        }),
-      });
-      const data = await res.json();
-      if (data.player) {
-        setPlayer(data.player);
-        localStorage.setItem("bv_invest_player", JSON.stringify(data.player));
-        soundFX.playBuy();
-        showToastMsg(
-          "success",
-          `Bem-vindo(a) ao Banco Vila, ${cleanName}!`,
-          "Você recebeu R$ 10.000,00 para investir na Bolsa B3V."
-        );
-      }
-    } catch (err) {
-      console.error("Erro ao entrar:", err);
-    }
+      localStorage.setItem("bv_invest_player", JSON.stringify(newPlayer));
+    } catch (err) {}
+
+    soundFX.playBuy();
+    showToastMsg(
+      "success",
+      `Bem-vindo(a) ao Banco Vila, ${cleanName}!`,
+      "Você recebeu R$ 10.000,00 para investir na Bolsa B3V."
+    );
+
+    // 2. Sincroniza em segundo plano com o Firestore e a API
+    setDoc(doc(db, "investimento_jogadores", existingId), newPlayer, { merge: true }).catch(
+      () => {}
+    );
+    fetch("/api/investimento", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "joinPlayer",
+        playerId: existingId,
+        name: cleanName,
+        turma: inputTurma,
+        avatar: inputAvatar,
+      }),
+    }).catch(() => {});
   };
 
   const handleLoginAdmin = (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     const pwd = adminPassword.trim().toLowerCase();
     if (
       pwd === "vila@123" ||
@@ -540,7 +652,9 @@ export default function InvestimentoPage() {
       setIsAdmin(true);
       setShowAdminPanel(true);
       setAdminError("");
-      localStorage.setItem("bv_invest_admin", "true");
+      try {
+        localStorage.setItem("bv_invest_admin", "true");
+      } catch (err) {}
       if (!player) {
         const profPlayer = {
           id: "prof_admin_vila",
@@ -553,10 +667,17 @@ export default function InvestimentoPage() {
           tradeHistory: [],
         };
         setPlayer(profPlayer);
+        try {
+          localStorage.setItem("bv_invest_player", JSON.stringify(profPlayer));
+        } catch (err) {}
       }
-      showToastMsg("success", "Acesso de Professor Liberado!", "Controle o pregão e dispare notícias.");
+      showToastMsg(
+        "success",
+        "Acesso de Professor Liberado!",
+        "Controle o pregão e dispare notícias."
+      );
     } else {
-      setAdminError("Senha incorreta. Dica: use a senha padrão do portal (Vila@123 ou professor).");
+      setAdminError("Senha incorreta. Dica: use Vila@123 ou professor.");
     }
   };
 
@@ -614,9 +735,7 @@ export default function InvestimentoPage() {
       }
 
       const newQty = pos.qty + qty;
-      const newAvgPrice = Number(
-        ((pos.qty * pos.avgPrice + totalCost) / newQty).toFixed(2)
-      );
+      const newAvgPrice = Number(((pos.qty * pos.avgPrice + totalCost) / newQty).toFixed(2));
       holdings[selectedTicker] = { qty: newQty, avgPrice: newAvgPrice };
       const newCash = Number((currentCash - totalCost).toFixed(2));
 
@@ -640,7 +759,9 @@ export default function InvestimentoPage() {
       };
 
       setPlayer(updatedPlayer);
-      localStorage.setItem("bv_invest_player", JSON.stringify(updatedPlayer));
+      try {
+        localStorage.setItem("bv_invest_player", JSON.stringify(updatedPlayer));
+      } catch (e) {}
       soundFX.playBuy();
       showToastMsg(
         "success",
@@ -648,7 +769,10 @@ export default function InvestimentoPage() {
         `Total investido: R$ ${totalCost.toFixed(2)} ( R$ ${price.toFixed(2)} / ação )`
       );
 
-      await fetch("/api/investimento", {
+      setDoc(doc(db, "investimento_jogadores", updatedPlayer.id), updatedPlayer, {
+        merge: true,
+      }).catch(() => {});
+      fetch("/api/investimento", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -698,7 +822,9 @@ export default function InvestimentoPage() {
       };
 
       setPlayer(updatedPlayer);
-      localStorage.setItem("bv_invest_player", JSON.stringify(updatedPlayer));
+      try {
+        localStorage.setItem("bv_invest_player", JSON.stringify(updatedPlayer));
+      } catch (e) {}
       soundFX.playSell();
       showToastMsg(
         profitOnSale >= 0 ? "success" : "info",
@@ -708,7 +834,10 @@ export default function InvestimentoPage() {
           : `Resultado nesta operação: R$ ${profitOnSale.toFixed(2)}`
       );
 
-      await fetch("/api/investimento", {
+      setDoc(doc(db, "investimento_jogadores", updatedPlayer.id), updatedPlayer, {
+        merge: true,
+      }).catch(() => {});
+      fetch("/api/investimento", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -722,58 +851,37 @@ export default function InvestimentoPage() {
   };
 
   // ============================================================================
-  // FUNÇÕES ADMINISTRATIVAS DO PROFESSOR
+  // FUNÇÕES ADMINISTRATIVAS DO PROFESSOR (COM ATUALIZAÇÃO IMEDIATA)
   // ============================================================================
   const handleAdminStartMarket = async () => {
     soundFX.playBell();
-    await fetch("/api/investimento", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "adminUpdateMarket",
-        marketPatch: { status: "pregao_aberto" },
-      }),
-    });
-    fetchMarketViaApi();
-    showToastMsg("success", "🔔 Pregão Iniciado!", "O relógio de 30 minutos e os gráficos estão rodando.");
+    setMarketState((prev) => ({ ...prev, status: "pregao_aberto", updatedAt: Date.now() }));
+    await persistMarketPatch({ status: "pregao_aberto" });
+    showToastMsg(
+      "success",
+      "🔔 Pregão Iniciado!",
+      "O relógio de 30 minutos e os gráficos estão rodando."
+    );
   };
 
   const handleAdminPauseMarket = async () => {
-    await fetch("/api/investimento", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "adminUpdateMarket",
-        marketPatch: { status: "pausado" },
-      }),
-    });
-    fetchMarketViaApi();
+    setMarketState((prev) => ({ ...prev, status: "pausado", updatedAt: Date.now() }));
+    await persistMarketPatch({ status: "pausado" });
     showToastMsg("info", "⏸️ Pregão Pausado", "As cotações estão temporariamente congeladas.");
   };
 
   const handleAdminEndMarket = async () => {
     soundFX.playBell();
-    await fetch("/api/investimento", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "adminUpdateMarket",
-        marketPatch: { status: "encerrado" },
-      }),
-    });
-    fetchMarketViaApi();
+    setMarketState((prev) => ({ ...prev, status: "encerrado", updatedAt: Date.now() }));
+    await persistMarketPatch({ status: "encerrado" });
   };
 
   const handleAdminResetMarket = async (clearPlayers = false) => {
     usedScenarioIdsRef.current.clear();
-    await fetch("/api/investimento", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "adminResetGame",
-        clearPlayers,
-      }),
-    });
+    const fresh = createLocalInitialMarketState();
+    setMarketState(fresh);
+    await persistMarketPatch(fresh);
+
     if (player) {
       const resetP = {
         ...player,
@@ -783,34 +891,47 @@ export default function InvestimentoPage() {
         tradeHistory: [],
       };
       setPlayer(resetP);
-      localStorage.setItem("bv_invest_player", JSON.stringify(resetP));
+      try {
+        localStorage.setItem("bv_invest_player", JSON.stringify(resetP));
+      } catch (e) {}
     }
-    fetchMarketViaApi();
-    showToastMsg("success", "🔄 Mercado Reiniciado!", "Todos os alunos voltaram para R$ 10.000,00.");
+
+    fetch("/api/investimento", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "adminResetGame",
+        clearPlayers,
+      }),
+    }).catch(() => {});
+
+    showToastMsg(
+      "success",
+      "🔄 Mercado Reiniciado!",
+      "Todos os alunos voltaram para R$ 10.000,00."
+    );
   };
 
   const handleAdminTriggerScenario = async (scenario) => {
-    if (!marketState) return;
     const now = Date.now();
     const simClock = formatSimulatedClock(
-      marketState.elapsedSeconds || 0,
-      marketState.durationSeconds || DEFAULT_DURATION_SECONDS
+      marketState?.elapsedSeconds || 0,
+      marketState?.durationSeconds || DEFAULT_DURATION_SECONDS
     );
 
-    const nextStocks = { ...(marketState.stocks || {}) };
+    const nextStocks = { ...(marketState?.stocks || {}) };
     const latestPoint = {
-      ...(marketState.priceHistory?.[marketState.priceHistory.length - 1] || {
+      ...(marketState?.priceHistory?.[marketState.priceHistory.length - 1] || {
         step: 1,
         timeLabel: simClock,
       }),
-      step: (marketState.priceHistory?.length || 0) + 1,
+      step: (marketState?.priceHistory?.length || 0) + 1,
       timeLabel: simClock,
     };
 
     Object.entries(scenario.impacts || {}).forEach(([tk, pct]) => {
       if (nextStocks[tk]) {
         const st = { ...nextStocks[tk] };
-        // Aplica 55% do choque na hora e deixa 45% como tendência nos próximos segundos
         const newPrice = Math.max(1.5, Number((st.price * (1 + pct * 0.55)).toFixed(2)));
         st.prevPrice = st.price;
         st.price = newPrice;
@@ -834,23 +955,18 @@ export default function InvestimentoPage() {
       marketTime: simClock,
     };
 
-    const nextHistory = [...(marketState.priceHistory || []), latestPoint].slice(-80);
-    const nextNewsFeed = [newsItem, ...(marketState.newsFeed || [])].slice(0, 30);
+    const nextHistory = [...(marketState?.priceHistory || []), latestPoint].slice(-80);
+    const nextNewsFeed = [newsItem, ...(marketState?.newsFeed || [])].slice(0, 30);
 
-    await fetch("/api/investimento", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "adminUpdateMarket",
-        marketPatch: {
-          stocks: nextStocks,
-          priceHistory: nextHistory,
-          newsFeed: nextNewsFeed,
-        },
-      }),
-    });
+    const patch = {
+      stocks: nextStocks,
+      priceHistory: nextHistory,
+      newsFeed: nextNewsFeed,
+      updatedAt: now,
+    };
 
-    fetchMarketViaApi();
+    setMarketState((prev) => ({ ...prev, ...patch }));
+    await persistMarketPatch(patch);
     showToastMsg("success", "📢 Plantão Disparado!", scenario.title);
   };
 
@@ -878,48 +994,49 @@ export default function InvestimentoPage() {
       [ticker]: newPrice,
     };
 
-    await fetch("/api/investimento", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "adminUpdateMarket",
-        marketPatch: {
-          stocks: nextStocks,
-          priceHistory: [...(marketState.priceHistory || []), latestPoint].slice(-80),
-        },
-      }),
-    });
-    fetchMarketViaApi();
+    const patch = {
+      stocks: nextStocks,
+      priceHistory: [...(marketState.priceHistory || []), latestPoint].slice(-80),
+      updatedAt: Date.now(),
+    };
+
+    setMarketState((prev) => ({ ...prev, ...patch }));
+    await persistMarketPatch(patch);
   };
 
   const handleAdminPayDividends = async (yieldPct = 0.03) => {
-    const res = await fetch("/api/investimento", {
+    // Paga imediatamente para o usuário atual se tiver ações
+    if (player && portfolioMetrics.investedMarketValue > 0) {
+      const divAmount = Number((portfolioMetrics.investedMarketValue * yieldPct).toFixed(2));
+      const updatedP = {
+        ...player,
+        cash: Number((player.cash + divAmount).toFixed(2)),
+      };
+      setPlayer(updatedP);
+      try {
+        localStorage.setItem("bv_invest_player", JSON.stringify(updatedP));
+      } catch (e) {}
+    }
+
+    await fetch("/api/investimento", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "adminPayDividends",
         yieldPct,
       }),
-    });
-    const data = await res.json();
-    fetchMarketViaApi();
+    }).catch(() => {});
+
     showToastMsg(
       "success",
       "💰 Dividendos Distribuídos!",
-      `${data.totalPaidPlayers || 0} investidor(es) com ações na carteira receberam dividendos em dinheiro.`
+      "Todos os investidores com ações na carteira receberam +3% em dinheiro!"
     );
   };
 
   const handleAdminUpdateSettings = async (patch) => {
-    await fetch("/api/investimento", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "adminUpdateMarket",
-        marketPatch: patch,
-      }),
-    });
-    fetchMarketViaApi();
+    setMarketState((prev) => ({ ...prev, ...patch, updatedAt: Date.now() }));
+    await persistMarketPatch(patch);
   };
 
   const formatBRL = (val) =>
@@ -927,7 +1044,8 @@ export default function InvestimentoPage() {
 
   const remainingSeconds = Math.max(
     0,
-    (marketState?.durationSeconds || DEFAULT_DURATION_SECONDS) - (marketState?.elapsedSeconds || 0)
+    (marketState?.durationSeconds || DEFAULT_DURATION_SECONDS) -
+      (marketState?.elapsedSeconds || 0)
   );
   const remMins = String(Math.floor(remainingSeconds / 60)).padStart(2, "0");
   const remSecs = String(remainingSeconds % 60).padStart(2, "0");
@@ -937,19 +1055,19 @@ export default function InvestimentoPage() {
   );
 
   const sortedPlayers = useMemo(() => {
-    return [...players].sort((a, b) => (b.netWorth || INITIAL_CASH) - (a.netWorth || INITIAL_CASH));
-  }, [players]);
+    return [...allPlayersWithMe].sort(
+      (a, b) => (b.netWorth || INITIAL_CASH) - (a.netWorth || INITIAL_CASH)
+    );
+  }, [allPlayersWithMe]);
 
   // ============================================================================
   // TELA DE ENTRADA (SE O ALUNO/PROFESSOR AINDA NÃO ENTROU NA CORRETORA)
   // ============================================================================
-  if (!player && !isAdmin) {
+  if (!player) {
     return (
       <main className="min-h-screen bg-slate-950 text-white flex flex-col justify-between relative overflow-hidden">
-        {/* Fundo decorativo estilo Terminal Financeiro */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-950/40 via-slate-950 to-slate-950 pointer-events-none" />
 
-        {/* Faixa de Cotações no Topo */}
         <div className="relative z-10 bg-slate-900/90 border-b border-slate-800 px-4 py-2 flex items-center justify-between text-xs">
           <div className="flex items-center gap-2 font-black text-emerald-400">
             <Building2 className="w-4 h-4" />
@@ -961,7 +1079,6 @@ export default function InvestimentoPage() {
         </div>
 
         <div className="relative z-10 container mx-auto px-4 py-8 flex flex-col lg:flex-row items-center justify-center gap-10 my-auto">
-          {/* Coluna Esquerda: Apresentação do Jogo */}
           <div className="max-w-xl space-y-6 text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-extrabold uppercase tracking-wider">
               <Sparkles className="w-4 h-4" /> Educação Financeira na Prática • Pregão de 30 Minutos
@@ -982,30 +1099,37 @@ export default function InvestimentoPage() {
             </div>
 
             <p className="text-base sm:text-lg text-slate-300 leading-relaxed">
-              Você acaba de receber <strong className="text-emerald-400 font-black">R$ 10.000,00</strong> na sua conta do{" "}
-              <strong className="text-white">Banco Vila</strong>! Analise os gráficos, acompanhe os plantões da{" "}
-              <span className="text-rose-400 font-semibold">G10 Economia</span>,{" "}
+              Você acaba de receber{" "}
+              <strong className="text-emerald-400 font-black">R$ 10.000,00</strong> na sua conta do{" "}
+              <strong className="text-white">Banco Vila</strong>! Analise os gráficos, acompanhe os
+              plantões da <span className="text-rose-400 font-semibold">G10 Economia</span>,{" "}
               <span className="text-emerald-400 font-semibold">Valor da Vila</span> e{" "}
-              <span className="text-blue-400 font-semibold">InfoGrana</span>, e compre e venda ações em tempo real!
+              <span className="text-blue-400 font-semibold">InfoGrana</span>, e compre e venda ações
+              em tempo real!
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left">
               <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded-xl">
                 <div className="text-emerald-400 font-black text-lg">R$ 10.000,00</div>
-                <p className="text-xs text-slate-400 mt-0.5">Capital inicial na sua conta da corretora</p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Capital inicial na sua conta da corretora
+                </p>
               </div>
               <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded-xl">
                 <div className="text-amber-400 font-black text-lg">10 Empresas</div>
-                <p className="text-xs text-slate-400 mt-0.5">Baseadas nas gigantes reais da Bolsa do Brasil</p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Baseadas nas gigantes reais da Bolsa do Brasil
+                </p>
               </div>
               <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded-xl">
                 <div className="text-cyan-400 font-black text-lg">Ao Vivo</div>
-                <p className="text-xs text-slate-400 mt-0.5">{players.length} investidor(es) conectado(s) agora</p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {players.length} investidor(es) conectado(s) agora
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Coluna Direita: Card de Acesso Aluno / Professor */}
           <div className="bg-slate-900/95 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl">
             <div className="grid grid-cols-2 gap-2 p-1 bg-slate-950 rounded-xl mb-6 border border-slate-800">
               <button
@@ -1042,7 +1166,7 @@ export default function InvestimentoPage() {
                     type="text"
                     required
                     maxLength={28}
-                    placeholder="Ex: João Silva"
+                    placeholder="Ex: Weslley"
                     value={inputName}
                     onChange={(e) => setInputName(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -1063,7 +1187,7 @@ export default function InvestimentoPage() {
                     <option value="1ª Série EM">1ª Série EM</option>
                     <option value="2ª Série EM">2ª Série EM</option>
                     <option value="3ª Série EM">3ª Série EM</option>
-                    <option value="Convidado">Turma Geral / Convidado</option>
+                    <option value="Convidado">Turma Geral / Professor</option>
                   </select>
                 </div>
 
@@ -1102,7 +1226,9 @@ export default function InvestimentoPage() {
             ) : (
               <form onSubmit={handleLoginAdmin} className="space-y-4">
                 <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 leading-relaxed">
-                  No <strong>Modo Professor Administrador</strong>, você controla o tempo do pregão (até 30 min), dispara notícias econômicas do dia a dia e encerra a partida para exibir o ranking de quem mais ganhou e quem mais perdeu.
+                  No <strong>Modo Professor Administrador</strong>, você controla o tempo do pregão
+                  (até 30 min), dispara notícias econômicas do dia a dia e encerra a partida para
+                  exibir o ranking de quem mais ganhou e quem mais perdeu.
                 </div>
 
                 {adminError && (
@@ -1176,11 +1302,7 @@ export default function InvestimentoPage() {
                 <span>{st.icon}</span>
                 <span className="font-black text-white">{st.ticker}</span>
                 <span className="font-bold text-slate-200">R$ {Number(live.price).toFixed(2)}</span>
-                <span
-                  className={`font-extrabold ${
-                    up ? "text-emerald-400" : "text-rose-400"
-                  }`}
-                >
+                <span className={`font-extrabold ${up ? "text-emerald-400" : "text-rose-400"}`}>
                   {up ? "▲" : "▼"} {up ? "+" : ""}
                   {Number(live.changePct || 0).toFixed(2)}%
                 </span>
@@ -1193,7 +1315,6 @@ export default function InvestimentoPage() {
       {/* 2. HEADER DO BANCO VILA CORRETORA */}
       <header className="bg-slate-900/95 border-b border-slate-800 px-4 py-3 sticky top-0 z-30 backdrop-blur-md">
         <div className="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-4">
-          {/* Logo Banco Vila + Status do Pregão */}
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg">
               BV
@@ -1232,18 +1353,17 @@ export default function InvestimentoPage() {
               </div>
               <p className="text-xs text-slate-400 flex items-center gap-2">
                 <span>
-                  {player?.avatar || "🦈"} <strong className="text-slate-200">{player?.name}</strong> (
-                  {player?.turma || "Geral"})
+                  {player?.avatar || "🦈"} <strong className="text-slate-200">{player?.name}</strong>{" "}
+                  ({player?.turma || "Geral"})
                 </span>
                 <span>•</span>
                 <span className="text-cyan-400 font-semibold">
-                  {players.length} investidor(es) online
+                  {allPlayersWithMe.length} investidor(es) online
                 </span>
               </p>
             </div>
           </div>
 
-          {/* Relógio do Pregão (Máx 30 min) */}
           <div className="flex items-center gap-3 bg-slate-950 border border-slate-800 px-4 py-2 rounded-xl">
             <Clock className="w-5 h-5 text-amber-400" />
             <div>
@@ -1273,7 +1393,6 @@ export default function InvestimentoPage() {
             </div>
           </div>
 
-          {/* Resumo Financeiro da Conta do Aluno */}
           <div className="flex flex-wrap items-center gap-3">
             <div className="bg-slate-950 border border-slate-800 px-3.5 py-1.5 rounded-xl">
               <span className="block text-[10px] uppercase font-bold text-slate-400">
@@ -1315,7 +1434,6 @@ export default function InvestimentoPage() {
             </div>
           </div>
 
-          {/* Botões de Ação Rápida (Glossário, Som, Admin, Sair) */}
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowGlossary(true)}
@@ -1335,7 +1453,11 @@ export default function InvestimentoPage() {
               className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer"
               title={isMuted ? "Ativar Som" : "Silenciar"}
             >
-              {isMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
+              {isMuted ? (
+                <VolumeX className="w-4 h-4 text-rose-400" />
+              ) : (
+                <Volume2 className="w-4 h-4 text-emerald-400" />
+              )}
             </button>
 
             {isAdmin ? (
@@ -1358,7 +1480,9 @@ export default function InvestimentoPage() {
                   ) {
                     setIsAdmin(true);
                     setShowAdminPanel(true);
-                    localStorage.setItem("bv_invest_admin", "true");
+                    try {
+                      localStorage.setItem("bv_invest_admin", "true");
+                    } catch (e) {}
                   } else if (pwd) {
                     window.alert("Senha incorreta.");
                   }
@@ -1374,8 +1498,10 @@ export default function InvestimentoPage() {
             <button
               onClick={() => {
                 if (window.confirm("Deseja sair ou trocar de usuário?")) {
-                  localStorage.removeItem("bv_invest_player");
-                  localStorage.removeItem("bv_invest_admin");
+                  try {
+                    localStorage.removeItem("bv_invest_player");
+                    localStorage.removeItem("bv_invest_admin");
+                  } catch (e) {}
                   setPlayer(null);
                   setIsAdmin(false);
                   setShowAdminPanel(false);
@@ -1392,11 +1518,10 @@ export default function InvestimentoPage() {
 
       {/* CONTEÚDO PRINCIPAL */}
       <main className="max-w-[1600px] w-full mx-auto px-3 sm:px-6 py-4 space-y-4 flex-1">
-        {/* PAINEL DO PROFESSOR ADMINISTRADOR (QUANDO ABERTO) */}
         {isAdmin && showAdminPanel && (
           <AdminPanel
             marketState={marketState}
-            players={players}
+            players={allPlayersWithMe}
             onStartMarket={handleAdminStartMarket}
             onPauseMarket={handleAdminPauseMarket}
             onEndMarket={handleAdminEndMarket}
@@ -1410,7 +1535,6 @@ export default function InvestimentoPage() {
           />
         )}
 
-        {/* BANNER DE PLANTÃO DE NOTÍCIAS (BREAKING NEWS) */}
         {breakingBanner && (
           <div className="bg-gradient-to-r from-rose-950/90 via-slate-900 to-slate-900 border-2 border-rose-500/70 rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-fade-in">
             <div className="space-y-1">
@@ -1454,9 +1578,8 @@ export default function InvestimentoPage() {
           </div>
         )}
 
-        {/* GRADE DE 3 COLUNAS DO HOME BROKER */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-          {/* COLUNA ESQUERDA (3 cols): LISTA DE EMPRESAS DA BOLSA VILA */}
+          {/* COLUNA ESQUERDA: LISTA DE EMPRESAS */}
           <div className="lg:col-span-3 bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-3">
             <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
               <div>
@@ -1537,11 +1660,9 @@ export default function InvestimentoPage() {
             </div>
           </div>
 
-          {/* COLUNA CENTRAL (5 cols): GRÁFICO DE ANÁLISE + BOLETA DE COMPRA E VENDA */}
+          {/* COLUNA CENTRAL: GRÁFICO + BOLETA */}
           <div className="lg:col-span-5 space-y-4">
-            {/* CARD DO GRÁFICO E DETALHES DA EMPRESA */}
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4">
-              {/* Cabeçalho do Ativo Selecionado */}
               <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-800 pb-3.5">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center text-3xl border border-slate-700">
@@ -1555,8 +1676,8 @@ export default function InvestimentoPage() {
                       </span>
                     </div>
                     <p className="text-xs text-slate-400">
-                      Setor: <strong className="text-slate-200">{selectedStockInfo.sector}</strong> •
-                      Inspirada na:{" "}
+                      Setor: <strong className="text-slate-200">{selectedStockInfo.sector}</strong>{" "}
+                      • Inspirada na:{" "}
                       <strong className="text-amber-400">
                         {selectedStockInfo.realInspiration}
                       </strong>
@@ -1586,7 +1707,6 @@ export default function InvestimentoPage() {
                 </div>
               </div>
 
-              {/* GRÁFICO DE COTAÇÃO EM TEMPO REAL */}
               <div className="h-64 w-full bg-slate-950/80 rounded-xl p-3 border border-slate-800/80">
                 <div className="flex items-center justify-between text-[11px] text-slate-400 mb-2 px-1">
                   <span className="font-bold text-slate-300">
@@ -1625,11 +1745,7 @@ export default function InvestimentoPage() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                    <XAxis
-                      dataKey="timeLabel"
-                      stroke="#64748b"
-                      tick={{ fontSize: 11 }}
-                    />
+                    <XAxis dataKey="timeLabel" stroke="#64748b" tick={{ fontSize: 11 }} />
                     <YAxis
                       domain={["auto", "auto"]}
                       stroke="#64748b"
@@ -1665,7 +1781,6 @@ export default function InvestimentoPage() {
                 </ResponsiveContainer>
               </div>
 
-              {/* Raio-X Pedagógico da Empresa */}
               <div className="bg-slate-950/90 border border-slate-800 rounded-xl p-3.5 space-y-1.5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-xs font-extrabold uppercase text-cyan-400">
@@ -1689,7 +1804,6 @@ export default function InvestimentoPage() {
               </div>
             </div>
 
-            {/* BOLETA DE COMPRA E VENDA DO BANCO VILA CORRETORA */}
             <div className="bg-slate-900 border-2 border-emerald-500/30 rounded-2xl p-4 sm:p-5 space-y-4 shadow-xl">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
                 <div>
@@ -1702,7 +1816,6 @@ export default function InvestimentoPage() {
                   </p>
                 </div>
 
-                {/* Posição atual do aluno nesta ação */}
                 <div className="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl text-right">
                   <span className="block text-[10px] text-slate-400 uppercase font-bold">
                     Sua Posição em {selectedTicker}
@@ -1718,11 +1831,13 @@ export default function InvestimentoPage() {
                 </div>
               </div>
 
-              {/* Se o aluno já possui esta ação, mostra o lucro/prejuízo específico nela */}
               {currentHolding.qty > 0 && (
                 <div className="bg-slate-950/90 border border-slate-800 rounded-xl px-3.5 py-2.5 flex items-center justify-between text-xs">
                   <span className="text-slate-300">
-                    Resultado se vender suas <strong>{currentHolding.qty}x {selectedTicker}</strong>{" "}
+                    Resultado se vender suas{" "}
+                    <strong>
+                      {currentHolding.qty}x {selectedTicker}
+                    </strong>{" "}
                     agora:
                   </span>
                   {(() => {
@@ -1749,7 +1864,6 @@ export default function InvestimentoPage() {
                 </div>
               )}
 
-              {/* Seletor de Quantidade e Atalhos */}
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between text-xs">
                   <label className="font-bold text-slate-300">Quantidade de Ações:</label>
@@ -1811,7 +1925,6 @@ export default function InvestimentoPage() {
                 </div>
               </div>
 
-              {/* Resumo do Valor Financeiro da Ordem */}
               <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
                 <div>
                   <span className="text-xs text-slate-400 block">Valor Total da Ordem:</span>
@@ -1821,11 +1934,12 @@ export default function InvestimentoPage() {
                 </div>
                 <div className="text-right text-xs text-slate-400">
                   <div>Cotação unitária: {formatBRL(selectedStockLive.price)}</div>
-                  <div className="text-emerald-400 font-semibold">Taxa de Corretagem: R$ 0,00 (Zero)</div>
+                  <div className="text-emerald-400 font-semibold">
+                    Taxa de Corretagem: R$ 0,00 (Zero)
+                  </div>
                 </div>
               </div>
 
-              {/* Botões COMPRAR e VENDER */}
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
@@ -1850,9 +1964,8 @@ export default function InvestimentoPage() {
             </div>
           </div>
 
-          {/* COLUNA DIREITA (4 cols): IMPRENSA BRASILEIRA, JOGADORES ONLINE E MINHA CARTEIRA */}
+          {/* COLUNA DIREITA: NOTÍCIAS, RANKING ONLINE E CARTEIRA */}
           <div className="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4">
-            {/* Abas da Coluna Direita */}
             <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-950 rounded-xl border border-slate-800">
               <button
                 onClick={() => setRightTab("noticias")}
@@ -1875,7 +1988,7 @@ export default function InvestimentoPage() {
                 }`}
               >
                 <Trophy className="w-3.5 h-3.5" />
-                Online ({players.length})
+                Online ({allPlayersWithMe.length})
               </button>
 
               <button
@@ -1891,7 +2004,6 @@ export default function InvestimentoPage() {
               </button>
             </div>
 
-            {/* ABA 1: CANAIS DE NOTÍCIAS DO BRASIL */}
             {rightTab === "noticias" && (
               <div className="space-y-3 max-h-[660px] overflow-y-auto pr-1">
                 <div className="flex flex-wrap gap-1.5 pb-1">
@@ -1953,7 +2065,6 @@ export default function InvestimentoPage() {
               </div>
             )}
 
-            {/* ABA 2: RANKING AO VIVO E JOGADORES ONLINE + TAPE READING */}
             {rightTab === "ranking" && (
               <div className="space-y-4 max-h-[660px] overflow-y-auto pr-1">
                 <div className="space-y-2">
@@ -1962,75 +2073,68 @@ export default function InvestimentoPage() {
                     <span>Patrimônio Total</span>
                   </div>
 
-                  {sortedPlayers.length === 0 ? (
-                    <p className="text-xs text-slate-500 text-center py-6">
-                      Nenhum jogador conectado ainda.
-                    </p>
-                  ) : (
-                    sortedPlayers.map((p, index) => {
-                      const diff = (p.netWorth || INITIAL_CASH) - INITIAL_CASH;
-                      const pct = ((diff / INITIAL_CASH) * 100).toFixed(2);
-                      const isMe = p.id === player?.id;
+                  {sortedPlayers.map((p, index) => {
+                    const diff = (p.netWorth || INITIAL_CASH) - INITIAL_CASH;
+                    const pct = ((diff / INITIAL_CASH) * 100).toFixed(2);
+                    const isMe = p.id === player?.id;
 
-                      return (
-                        <div
-                          key={p.id}
-                          className={`flex items-center justify-between p-3 rounded-xl border ${
-                            isMe
-                              ? "bg-emerald-950/40 border-emerald-500/60"
-                              : "bg-slate-950/90 border-slate-800"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <span
-                              className={`w-6 text-center font-black text-sm ${
-                                index === 0
-                                  ? "text-amber-400"
-                                  : index === 1
-                                  ? "text-slate-300"
-                                  : index === 2
-                                  ? "text-amber-600"
-                                  : "text-slate-500"
-                              }`}
-                            >
-                              {index + 1}º
+                    return (
+                      <div
+                        key={p.id}
+                        className={`flex items-center justify-between p-3 rounded-xl border ${
+                          isMe
+                            ? "bg-emerald-950/40 border-emerald-500/60"
+                            : "bg-slate-950/90 border-slate-800"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <span
+                            className={`w-6 text-center font-black text-sm ${
+                              index === 0
+                                ? "text-amber-400"
+                                : index === 1
+                                ? "text-slate-300"
+                                : index === 2
+                                ? "text-amber-600"
+                                : "text-slate-500"
+                            }`}
+                          >
+                            {index + 1}º
+                          </span>
+                          <span className="text-xl">{p.avatar || "🦈"}</span>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm font-bold text-white">{p.name}</span>
+                              {isMe && (
+                                <span className="px-1.5 py-0.5 rounded bg-emerald-500 text-slate-950 text-[9px] font-black uppercase">
+                                  Você
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[11px] text-slate-400">
+                              {p.turma || "Geral"} • {p.tradesCount || 0} ordens
                             </span>
-                            <span className="text-xl">{p.avatar || "🦈"}</span>
-                            <div>
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-sm font-bold text-white">{p.name}</span>
-                                {isMe && (
-                                  <span className="px-1.5 py-0.5 rounded bg-emerald-500 text-slate-950 text-[9px] font-black uppercase">
-                                    Você
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-[11px] text-slate-400">
-                                {p.turma || "Geral"} • {p.tradesCount || 0} ordens
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="text-right">
-                            <div className="text-sm font-black text-white">
-                              {formatBRL(p.netWorth || INITIAL_CASH)}
-                            </div>
-                            <div
-                              className={`text-xs font-extrabold ${
-                                diff >= 0 ? "text-emerald-400" : "text-rose-400"
-                              }`}
-                            >
-                              {diff >= 0 ? "+" : ""}
-                              {pct}%
-                            </div>
                           </div>
                         </div>
-                      );
-                    })
-                  )}
+
+                        <div className="text-right">
+                          <div className="text-sm font-black text-white">
+                            {formatBRL(p.netWorth || INITIAL_CASH)}
+                          </div>
+                          <div
+                            className={`text-xs font-extrabold ${
+                              diff >= 0 ? "text-emerald-400" : "text-rose-400"
+                            }`}
+                          >
+                            {diff >= 0 ? "+" : ""}
+                            {pct}%
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
-                {/* Fluxo de Ordens Ao Vivo (Tape Reading da Turma) */}
                 <div className="border-t border-slate-800 pt-3 space-y-2">
                   <h4 className="text-xs font-black uppercase text-cyan-400">
                     ⚡ Últimas Negociações na Bolsa Vila
@@ -2060,9 +2164,7 @@ export default function InvestimentoPage() {
                               {ord.qty}x {ord.ticker}
                             </strong>
                           </div>
-                          <span className="text-slate-400 font-mono">
-                            {formatBRL(ord.price)}
-                          </span>
+                          <span className="text-slate-400 font-mono">{formatBRL(ord.price)}</span>
                         </div>
                       ))}
                     </div>
@@ -2071,7 +2173,6 @@ export default function InvestimentoPage() {
               </div>
             )}
 
-            {/* ABA 3: MINHA CARTEIRA DE AÇÕES E EXTRATO */}
             {rightTab === "carteira" && (
               <div className="space-y-4 max-h-[660px] overflow-y-auto pr-1">
                 <div className="bg-slate-950 border border-slate-800 rounded-xl p-3.5 space-y-2">
@@ -2151,7 +2252,6 @@ export default function InvestimentoPage() {
         </div>
       </main>
 
-      {/* TOAST DE CONFIRMAÇÃO DE ORDENS E EVENTOS */}
       {toast && (
         <div className="fixed bottom-5 right-5 z-50 max-w-sm bg-slate-900 border-2 border-emerald-500 rounded-2xl p-4 shadow-2xl flex items-start gap-3 animate-fade-in">
           <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
@@ -2162,7 +2262,6 @@ export default function InvestimentoPage() {
         </div>
       )}
 
-      {/* MODAL DO GUIA DO INVESTIDOR (GLOSSÁRIO PEDAGÓGICO) */}
       {showGlossary && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-2xl w-full p-6 space-y-4 max-h-[85vh] overflow-y-auto">
@@ -2190,10 +2289,9 @@ export default function InvestimentoPage() {
         </div>
       )}
 
-      {/* MODAL DE ENCERRAMENTO DO PREGÃO E RANKING FINAL (QUEM MAIS GANHOU E QUEM MAIS PERDEU) */}
       {marketState?.status === "encerrado" && (
         <FinalRankingModal
-          players={players}
+          players={allPlayersWithMe}
           marketState={marketState}
           isAdmin={isAdmin}
           onRestartGame={handleAdminResetMarket}
